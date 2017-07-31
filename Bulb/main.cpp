@@ -2,6 +2,7 @@
 #include <cmath>
 #include <glew.h>
 #include <glut.h>
+#include <glm\glm.hpp>
 
 #include "shader_utils.h"
 #include "gamepad_input.h"
@@ -10,8 +11,8 @@
 
 static GLuint program_fp32;
 
-int SCREEN_W = 600;
-int SCREEN_H = 600;
+int SCREEN_W = 300;
+int SCREEN_H = 300;
 float ASPECT = (float)SCREEN_W / (float)SCREEN_H;
 
 //GamePadXbox* pad = new GamePadXbox(GamePadIndex_One);
@@ -20,13 +21,15 @@ int de_iterations = 100;
 int max_ray_steps = 100;
 float min_distance = 0.001f;
 
-GLfloat camera_eye[] = {00.0, 0, 0};
+GLfloat camera_eye[] = {0.0, 4.0, 0.0};
 GLfloat camera_target[] = {0.0, 0.0, 0.0};
 GLfloat camera_up[] = {0, 0, 1};
 
 float camera_orbit = 0.0;
 
 float camera_fov = 90.0;
+
+glm::mat4 camera_orientation = glm::mat4(1.0);
 
 void update_program_variables() {
 	GLint prog_camera_pos = glGetUniformLocation(program_fp32, "camera_eye");
@@ -137,23 +140,31 @@ void keyboard_down(unsigned char key, int x, int y) {
 	//julia_explorer.explore(SCREEN_W, SCREEN_H);
 	if (key == 'h')
 		julia_state.zoom.cruise = !julia_state.zoom.cruise;
-	
 	*/
 
-	if (key == 'w') 
-		camera_eye[1] += 0.1;
-	if (key == 's') 
-		camera_eye[1] -= 0.1;
-	if (key == 'a') 
-		camera_eye[0] += 0.1;
-	if (key == 'd') 
-		camera_eye[0] -= 0.1;
-	
-	if (key == ' ') {
-		camera_orbit += 0.01;
+	glm::vec4 forward_direction = camera_orientation * glm::vec4(0, 1, 0, 1);
 
-		camera_eye[0] = 3.0 * sin(camera_orbit);
-		camera_eye[2] = 3.0 * cos(camera_orbit);
+	if (key == 'w') {
+		camera_eye[1] -= 0.1f;
+		camera_target[1] -= 0.1f;
+	}
+	if (key == 's') {
+		camera_eye[1] += 0.1f;
+		camera_target[1] += 0.1f;
+	}
+	if (key == 'a') {
+		camera_eye[0] += 0.1f;
+		camera_target[0] += 0.1f;
+	}
+	if (key == 'd') {
+		camera_eye[0] -= 0.1f;
+		camera_target[0] -= 0.1f;
+	}
+	if (key == ' ') {
+		camera_orbit += 0.01f;
+
+		camera_eye[0] = 3.0f * sin(camera_orbit);
+		camera_eye[2] = 3.0f * cos(camera_orbit);
 
 	}
 }
@@ -190,16 +201,6 @@ int main(int argc, const char * argv[]) {
 	//glutMouseFunc(on_click);
 	//glutMotionFunc(on_move);
 	glutReshapeFunc(reshape);
-
-	//glEnable(GL_BLEND);
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	//glEnable(GL_LINE_SMOOTH);
-	//glEnable(GL_POLYGON_SMOOTH);
-	//glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-	//glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
-
-	//glLineWidth(2.0);
 
 	load_shader("bulb.vert", "bulb.frag", &program_fp32);
 

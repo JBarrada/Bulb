@@ -1,29 +1,22 @@
-﻿Build started 7/30/2017 5:11:53 PM.
-     1>Project "C:\Users\dinosaur\Documents\Visual Studio 2010\Projects\Bulb\Bulb\Bulb.vcxproj" on node 2 (build target(s)).
+﻿Build started 7/31/2017 10:03:22 AM.
+     1>Project "C:\Users\Justin B\Documents\Visual Studio 2010\Projects\Bulb\Bulb\Bulb.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
          Creating "Debug\Bulb.unsuccessfulbuild" because "AlwaysCreate" was specified.
        ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /IC:\MinGW\include\GL /ZI /nologo /W3 /WX- /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /IC:\MinGW\include\GL /ZI /nologo /W3 /WX- /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
          main.cpp
-     1>c:\users\dinosaur\documents\visual studio 2010\projects\bulb\bulb\main.cpp(144): warning C4305: '+=' : truncation from 'double' to 'GLfloat'
-     1>c:\users\dinosaur\documents\visual studio 2010\projects\bulb\bulb\main.cpp(146): warning C4305: '-=' : truncation from 'double' to 'GLfloat'
-     1>c:\users\dinosaur\documents\visual studio 2010\projects\bulb\bulb\main.cpp(148): warning C4305: '+=' : truncation from 'double' to 'GLfloat'
-     1>c:\users\dinosaur\documents\visual studio 2010\projects\bulb\bulb\main.cpp(150): warning C4305: '-=' : truncation from 'double' to 'GLfloat'
-     1>c:\users\dinosaur\documents\visual studio 2010\projects\bulb\bulb\main.cpp(153): warning C4305: '+=' : truncation from 'double' to 'float'
-     1>c:\users\dinosaur\documents\visual studio 2010\projects\bulb\bulb\main.cpp(155): warning C4244: '=' : conversion from 'double' to 'GLfloat', possible loss of data
-     1>c:\users\dinosaur\documents\visual studio 2010\projects\bulb\bulb\main.cpp(156): warning C4244: '=' : conversion from 'double' to 'GLfloat', possible loss of data
        Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\dinosaur\Documents\Visual Studio 2010\Projects\Bulb\Debug\Bulb.exe" /NOLOGO /LIBPATH:C:\MinGW\lib /LIBPATH:C:\MinGW\lib\Release\Win32 /LIBPATH:"C:\Program Files (x86)\Windows Kits\8.0\Lib\win8\um\x86" XINPUT9_1_0.lib glew32.lib opengl32.lib freeglut.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\Bulb.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"C:\Users\dinosaur\Documents\Visual Studio 2010\Projects\Bulb\Debug\Bulb.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\dinosaur\Documents\Visual Studio 2010\Projects\Bulb\Debug\Bulb.lib" /MACHINE:X86 Debug\gamepad_input.obj
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Justin B\Documents\Visual Studio 2010\Projects\Bulb\Debug\Bulb.exe" /NOLOGO /LIBPATH:C:\MinGW\lib /LIBPATH:C:\MinGW\lib\Release\Win32 /LIBPATH:"C:\Program Files (x86)\Windows Kits\8.0\Lib\win8\um\x86" XINPUT9_1_0.lib glew32.lib opengl32.lib freeglut.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\Bulb.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"C:\Users\Justin B\Documents\Visual Studio 2010\Projects\Bulb\Debug\Bulb.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Justin B\Documents\Visual Studio 2010\Projects\Bulb\Debug\Bulb.lib" /MACHINE:X86 Debug\gamepad_input.obj
          Debug\main.obj
          Debug\shader_utils.obj
-         LINK : C:\Users\dinosaur\Documents\Visual Studio 2010\Projects\Bulb\Debug\Bulb.exe not found or not built by the last incremental link; performing full link
-         Bulb.vcxproj -> C:\Users\dinosaur\Documents\Visual Studio 2010\Projects\Bulb\Debug\Bulb.exe
+         LINK : C:\Users\Justin B\Documents\Visual Studio 2010\Projects\Bulb\Debug\Bulb.exe not found or not built by the last incremental link; performing full link
+         Bulb.vcxproj -> C:\Users\Justin B\Documents\Visual Studio 2010\Projects\Bulb\Debug\Bulb.exe
        Manifest:
-         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /outputresource:"C:\Users\dinosaur\Documents\Visual Studio 2010\Projects\Bulb\Debug\Bulb.exe;#1" /manifest Debug\Bulb.exe.intermediate.manifest
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /outputresource:"C:\Users\Justin B\Documents\Visual Studio 2010\Projects\Bulb\Debug\Bulb.exe;#1" /manifest Debug\Bulb.exe.intermediate.manifest
        FinalizeBuildStatus:
          Deleting file "Debug\Bulb.unsuccessfulbuild".
          Touching "Debug\Bulb.lastbuildstate".
-     1>Done Building Project "C:\Users\dinosaur\Documents\Visual Studio 2010\Projects\Bulb\Bulb\Bulb.vcxproj" (build target(s)).
+     1>Done Building Project "C:\Users\Justin B\Documents\Visual Studio 2010\Projects\Bulb\Bulb\Bulb.vcxproj" (build target(s)).
 
 Build succeeded.
 
