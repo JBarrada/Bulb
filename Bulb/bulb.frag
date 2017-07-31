@@ -63,6 +63,11 @@ float DECube(vec3 z) {
 	return inside_distance + outside_distance;
 }
 
+float DESpheres(vec3 z) {
+	z.xy = mod((z.xy), 1.0) - vec2(0.5);
+	return length(z) - 0.3;
+}
+
 float ray_march(vec3 from, vec3 dir) {
 	float total_distance = 0.0;
 	float distance = 0.0;
@@ -70,7 +75,7 @@ float ray_march(vec3 from, vec3 dir) {
 	
 	for (steps = 0; steps < max_ray_steps; steps++) {
 		march_point = from + (total_distance * dir);
-		distance = DECube(march_point);
+		distance = DESpheres(march_point);
 		total_distance += distance;
 		if (distance < min_distance) {
 			break;

@@ -3,6 +3,7 @@
 #include <glew.h>
 #include <glut.h>
 #include <glm\glm.hpp>
+#include <glm\gtc\matrix_transform.hpp>
 
 #include "shader_utils.h"
 #include "gamepad_input.h"
@@ -11,8 +12,8 @@
 
 static GLuint program_fp32;
 
-int SCREEN_W = 300;
-int SCREEN_H = 300;
+int SCREEN_W = 100;
+int SCREEN_H = 100;
 float ASPECT = (float)SCREEN_W / (float)SCREEN_H;
 
 //GamePadXbox* pad = new GamePadXbox(GamePadIndex_One);
@@ -21,9 +22,9 @@ int de_iterations = 100;
 int max_ray_steps = 100;
 float min_distance = 0.001f;
 
-GLfloat camera_eye[] = {0.0, 4.0, 0.0};
-GLfloat camera_target[] = {0.0, 0.0, 0.0};
-GLfloat camera_up[] = {0, 0, 1};
+glm::vec3 camera_eye = glm::vec3(0.0, 4.0, 0.0);
+glm::vec3 camera_target = glm::vec3(0.0, 0.0, 0.0);
+glm::vec3 camera_up = glm::vec3(0, 0, 1);
 
 float camera_orbit = 0.0;
 
@@ -33,13 +34,13 @@ glm::mat4 camera_orientation = glm::mat4(1.0);
 
 void update_program_variables() {
 	GLint prog_camera_pos = glGetUniformLocation(program_fp32, "camera_eye");
-	glUniform3fv(prog_camera_pos, 1, camera_eye);
+	glUniform3fv(prog_camera_pos, 1, (float*)&camera_eye);
 	
 	GLint prog_camera_target = glGetUniformLocation(program_fp32, "camera_target");
-	glUniform3fv(prog_camera_target, 1, camera_target);
+	glUniform3fv(prog_camera_target, 1, (float*)&camera_target);
 
 	GLint prog_camera_up = glGetUniformLocation(program_fp32, "camera_up");
-	glUniform3fv(prog_camera_up, 1, camera_up);
+	glUniform3fv(prog_camera_up, 1, (float*)&camera_up);
 
 	GLint prog_camera_fov = glGetUniformLocation(program_fp32, "camera_fov");
 	glUniform1f(prog_camera_fov, camera_fov);
@@ -134,39 +135,42 @@ void on_move(int x, int y) {
 }
 
 void keyboard_down(unsigned char key, int x, int y) {
-	/*
-	if (key == 'g')
-		explore = !explore;
-	//julia_explorer.explore(SCREEN_W, SCREEN_H);
-	if (key == 'h')
-		julia_state.zoom.cruise = !julia_state.zoom.cruise;
-	*/
-
-	glm::vec4 forward_direction = camera_orientation * glm::vec4(0, 1, 0, 1);
+	glm::vec3 forward_direction = glm::vec3(camera_orientation * glm::vec4(0, 1, 0, 0));
+	glm::vec3 left_direction = glm::vec3(camera_orientation * glm::vec4(1, 0, 0, 0));
 
 	if (key == 'w') {
-		camera_eye[1] -= 0.1f;
-		camera_target[1] -= 0.1f;
+		camera_eye -= 0.1f * forward_direction;
 	}
 	if (key == 's') {
-		camera_eye[1] += 0.1f;
-		camera_target[1] += 0.1f;
+		camera_eye += 0.1f * forward_direction;
 	}
 	if (key == 'a') {
-		camera_eye[0] += 0.1f;
-		camera_target[0] += 0.1f;
+		camera_eye += 0.1f * left_direction;
 	}
 	if (key == 'd') {
-		camera_eye[0] -= 0.1f;
-		camera_target[0] -= 0.1f;
+		camera_eye -= 0.1f * left_direction;
 	}
+	
 	if (key == ' ') {
-		camera_orbit += 0.01f;
-
-		camera_eye[0] = 3.0f * sin(camera_orbit);
-		camera_eye[2] = 3.0f * cos(camera_orbit);
-
+		camera_eye += 0.1f * camera_up;
 	}
+
+	if (key == 'q') {
+		camera_orientation *= glm::rotate(glm::mat4(1.0), 0.02f, glm::vec3(0, 0, 1));
+	}
+	if (key == 'e') {
+		camera_orientation *= glm::rotate(glm::mat4(1.0), -0.02f, glm::vec3(0, 0, 1));
+	}
+
+	if (key == 'r') {
+		camera_orientation *= glm::rotate(glm::mat4(1.0), 0.02f, glm::vec3(0, 1, 0));
+	}
+	if (key == 'f') {
+		camera_orientation *= glm::rotate(glm::mat4(1.0), -0.02f, glm::vec3(0, 1, 0));
+	}
+
+	camera_target = camera_eye + glm::vec3(camera_orientation * glm::vec4(0, -1, 0, 0));
+	camera_up = glm::vec3(camera_orientation * glm::vec4(0, 0, 1, 0));
 }
 
 void force_redraw(int value) {
@@ -203,7 +207,6 @@ int main(int argc, const char * argv[]) {
 	glutReshapeFunc(reshape);
 
 	load_shader("bulb.vert", "bulb.frag", &program_fp32);
-
 
 	glutMainLoop();
 

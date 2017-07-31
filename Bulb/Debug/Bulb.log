@@ -1,4 +1,4 @@
-﻿Build started 7/31/2017 10:03:22 AM.
+﻿Build started 7/31/2017 11:57:46 AM.
      1>Project "C:\Users\Justin B\Documents\Visual Studio 2010\Projects\Bulb\Bulb\Bulb.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
          Creating "Debug\Bulb.unsuccessfulbuild" because "AlwaysCreate" was specified.
@@ -20,4 +20,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:01.30
+Time Elapsed 00:00:01.59
