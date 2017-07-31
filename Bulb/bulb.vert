@@ -1,4 +1,4 @@
-#version 130
+#version 400
 
 const float PI = 3.14159265359;
 const float DEG_TO_RAD = PI / 180.0;

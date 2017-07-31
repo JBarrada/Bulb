@@ -18,11 +18,11 @@ float ASPECT = (float)SCREEN_W / (float)SCREEN_H;
 
 //GamePadXbox* pad = new GamePadXbox(GamePadIndex_One);
 
-int de_iterations = 100;
-int max_ray_steps = 100;
+int de_iterations = 10;
+int max_ray_steps = 50;
 float min_distance = 0.001f;
 
-glm::vec3 camera_eye = glm::vec3(0.0, 4.0, 0.0);
+glm::vec3 camera_eye = glm::vec3(0.0, 2.0, 0.0);
 glm::vec3 camera_target = glm::vec3(0.0, 0.0, 0.0);
 glm::vec3 camera_up = glm::vec3(0, 0, 1);
 
@@ -48,7 +48,7 @@ void update_program_variables() {
 	GLint prog_camera_aspect = glGetUniformLocation(program_fp32, "camera_aspect");
 	glUniform1f(prog_camera_aspect, ASPECT);
 
-	/*
+	
 	GLint prog_de_iterations = glGetUniformLocation(program_fp32, "de_iterations");
 	glUniform1i(prog_de_iterations, de_iterations);
 
@@ -57,7 +57,6 @@ void update_program_variables() {
 	
 	GLint prog_min_distance = glGetUniformLocation(program_fp32, "min_distance");
 	glUniform1f(prog_min_distance, min_distance);
-	*/
 }
 
 void render() {
@@ -65,7 +64,7 @@ void render() {
 	
 	update_program_variables();
 	glUseProgram(program_fp32);
-	
+
 	glBegin(GL_QUADS);
 	glVertex2f(-1, -1);
 	glVertex2f(1, -1);
@@ -74,6 +73,22 @@ void render() {
 	glEnd();
 	
 	glutSwapBuffers();
+}
+
+float get_avg_dist() {
+	float depth_total = 0.0;
+	int depth_samples = 0;
+	for (int x = 0; x < SCREEN_W; x += (SCREEN_W / 10)) {
+		for (int y = 0; y < SCREEN_H; y += (SCREEN_H / 10)) {
+			GLfloat depth_comp;
+			glReadPixels(x, y, 1, 1, GL_ALPHA, GL_FLOAT, &depth_comp);
+			depth_total += depth_comp;
+			depth_samples++;
+		}
+	}
+
+	printf("%f\n", depth_total / (float)depth_samples);
+	return (depth_total / (float)depth_samples);
 }
 
 void on_click(int button, int state, int x, int y) {
@@ -138,21 +153,34 @@ void keyboard_down(unsigned char key, int x, int y) {
 	glm::vec3 forward_direction = glm::vec3(camera_orientation * glm::vec4(0, 1, 0, 0));
 	glm::vec3 left_direction = glm::vec3(camera_orientation * glm::vec4(1, 0, 0, 0));
 
+		
+	float avg_dist = glm::max(get_avg_dist(), 0.0001f);
+
+	float move_amount = 0.01 * avg_dist;
+
+	if (key == '1') 
+		de_iterations++;
+	if (key == '2')
+		max_ray_steps++;
+	if (key == '3')
+		min_distance /= 2.0f;
+
+
 	if (key == 'w') {
-		camera_eye -= 0.1f * forward_direction;
+		camera_eye -= move_amount * forward_direction;
 	}
 	if (key == 's') {
-		camera_eye += 0.1f * forward_direction;
+		camera_eye += move_amount * forward_direction;
 	}
 	if (key == 'a') {
-		camera_eye += 0.1f * left_direction;
+		camera_eye += move_amount * left_direction;
 	}
 	if (key == 'd') {
-		camera_eye -= 0.1f * left_direction;
+		camera_eye -= move_amount * left_direction;
 	}
 	
 	if (key == ' ') {
-		camera_eye += 0.1f * camera_up;
+		camera_eye += move_amount * camera_up;
 	}
 
 	if (key == 'q') {

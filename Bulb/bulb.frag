@@ -1,19 +1,11 @@
-#version 130
+#version 400
 
 precision highp float;
-
 uniform vec3 camera_eye;
-/*
-vec3 camera_up;
-vec3 camera_at = vec3(0.0,0.0,0.0);
-vec3 camera_dir = vec3(1,0,0);
-float fov = 90.0;
-float aspect_ratio = 1.0;
-*/
 
-int de_iterations = 10;
-int max_ray_steps = 50;
-const float min_distance = 0.001;
+uniform int de_iterations = 10;
+uniform int max_ray_steps = 50;
+uniform float min_distance = 0.001;
 
 const float bailout = 2.0;
 const float power = 8.0;
@@ -23,7 +15,15 @@ in vec3 camera_ray;
 vec3 march_point = vec3(0.0);
 vec3 light_point = vec3(-6, 2, 8);
 
+int max_iter = 0;
+
 out vec4 out_0;
+
+vec3 hsv2rgb(vec3 c) {
+    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
 
 float DE(vec3 z) {
 	vec3 z_temp = vec3(z);
@@ -49,6 +49,10 @@ float DE(vec3 z) {
 		
 		z_temp = vec3(sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta)) * zr;
 		z_temp += z;
+		
+		if (i > max_iter) {
+			max_iter = i;
+		}
 	}
 	
 	return 0.5 * log(r) * r / dr;
@@ -68,39 +72,42 @@ float DESpheres(vec3 z) {
 	return length(z) - 0.3;
 }
 
-float ray_march(vec3 from, vec3 dir) {
+vec2 ray_march(vec3 from, vec3 dir, int max_steps) {
 	float total_distance = 0.0;
 	float distance = 0.0;
 	int steps = 0;
 	
-	for (steps = 0; steps < max_ray_steps; steps++) {
+	for (steps = 0; steps < max_steps; steps++) {
 		march_point = from + (total_distance * dir);
-		distance = DESpheres(march_point);
+		distance = DE(march_point);
 		total_distance += distance;
 		if (distance < min_distance) {
 			break;
 		}
 	}
 	
-	return (1.0 - (float(steps) / float(max_ray_steps)));
+	return vec2(1.0 - (float(steps) / float(max_steps)), total_distance);
 }
 
 void main() {
-	float ray_steps = ray_march(camera_eye, camera_ray);
-	float brightness = ray_steps;
+	vec2 ray_data = ray_march(camera_eye, camera_ray, max_ray_steps);
+	float brightness = ray_data.x;
 	
-	/*
-	if (ray_steps != 0.0) {
-		vec3 contact_point = (-min_distance * camera_ray) + march_point;
-		vec3 light_ray = normalize(light_point - contact_point);
-		float light_steps = ray_march(contact_point, light_ray);
+	vec3 color = hsv2rgb(vec3( 2.0 * (float(max_iter) / float(de_iterations)), 0.5, 0.5));
+	
+	if (brightness != 0.0) {
+		vec3 light_ray = normalize(light_point - march_point);
+		vec3 contact_point = (min_distance * light_ray) + march_point;
+		float light_steps = ray_march(contact_point, light_ray, max_ray_steps).x;
 		
-		if (light_steps != 0) {
-			brightness *= max((1.0 - light_steps), 0.5);
+		if (light_steps != 0.0) {
+			color = mix(color * 0.1, color, 1.0 - light_steps);
 		}
 	}
-	*/
+	
 	
 	//gl_FragColor = vec4(vec3(brightness), 1.0);
-	out_0 = vec4(vec3(brightness), 1.0);
+	//out_0 = vec4(vec3(brightness), 1.0);
+	
+	out_0 = vec4(mix(vec3(0.8), color, brightness), ray_data.y);
 }
