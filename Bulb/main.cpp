@@ -87,7 +87,7 @@ float get_avg_dist() {
 		}
 	}
 
-	printf("%f\n", depth_total / (float)depth_samples);
+	//printf("%f\n", depth_total / (float)depth_samples);
 	return (depth_total / (float)depth_samples);
 }
 
@@ -156,7 +156,7 @@ void keyboard_down(unsigned char key, int x, int y) {
 		
 	float avg_dist = glm::max(get_avg_dist(), 0.0001f);
 
-	float move_amount = 0.01 * avg_dist;
+	float move_amount = 0.01f * avg_dist;
 
 	if (key == '1') 
 		de_iterations++;

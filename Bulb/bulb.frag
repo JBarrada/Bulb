@@ -93,18 +93,17 @@ void main() {
 	vec2 ray_data = ray_march(camera_eye, camera_ray, max_ray_steps);
 	float brightness = ray_data.x;
 	
-	vec3 color = hsv2rgb(vec3( 2.0 * (float(max_iter) / float(de_iterations)), 0.5, 0.5));
+	vec3 color = hsv2rgb(vec3( 2.0 * (float(max_iter) / float(de_iterations)), 0.8, 0.8));
 	
 	if (brightness != 0.0) {
 		vec3 light_ray = normalize(light_point - march_point);
 		vec3 contact_point = (min_distance * light_ray) + march_point;
-		float light_steps = ray_march(contact_point, light_ray, max_ray_steps).x;
+		float light_steps = ray_march(contact_point, light_ray, max_ray_steps / 2).x;
 		
 		if (light_steps != 0.0) {
-			color = mix(color * 0.1, color, 1.0 - light_steps);
+			color = mix(color * 0.2, color, 1.0 - light_steps);
 		}
 	}
-	
 	
 	//gl_FragColor = vec4(vec3(brightness), 1.0);
 	//out_0 = vec4(vec3(brightness), 1.0);
