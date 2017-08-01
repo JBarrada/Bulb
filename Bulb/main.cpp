@@ -22,7 +22,7 @@ int de_iterations = 10;
 int max_ray_steps = 50;
 float min_distance = 0.001f;
 
-glm::vec3 camera_eye = glm::vec3(0.0, 2.0, 0.0);
+glm::vec3 camera_eye = glm::vec3(0.0, 8.0, 0.0);
 glm::vec3 camera_target = glm::vec3(0.0, 0.0, 0.0);
 glm::vec3 camera_up = glm::vec3(0, 0, 1);
 
@@ -78,17 +78,23 @@ void render() {
 float get_avg_dist() {
 	float depth_total = 0.0;
 	int depth_samples = 0;
-	for (int x = 0; x < SCREEN_W; x += (SCREEN_W / 10)) {
-		for (int y = 0; y < SCREEN_H; y += (SCREEN_H / 10)) {
+	for (int x = 0; x < SCREEN_W; x += (SCREEN_W / 20)) {
+		for (int y = 0; y < SCREEN_H; y += (SCREEN_H / 20)) {
 			GLfloat depth_comp;
 			glReadPixels(x, y, 1, 1, GL_ALPHA, GL_FLOAT, &depth_comp);
-			depth_total += depth_comp;
-			depth_samples++;
+			if (depth_comp != 1.0) {
+				depth_total += depth_comp;
+				depth_samples++;
+			}
 		}
 	}
 
 	//printf("%f\n", depth_total / (float)depth_samples);
-	return (depth_total / (float)depth_samples);
+	if (depth_samples != 0) {
+		return (depth_total / (float)depth_samples);
+	} else {
+		return 1.0;
+	}
 }
 
 void on_click(int button, int state, int x, int y) {
@@ -156,7 +162,9 @@ void keyboard_down(unsigned char key, int x, int y) {
 		
 	float avg_dist = glm::max(get_avg_dist(), 0.0001f);
 
-	float move_amount = 0.01f * avg_dist;
+	float move_amount = 0.02f * avg_dist;
+	//min_distance = 0.001f * avg_dist;
+	//printf("%0.20f\n", min_distance);
 
 	if (key == '1') 
 		de_iterations++;
@@ -191,10 +199,10 @@ void keyboard_down(unsigned char key, int x, int y) {
 	}
 
 	if (key == 'r') {
-		camera_orientation *= glm::rotate(glm::mat4(1.0), 0.02f, glm::vec3(0, 1, 0));
+		camera_orientation *= glm::rotate(glm::mat4(1.0), 0.02f, glm::vec3(-1, 0, 0));
 	}
 	if (key == 'f') {
-		camera_orientation *= glm::rotate(glm::mat4(1.0), -0.02f, glm::vec3(0, 1, 0));
+		camera_orientation *= glm::rotate(glm::mat4(1.0), -0.02f, glm::vec3(-1, 0, 0));
 	}
 
 	camera_target = camera_eye + glm::vec3(camera_orientation * glm::vec4(0, -1, 0, 0));
