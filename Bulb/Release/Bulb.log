@@ -1,10 +1,12 @@
-﻿Build started 7/31/2017 11:05:05 PM.
+﻿Build started 8/1/2017 11:45:27 PM.
      1>Project "C:\Users\dinosaur\Documents\Visual Studio 2010\Projects\Bulb\Bulb\Bulb.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
          Creating "Release\Bulb.unsuccessfulbuild" because "AlwaysCreate" was specified.
        ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /IC:\MinGW\include\GL /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /D _MBCS /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /IC:\MinGW\include\GL /Zi /nologo /W3 /WX- /Ox /Oi /Ot /Oy- /GL /D _MBCS /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
          main.cpp
+     1>main.cpp(281): warning C4244: 'argument' : conversion from 'double' to 'float', possible loss of data
+     1>main.cpp(281): warning C4244: 'argument' : conversion from 'double' to 'float', possible loss of data
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\dinosaur\Documents\Visual Studio 2010\Projects\Bulb\Release\Bulb.exe" /NOLOGO /LIBPATH:C:\MinGW\lib /LIBPATH:C:\MinGW\lib\Release\Win32 /LIBPATH:"C:\Program Files (x86)\Windows Kits\8.0\Lib\win8\um\x86" XINPUT9_1_0.lib glew32.lib opengl32.lib freeglut.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Release\Bulb.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"C:\Users\dinosaur\Documents\Visual Studio 2010\Projects\Bulb\Release\Bulb.pdb" /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\dinosaur\Documents\Visual Studio 2010\Projects\Bulb\Release\Bulb.lib" /MACHINE:X86 Release\gamepad_input.obj
          Release\main.obj
@@ -21,4 +23,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:01.34
+Time Elapsed 00:00:01.42

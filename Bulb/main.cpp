@@ -1,5 +1,7 @@
 #include <iostream>
 #include <cmath>
+#include <time.h>
+
 #include <glew.h>
 #include <glut.h>
 #include <glm\glm.hpp>
@@ -16,21 +18,28 @@ int SCREEN_W = 100;
 int SCREEN_H = 100;
 float ASPECT = (float)SCREEN_W / (float)SCREEN_H;
 
-//GamePadXbox* pad = new GamePadXbox(GamePadIndex_One);
+GamePadXbox* pad = new GamePadXbox(GamePadIndex_One);
 
-int de_iterations = 10;
-int max_ray_steps = 50;
-float min_distance = 0.001f;
+//int de_iterations = 10;
+//int max_ray_steps = 50;
+//float min_distance = 0.001f;
 
-glm::vec3 camera_eye = glm::vec3(0.0, 8.0, 0.0);
+glm::vec3 camera_eye = glm::vec3(0.0, 4.0, 10.0);
 glm::vec3 camera_target = glm::vec3(0.0, 0.0, 0.0);
 glm::vec3 camera_up = glm::vec3(0, 0, 1);
 
+glm::vec3 camera_eye_prev = glm::vec3(camera_eye);
+glm::vec3 camera_velocity_prev = glm::vec3(0.0);
+
 float camera_orbit = 0.0;
 
-float camera_fov = 90.0;
+float camera_fov = 1.5;
 
 glm::mat4 camera_orientation = glm::mat4(1.0);
+
+
+float frames = 0;
+clock_t frame_time;
 
 void update_program_variables() {
 	GLint prog_camera_pos = glGetUniformLocation(program_fp32, "camera_eye");
@@ -48,7 +57,7 @@ void update_program_variables() {
 	GLint prog_camera_aspect = glGetUniformLocation(program_fp32, "camera_aspect");
 	glUniform1f(prog_camera_aspect, ASPECT);
 
-	
+	/*
 	GLint prog_de_iterations = glGetUniformLocation(program_fp32, "de_iterations");
 	glUniform1i(prog_de_iterations, de_iterations);
 
@@ -57,6 +66,7 @@ void update_program_variables() {
 	
 	GLint prog_min_distance = glGetUniformLocation(program_fp32, "min_distance");
 	glUniform1f(prog_min_distance, min_distance);
+	*/
 }
 
 void render() {
@@ -73,11 +83,22 @@ void render() {
 	glEnd();
 	
 	glutSwapBuffers();
+	
+	frames++;
+	float time_seconds = (float)(clock() - frame_time) / CLOCKS_PER_SEC;
+	if (time_seconds > 0.25) {
+		float fps = frames / time_seconds;
+		printf("%0.1f\n", fps);
+
+		frames = 0;
+		frame_time = clock();
+	}
 }
 
 float get_avg_dist() {
 	float depth_total = 0.0;
 	int depth_samples = 0;
+	/*
 	for (int x = 0; x < SCREEN_W; x += (SCREEN_W / 20)) {
 		for (int y = 0; y < SCREEN_H; y += (SCREEN_H / 20)) {
 			GLfloat depth_comp;
@@ -88,7 +109,13 @@ float get_avg_dist() {
 			}
 		}
 	}
-
+	*/
+	GLfloat depth_comp;
+	for (int i = 0; i < 100; i++) {
+		glReadPixels(rand() % SCREEN_W, rand() % SCREEN_H, 1, 1, GL_ALPHA, GL_FLOAT, &depth_comp);
+		depth_total += depth_comp;
+		depth_samples++;
+	}
 	//printf("%f\n", depth_total / (float)depth_samples);
 	if (depth_samples != 0) {
 		return (depth_total / (float)depth_samples);
@@ -166,13 +193,14 @@ void keyboard_down(unsigned char key, int x, int y) {
 	//min_distance = 0.001f * avg_dist;
 	//printf("%0.20f\n", min_distance);
 
+	/*
 	if (key == '1') 
 		de_iterations++;
 	if (key == '2')
 		max_ray_steps++;
 	if (key == '3')
 		min_distance /= 2.0f;
-
+	*/
 
 	if (key == 'w') {
 		camera_eye -= move_amount * forward_direction;
@@ -209,10 +237,58 @@ void keyboard_down(unsigned char key, int x, int y) {
 	camera_up = glm::vec3(camera_orientation * glm::vec4(0, 0, 1, 0));
 }
 
+float expo(float value) {
+	if (value < 0)
+		return -1.0f * pow(value, 2);
+	return pow(value, 2);
+}
+
+void update_gamepad() {
+	if (pad->is_connected()) {
+		pad->update();
+
+		glm::vec3 forward_direction = glm::vec3(camera_orientation * glm::vec4(0, 1, 0, 0));
+		glm::vec3 left_direction = glm::vec3(camera_orientation * glm::vec4(1, 0, 0, 0));
+
+		float avg_dist = glm::max(get_avg_dist(), 0.0001f);
+		float move_amount = 0.02f * avg_dist;
+		
+		// triggers
+		float trigger_sum = expo(pad->State.rt) - expo(pad->State.lt);
+		camera_eye -= (move_amount * trigger_sum) * forward_direction;
+
+		camera_eye += (move_amount * expo(pad->State.lstick_y)) * camera_up;
+
+		// rstick y
+		camera_orientation *= glm::rotate(glm::mat4(1.0), 0.03f * expo(pad->State.rstick_y), glm::vec3(1, 0, 0));
+
+		// rstick x
+		camera_orientation *= glm::rotate(glm::mat4(1.0), 0.06f * expo(pad->State.rstick_x), glm::vec3(0, -1, 0));
+
+		// lstick x
+		camera_orientation *= glm::rotate(glm::mat4(1.0), 0.03f * expo(pad->State.lstick_x), glm::vec3(0, 0, -1));
+
+
+		camera_target = camera_eye + glm::vec3(camera_orientation * glm::vec4(0, -1, 0, 0));
+		camera_up = glm::vec3(camera_orientation * glm::vec4(0, 0, 1, 0));
+
+		glm::vec3 velocity = camera_eye - camera_eye_prev;
+		camera_eye_prev = glm::vec3(camera_eye);
+
+		float accel = length(velocity - camera_velocity_prev);
+		camera_velocity_prev = glm::vec3(velocity);
+
+		pad->vibrate(accel * 100.0, accel * 100.0);
+
+		//printf("%f\n", force);
+	}
+}
+
 void force_redraw(int value) {
 	glutPostRedisplay();
 	
 	// update gamepad & stuff
+	update_gamepad();
 
 	glutTimerFunc(20, force_redraw, 0);
 }
@@ -231,6 +307,7 @@ int main(int argc, const char * argv[]) {
 	glutInitDisplayMode(GLUT_RGB);
 	glutInitWindowSize(SCREEN_W, SCREEN_H);
 	glutCreateWindow("BULB");
+	//glutFullScreen();
 	glClearColor(1.0, 1.0, 1.0, 1.0);
 
 	GLuint error = glewInit();
