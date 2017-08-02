@@ -24,12 +24,24 @@
     <ClCompile Include="gamepad_input.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="bulb_control.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bulb_shader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="shader_utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="gamepad_input.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bulb_control.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bulb_shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

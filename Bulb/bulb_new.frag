@@ -1,4 +1,7 @@
-#version 400
+#version 130
+
+precision highp float;
+
 
 uniform vec3 camera_eye;
 
@@ -44,7 +47,7 @@ uniform float HardShadow = 0.5;
 
 uniform float Specular = 0.4;
 uniform float SpecularExp = 16.0;
-uniform float SpecularMax = 10;
+uniform float SpecularMax = 10.0;
 
 
 uniform float Fog = 0.5;
