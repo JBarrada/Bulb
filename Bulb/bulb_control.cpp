@@ -92,7 +92,7 @@ void BulbControl::update_gamepad() {
 		glm::vec3 forward_direction = glm::vec3(camera_orientation * glm::vec4(0, 1, 0, 0));
 		glm::vec3 left_direction = glm::vec3(camera_orientation * glm::vec4(1, 0, 0, 0));
 
-		float avg_dist = 0.01; //glm::max(get_avg_dist(), 0.0001f);
+		float avg_dist = 0.01f; //glm::max(get_avg_dist(), 0.0001f);
 		float move_amount = 0.02f * avg_dist;
 		
 		// triggers
@@ -131,7 +131,7 @@ void BulbControl::keyboard_down(unsigned char key, int x, int y) {
 	glm::vec3 left_direction = glm::vec3(camera_orientation * glm::vec4(1, 0, 0, 0));
 
 		
-	float avg_dist = 0.01; //glm::max(get_avg_dist(), 0.0001f);
+	float avg_dist = 0.01f; //glm::max(get_avg_dist(), 0.0001f);
 
 	float move_amount = 0.02f * avg_dist;
 

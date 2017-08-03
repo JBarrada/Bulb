@@ -34,6 +34,9 @@ float camera_fov = 1.5;
 
 glm::mat4 camera_orientation = glm::mat4(1.0);
 
+float camera_prox = 1.0;
+float camera_prox_target = 1.0;
+
 float frames = 0;
 clock_t frame_time;
 
@@ -65,34 +68,6 @@ void update_program_variables() {
 	
 }
 
-void render() {
-	glClear(GL_COLOR_BUFFER_BIT);
-	
-	update_program_variables();
-	glUseProgram(program_fp32);
-
-	glBegin(GL_QUADS);
-	glVertex2f(-1, -1);
-	glVertex2f(1, -1);
-	glVertex2f(1, 1);
-	glVertex2f(-1, 1);
-	glEnd();
-	
-	glutSwapBuffers();
-	
-	/*
-	frames++;
-	float time_seconds = (float)(clock() - frame_time) / CLOCKS_PER_SEC;
-	if (time_seconds > 0.25) {
-		float fps = frames / time_seconds;
-		printf("%0.1f\n", fps);
-
-		frames = 0;
-		frame_time = clock();
-	}
-	*/
-}
-
 float get_avg_dist() {
 	float depth_total = 0.0;
 	int depth_samples = 0;
@@ -110,13 +85,51 @@ float get_avg_dist() {
 	}
 }
 
+void render() {
+	glClear(GL_COLOR_BUFFER_BIT);
+	
+	update_program_variables();
+	glUseProgram(program_fp32);
+
+	glBegin(GL_QUADS);
+	glVertex2f(-1, -1);
+	glVertex2f(1, -1);
+	glVertex2f(1, 1);
+	glVertex2f(-1, 1);
+	glEnd();
+	
+	glutSwapBuffers();
+	
+	camera_prox_target = get_avg_dist();
+	float prox_delta = (camera_prox_target - camera_prox);
+	if (prox_delta > 0) {
+		camera_prox +=  (prox_delta / 160.0f);
+	} else {
+		camera_prox +=  (prox_delta / 8.0f);
+	}
+	
+	//printf("%f\n", camera_prox);
+
+	frames++;
+	float time_seconds = (float)(clock() - frame_time) / CLOCKS_PER_SEC;
+	if (time_seconds > 0.25) {
+		float fps = frames / time_seconds;
+		printf("%0.1f\n", fps);
+
+		frames = 0;
+		frame_time = clock();
+	}
+}
+
+
+
 
 void keyboard_down(unsigned char key, int x, int y) {
 	glm::vec3 forward_direction = glm::vec3(camera_orientation * glm::vec4(0, 1, 0, 0));
 	glm::vec3 left_direction = glm::vec3(camera_orientation * glm::vec4(1, 0, 0, 0));
 
 		
-	float avg_dist = glm::max(get_avg_dist(), 0.0001f);
+	float avg_dist = glm::max(camera_prox, 0.0001f);
 
 	float move_amount = 0.02f * avg_dist;
 
@@ -168,8 +181,8 @@ void update_gamepad() {
 		glm::vec3 forward_direction = glm::vec3(camera_orientation * glm::vec4(0, 1, 0, 0));
 		glm::vec3 left_direction = glm::vec3(camera_orientation * glm::vec4(1, 0, 0, 0));
 
-		float avg_dist = glm::max(get_avg_dist(), 0.0001f);
-		float move_amount = 0.02f * avg_dist;
+		float avg_dist = glm::max(camera_prox, 0.0001f);
+		float move_amount = 0.015f * avg_dist;
 		
 		// triggers
 		float trigger_sum = expo(pad->State.rt) - expo(pad->State.lt);
@@ -222,11 +235,11 @@ void reshape(int width, int height) {
 int main(int argc, const char * argv[]) {
 	glutInit(&argc, const_cast<char**>(argv));
 	
-	glutInitDisplayMode(GLUT_RGB);
+	glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA);
 	glutInitWindowSize(SCREEN_W, SCREEN_H);
 	glutCreateWindow("BULB");
 	//glutFullScreen();
-	glClearColor(1.0, 1.0, 1.0, 1.0);
+	glClearColor(1.0, 1.0, 1.0, 0.0);
 
 	GLuint error = glewInit();
 
@@ -234,6 +247,8 @@ int main(int argc, const char * argv[]) {
 	glutTimerFunc(20, force_redraw, 0);
 	glutKeyboardFunc(keyboard_down);
 	glutReshapeFunc(reshape);
+
+	glEnable(GL_BLEND);
 
 	BulbShader bs;
 	bs.load("bulb.vert", "bulb.frag");

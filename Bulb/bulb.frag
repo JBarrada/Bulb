@@ -1,6 +1,6 @@
 #version 400
 
-#include "mandelbox.frag"
+#include "brocc.frag"
 
 // Camera
 uniform vec3 camera_eye;
@@ -49,7 +49,7 @@ uniform float Specular = 0.4; //~Lighting,default,0.4|0|1|
 uniform float SpecularExp = 16.0; //~Lighting,default,16|0|100|
 uniform float SpecularMax = 10.0; //~Lighting,default,10|0|100|
 
-uniform float Fog = 0.5; //~Lighting,default,0.5|0|2|
+uniform float Fog = 0.0; //~Lighting,default,0.5|0|2|
 
 
 float shadow(vec3 pos, vec3 sdir, float eps) {

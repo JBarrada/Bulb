@@ -3,8 +3,8 @@
 string parse_to_next(string input, string target, int &pos) {
 	string output = "";
 
-	while (pos < input.size()) {
-		for (int i = 0; i < target.size(); i++) {
+	while (pos < (int)input.size()) {
+		for (int i = 0; i < (int)target.size(); i++) {
 			if (input[pos] == target[i]) {
 				return output;
 			}
@@ -137,8 +137,6 @@ void BulbShader::load(char *vertex, char *fragment) {
 			}
 
 			include_file.close();
-
-			int test = 0;
 		} else {
 			frag_temp_file << current_line << endl;
 			if (current_line.substr(0, 7) == "uniform" && current_line.find("~") != std::string::npos) {

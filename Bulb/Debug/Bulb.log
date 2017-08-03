@@ -1,17 +1,31 @@
-﻿Build started 8/2/2017 5:52:29 PM.
-     1>Project "C:\Users\Justin B\Documents\Visual Studio 2010\Projects\Bulb\Bulb\Bulb.vcxproj" on node 2 (build target(s)).
-     1>InitializeBuildStatus:
+﻿Build started 8/2/2017 6:47:40 PM.
+     1>Project "C:\Users\dinosaur\Documents\Visual Studio 2010\Projects\Bulb\Bulb\Bulb.vcxproj" on node 2 (rebuild target(s)).
+     1>_PrepareForClean:
+         Deleting file "Debug\Bulb.lastbuildstate".
+       InitializeBuildStatus:
          Creating "Debug\Bulb.unsuccessfulbuild" because "AlwaysCreate" was specified.
        ClCompile:
-         All outputs are up-to-date.
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /IC:\MinGW\include\GL /ZI /nologo /W3 /WX- /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt bulb_control.cpp bulb_shader.cpp gamepad_input.cpp main.cpp shader_utils.cpp
+         shader_utils.cpp
+         main.cpp
+         gamepad_input.cpp
+         bulb_shader.cpp
+         bulb_control.cpp
+         Generating Code...
        Link:
-         All outputs are up-to-date.
-         Bulb.vcxproj -> C:\Users\Justin B\Documents\Visual Studio 2010\Projects\Bulb\Debug\Bulb.exe
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\dinosaur\Documents\Visual Studio 2010\Projects\Bulb\Debug\Bulb.exe" /NOLOGO /LIBPATH:C:\MinGW\lib /LIBPATH:C:\MinGW\lib\Release\Win32 /LIBPATH:"C:\Program Files (x86)\Windows Kits\8.0\Lib\win8\um\x86" XINPUT9_1_0.lib glew32.lib opengl32.lib freeglut.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\Bulb.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"C:\Users\dinosaur\Documents\Visual Studio 2010\Projects\Bulb\Debug\Bulb.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\dinosaur\Documents\Visual Studio 2010\Projects\Bulb\Debug\Bulb.lib" /MACHINE:X86 Debug\bulb_control.obj
+         Debug\bulb_shader.obj
+         Debug\gamepad_input.obj
+         Debug\main.obj
+         Debug\shader_utils.obj
+         Bulb.vcxproj -> C:\Users\dinosaur\Documents\Visual Studio 2010\Projects\Bulb\Debug\Bulb.exe
+       Manifest:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /outputresource:"C:\Users\dinosaur\Documents\Visual Studio 2010\Projects\Bulb\Debug\Bulb.exe;#1" /manifest Debug\Bulb.exe.intermediate.manifest
        FinalizeBuildStatus:
          Deleting file "Debug\Bulb.unsuccessfulbuild".
          Touching "Debug\Bulb.lastbuildstate".
-     1>Done Building Project "C:\Users\Justin B\Documents\Visual Studio 2010\Projects\Bulb\Bulb\Bulb.vcxproj" (build target(s)).
+     1>Done Building Project "C:\Users\dinosaur\Documents\Visual Studio 2010\Projects\Bulb\Bulb\Bulb.vcxproj" (rebuild target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:00.06
+Time Elapsed 00:00:04.31
