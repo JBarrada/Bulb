@@ -68,14 +68,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bulb_control.cpp" />
+    <ClCompile Include="bulb_settings.cpp" />
     <ClCompile Include="bulb_shader.cpp" />
+    <ClCompile Include="drawing_tools.cpp" />
     <ClCompile Include="gamepad_input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="shader_utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bulb_control.h" />
+    <ClInclude Include="bulb_settings.h" />
     <ClInclude Include="bulb_shader.h" />
+    <ClInclude Include="drawing_tools.h" />
     <ClInclude Include="gamepad_input.h" />
     <ClInclude Include="shader_utils.h" />
   </ItemGroup>

@@ -12,8 +12,8 @@
 
 //#include "bulb_control.h"
 #include "bulb_shader.h"
-
-#define M_PI 3.14159265359f
+#include "drawing_tools.h"
+#include "bulb_settings.h"
 
 static GLuint program_fp32;
 
@@ -39,6 +39,10 @@ float camera_prox_target = 1.0;
 
 float frames = 0;
 clock_t frame_time;
+
+DrawingTools drawing_tools;
+BulbShader bulb_shader;
+BulbSettings bulb_settings(&bulb_shader.shader_variables, &drawing_tools);
 
 void update_program_variables() {
 	GLint prog_camera_pos = glGetUniformLocation(program_fp32, "camera_eye");
@@ -88,16 +92,12 @@ float get_avg_dist() {
 void render() {
 	glClear(GL_COLOR_BUFFER_BIT);
 	
+	bulb_shader.draw();
 	update_program_variables();
-	glUseProgram(program_fp32);
+	bulb_shader.update_shader_variables();
 
-	glBegin(GL_QUADS);
-	glVertex2f(-1, -1);
-	glVertex2f(1, -1);
-	glVertex2f(1, 1);
-	glVertex2f(-1, 1);
-	glEnd();
-	
+	if (bulb_settings.menu_open) bulb_settings.draw();
+
 	glutSwapBuffers();
 	
 	camera_prox_target = get_avg_dist();
@@ -120,9 +120,6 @@ void render() {
 		frame_time = clock();
 	}
 }
-
-
-
 
 void keyboard_down(unsigned char key, int x, int y) {
 	glm::vec3 forward_direction = glm::vec3(camera_orientation * glm::vec4(0, 1, 0, 0));
@@ -175,51 +172,59 @@ float expo(float value) {
 }
 
 void update_gamepad() {
-	if (pad->is_connected()) {
-		pad->update();
+	glm::vec3 forward_direction = glm::vec3(camera_orientation * glm::vec4(0, 1, 0, 0));
+	glm::vec3 left_direction = glm::vec3(camera_orientation * glm::vec4(1, 0, 0, 0));
 
-		glm::vec3 forward_direction = glm::vec3(camera_orientation * glm::vec4(0, 1, 0, 0));
-		glm::vec3 left_direction = glm::vec3(camera_orientation * glm::vec4(1, 0, 0, 0));
-
-		float avg_dist = glm::max(camera_prox, 0.0001f);
-		float move_amount = 0.015f * avg_dist;
+	float avg_dist = glm::max(camera_prox, 0.0001f);
+	float move_amount = 0.015f * avg_dist;
 		
-		// triggers
-		float trigger_sum = expo(pad->State.rt) - expo(pad->State.lt);
-		camera_eye -= (move_amount * trigger_sum) * forward_direction;
+	// triggers
+	float trigger_sum = expo(pad->State.rt) - expo(pad->State.lt);
+	camera_eye -= (move_amount * trigger_sum) * forward_direction;
 
-		camera_eye += (move_amount * expo(pad->State.lstick_y)) * camera_up;
+	camera_eye += (move_amount * expo(pad->State.lstick_y)) * camera_up;
 
-		// rstick y
-		camera_orientation *= glm::rotate(glm::mat4(1.0), 0.03f * expo(pad->State.rstick_y), glm::vec3(1, 0, 0));
+	// rstick y
+	camera_orientation *= glm::rotate(glm::mat4(1.0), 0.03f * expo(pad->State.rstick_y), glm::vec3(1, 0, 0));
 
-		// rstick x
-		camera_orientation *= glm::rotate(glm::mat4(1.0), 0.06f * expo(pad->State.rstick_x), glm::vec3(0, -1, 0));
+	// rstick x
+	camera_orientation *= glm::rotate(glm::mat4(1.0), 0.06f * expo(pad->State.rstick_x), glm::vec3(0, -1, 0));
 
-		// lstick x
-		camera_orientation *= glm::rotate(glm::mat4(1.0), 0.03f * expo(pad->State.lstick_x), glm::vec3(0, 0, -1));
+	// lstick x
+	camera_orientation *= glm::rotate(glm::mat4(1.0), 0.03f * expo(pad->State.lstick_x), glm::vec3(0, 0, -1));
 
 
-		camera_target = camera_eye + glm::vec3(camera_orientation * glm::vec4(0, -1, 0, 0));
-		camera_up = glm::vec3(camera_orientation * glm::vec4(0, 0, 1, 0));
+	camera_target = camera_eye + glm::vec3(camera_orientation * glm::vec4(0, -1, 0, 0));
+	camera_up = glm::vec3(camera_orientation * glm::vec4(0, 0, 1, 0));
 
-		glm::vec3 velocity = camera_eye - camera_eye_prev;
-		camera_eye_prev = glm::vec3(camera_eye);
+	glm::vec3 velocity = camera_eye - camera_eye_prev;
+	camera_eye_prev = glm::vec3(camera_eye);
 
-		float accel = length(velocity - camera_velocity_prev);
-		camera_velocity_prev = glm::vec3(velocity);
+	float accel = length(velocity - camera_velocity_prev);
+	camera_velocity_prev = glm::vec3(velocity);
 
-		pad->vibrate(accel * 100.0f, accel * 100.0f);
-
-		//printf("%f\n", force);
-	}
+	pad->vibrate(accel * 100.0f, accel * 100.0f);
 }
 
 void force_redraw(int value) {
 	glutPostRedisplay();
 	
 	// update gamepad & stuff
-	update_gamepad();
+	if (pad->is_connected()) {
+		pad->update();
+
+		if (bulb_settings.menu_open) {
+			bulb_settings.gamepad_update(&pad->State);
+		} else {
+			if (pad->State.buttons_last[GamePad_Button_START] && pad->State.buttons[GamePad_Button_START]) {
+				bulb_settings.menu_open = true;
+			} else {
+				update_gamepad();
+			}
+		}
+	}
+
+
 
 	glutTimerFunc(20, force_redraw, 0);
 }
@@ -230,6 +235,8 @@ void reshape(int width, int height) {
 	ASPECT = (float)SCREEN_W / (float)SCREEN_H;
 
 	glViewport(0, 0, (GLsizei)width, (GLsizei)height);
+
+	drawing_tools.reshape(SCREEN_W, SCREEN_H);
 }
 
 int main(int argc, const char * argv[]) {
@@ -239,7 +246,7 @@ int main(int argc, const char * argv[]) {
 	glutInitWindowSize(SCREEN_W, SCREEN_H);
 	glutCreateWindow("BULB");
 	//glutFullScreen();
-	glClearColor(1.0, 1.0, 1.0, 0.0);
+	glClearColor(1.0, 1.0, 1.0, 1.0);
 
 	GLuint error = glewInit();
 
@@ -250,9 +257,9 @@ int main(int argc, const char * argv[]) {
 
 	glEnable(GL_BLEND);
 
-	BulbShader bs;
-	bs.load("bulb.vert", "bulb.frag");
-	load_shader("bulb.vert", "bulb_temp.frag", &program_fp32);
+	bulb_shader.load("bulb.vert", "bulb.frag");
+	program_fp32 = bulb_shader.program_fp32;
+	//load_shader("bulb.vert", "bulb_temp.frag", &program_fp32);
 
 	glutMainLoop();
 

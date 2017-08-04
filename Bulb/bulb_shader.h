@@ -7,6 +7,7 @@
 #include <time.h>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include <glew.h>
 #include <glut.h>
@@ -17,6 +18,8 @@
 
 using namespace std;
 
+#define M_PI 3.14159265359f
+
 enum SHADER_VAR_TYPE {
 	VAR_BOOL,
 	VAR_INT,
@@ -25,7 +28,6 @@ enum SHADER_VAR_TYPE {
 	VAR_VEC3,
 	VAR_VEC4
 };
-
 
 class ShaderVariable {
 public:
@@ -36,15 +38,25 @@ public:
 	SHADER_VAR_TYPE var_type;
 
 	bool var_bool[3];
-	int var_int[3];
-	float var_float[3];
-	glm::vec2 var_vec2[3];
-	glm::vec3 var_vec3[3];
-	glm::vec4 var_vec4[3];
+	int var_int[4];
+	float var_float[4];
+	glm::vec2 var_vec2[4];
+	glm::vec3 var_vec3[4];
+	glm::vec4 var_vec4[4];
+
+	bool update;
+
+	bool animate;
+	float animate_scale;
+	float animate_offset;
+	float animate_speed;
+	float animate_pos;
 
 	ShaderVariable(string code);
 
-	void update_program_variable(GLuint *program);
+	void update_program_variable(GLuint program);
+
+	string get_string();
 };
 
 
@@ -55,8 +67,10 @@ public:
 	vector<ShaderVariable> shader_variables;
 	// stuct for camera pos/orient variables
 
-	
+	void update_shader_variables();
 
+	void draw();
+	
 	void load(char *vertex, char *fragment);
 };
 

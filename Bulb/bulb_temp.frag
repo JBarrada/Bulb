@@ -1,19 +1,28 @@
 #version 400
 
-uniform int Iterations = 10;
-uniform int ColorIterations = 3;
-uniform float MinRad2 = 0.25;
-uniform float Scale = 1.5;
+// Standard matrices
 
-vec4 orbitTrap = vec4(10000.0);
+// Return rotation matrix for rotating around vector v by angle
+mat3  rotationMatrix3(vec3 v, float angle)
+{
+	float c = cos(radians(angle));
+	float s = sin(radians(angle));
+	
+	return mat3(c + (1.0 - c) * v.x * v.x, (1.0 - c) * v.x * v.y - s * v.z, (1.0 - c) * v.x * v.z + s * v.y,
+		(1.0 - c) * v.x * v.y + s * v.z, c + (1.0 - c) * v.y * v.y, (1.0 - c) * v.y * v.z - s * v.x,
+		(1.0 - c) * v.x * v.z - s * v.y, (1.0 - c) * v.y * v.z + s * v.x, c + (1.0 - c) * v.z * v.z
+		);
+}
 
-uniform float Phi = 1.618; //slider[-5,1.618,5]
+mat3 rotationMatrixXYZ(vec3 v) {
+	return rotationMatrix3(vec3(1.0,0.0,0.0), v.x)*
+	rotationMatrix3(vec3(0.0,1.0,0.0), v.y)*
+	rotationMatrix3(vec3(0.0,0.0,1.0), v.z);
+}
 
-vec3 n1 = normalize(vec3(-Phi,Phi-1.0,1.0));
-vec3 n2 = normalize(vec3(1.0,-Phi,Phi+1.0));
-vec3 n3 = normalize(vec3(0.0,0.0,-1.0));
-
-mat4  rotationMatrix(vec3 v, float angle) {
+// Return rotation matrix for rotating around vector v by angle
+mat4  rotationMatrix(vec3 v, float angle)
+{
 	float c = cos(radians(angle));
 	float s = sin(radians(angle));
 	
@@ -37,43 +46,60 @@ mat4 scale4(float s) {
 		0.0,0.0,0.0,1.0);
 }
 
-uniform vec3 Offset = vec3(0.850650808,0.525731112,0);
+uniform int Iterations = 15; //~Fractal,default,15|0|200
+uniform float Gap = 1.0; //~Fractal,default,1|0|1
 
-uniform float Angle1 = 0; //slider[-180,0,180]
-uniform vec3 Rot1 = vec3(1); //slider[(-1,-1,-1),(1,1,1),(1,1,1)]
-uniform float Angle2 = 0; //slider[-180,0,180]
-uniform vec3 Rot2 = vec3(1); //slider[(-1,-1,-1),(1,1,1),(1,1,1)]
+uniform vec3 Rot1 = vec3(0.0); //~Fractal,default,0,0,0|-180,-180,-180|180,180,180
+uniform vec3 Rot2 = vec3(0.0); //~Fractal,default,0,0,0|-180,-180,-180|180,180,180
 
-mat4 fracRotation2 = rotationMatrix(normalize(Rot2), Angle2);
-mat4 fracRotation1 = rotationMatrix(normalize(Rot1), Angle1);
-mat4 M = fracRotation2 * translate(Offset) * scale4(Scale) * translate(-Offset) * fracRotation1;
+mat3 fracRotation1;
+mat3 fracRotation2;
 
+vec4 orbitTrap = vec4(10000.0);
 
-float DE(vec3 z)
-{
-	float t;
+void init() {
+	fracRotation1 = rotationMatrixXYZ(vec3(Rot1.x,0.0,0.0))*rotationMatrixXYZ(vec3(0.0,Rot1.y,0.0))*rotationMatrixXYZ(vec3(0.0,0.0,Rot1.z));
+	fracRotation2 = rotationMatrixXYZ(vec3(Rot2.x,0.0,0.0))*rotationMatrixXYZ(vec3(0.0,Rot2.y,0.0))*rotationMatrixXYZ(vec3(0.0,0.0,Rot2.z));
+}
+
+float baseshape(vec3 p, float s) {
+	p.yz = abs(p.yz);
+	float t = 2.0 * max(0.0, dot(p.xy, vec2(-sqrt(3.0) * 0.5, 0.5)));
+    p.xy -= t * vec2(-sqrt(3.0), 1.0) * 0.5;
+	p.y = abs(p.y);
 	
-	// Prefolds.
-	z = abs(z);
-	t=dot(z,n1); if (t>0.0) { z-=2.0*t*n1; }
-	t=dot(z,n2); if (t>0.0) { z-=2.0*t*n2; }
-	t =dot(z,n3); if (t>0.0) { z-=2.0*t*n3; }
-	t =dot(z,n2); if (t>0.0) { z-=2.0*t*n2; }
+	if (p.y > p.z) p.yz = p.zy;
 	
-	// Iterate to compute the distance estimator.
-	int n = 0;
-	while (n < Iterations) {
-		// Fold
-		z = abs(z);
-		t =dot(z,n1); if (t>0.0) { z-=2.0*t*n1; }
+	p -= s * vec3(0.5*sqrt(3.0), 1.5, 1.5);
+	
+	if (p.z > p.x) p.xz = p.zx;
+	
+	if (p.x < 0.0) return p.x;
+	
+	p.yz = max(vec2(0.0), p.yz);
+	return length(p);
+}
+
+float DE(vec3 p) {
+	float dd = 1.0;
+	for(int i = 0; i<Iterations; i++){
+		p=fracRotation1*p;
+		p.yz=abs(p.yz); 
+		float t = 2.0 * max(0.0, dot(p.xy, vec2(-sqrt(3.0) * 0.5, 0.5)) );
+		p.xy -= t*vec2(-sqrt(3.0),1.0)*0.5;
+		p.y=abs(p.y);
 		
-		// Rotate, scale, rotate (we need to cast to a 4-component vector).
-		z = (M*vec4(z,1.0)).xyz;
-		n++;
-		if (n < ColorIterations) orbitTrap = min(orbitTrap, abs(vec4(z,dot(z,z))));
+		if(p.y>p.z) p.yz=p.zy;
+		p.y=abs(p.y-0.5)+0.5; 
+		p-=vec3(0.5*sqrt(3.0),1.5,1.5);
+		
+		p*=3.0;
+		dd*=1.0/3.0;
+		p+=vec3(0.5*sqrt(3.0),1.5,1.5);
+		p=fracRotation2*p;
+		orbitTrap = min(orbitTrap, abs(vec4(p.xyz,dot(p,p))));
 	}
-	
-	return (length(z) ) * pow(Scale,  float(-n));
+	return dd*baseshape(p,Gap);
 }
 
 // Camera
@@ -83,9 +109,11 @@ in vec3 camera_ray;
 
 // Raytrace
 uniform float Dither = 0.1; //~Raytrace,default,0.1|0|1|
-uniform float Detail = -2.5; //~Raytrace,default,-2|5|-7,0|
+uniform float Detail = -2.5; //~Raytrace,default,-2.5|-7|0|
+uniform float DetailAO = -0.5; //~Raytrace,default,-0.5|-7|0|
 
 float minDist = pow(10.0, Detail); 
+float aoEps = pow(10.0, DetailAO);
 float MaxDistance = 100000.0;
 
 uniform int MaxRaySteps = 110; //~Raytrace,default,110|0|500|
@@ -123,8 +151,17 @@ uniform float Specular = 0.4; //~Lighting,default,0.4|0|1|
 uniform float SpecularExp = 16.0; //~Lighting,default,16|0|100|
 uniform float SpecularMax = 10.0; //~Lighting,default,10|0|100|
 
-uniform float Fog = 0.0; //~Lighting,default,0.5|0|2|
+uniform vec4 AO = vec4(0.0,0.0,0.0,0.7); //~Lighting,color4,0,0,0,0.7|0,0,0,0|1,1,1,1|
 
+uniform float Fog = 0.4; //~Lighting,default,0.4|0|2|
+
+
+float fSteps = 0.0;
+
+float DEF(vec3 p) {
+	fSteps++;
+	return DE(p);
+}
 
 float shadow(vec3 pos, vec3 sdir, float eps) {
 	float totalDist =2.0*eps;
@@ -165,6 +202,25 @@ vec3 lighting(vec3 n, vec3 color, vec3 pos, vec3 dir, float eps, out float shado
 	return (SpotLight.xyz*diffuse+CamLight.xyz*ambient+ specular*SpotLight.xyz)*color;
 }
 
+float rand(vec2 co){
+	return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
+float ambientOcclusion(vec3 p, vec3 n) {
+	float ao = 0.0;
+	float de = DEF(p);
+	float wSum = 0.0;
+	float w = 1.0;
+	float d = 1.0-(Dither*rand(p.xy));
+	for (float i =1.0; i <6.0; i++) {
+		float D = (DEF(p+ d*n*i*i*aoEps) -de)/(d*i*i*aoEps);
+		w *= 0.6;
+		ao += w*clamp(1.0-D,0.0,1.0);
+		wSum += w;
+	}
+	return clamp(AO.w*ao/wSum, 0.0, 1.0);
+}
+
 vec3 cycle(vec3 c, float s) {
 	return vec3(0.5)+0.5*vec3(cos(s*Cycles+c.x),cos(s*Cycles+c.y),cos(s*Cycles+c.z));
 }
@@ -199,10 +255,6 @@ vec3 normal(vec3 pos, float normalDistance) {
 	return n;
 }
 
-float rand(vec2 co){
-	return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-}
-
 vec4 trace(vec3 from, vec3 dir, inout vec3 hit, inout vec3 hitNormal) {
 	hit = vec3(0.0);
 	orbitTrap = vec4(10000.0);
@@ -219,7 +271,7 @@ vec4 trace(vec3 from, vec3 dir, inout vec3 hit, inout vec3 hitNormal) {
 	for (steps=0; steps<MaxRaySteps; steps++) {
 		orbitTrap = vec4(10000.0);
 		vec3 p = from + totalDist * direction;
-		dist = DE(p);
+		dist = DEF(p);
 		dist *= FudgeFactor;
 		
 		if (steps == 0) { 
@@ -232,11 +284,13 @@ vec4 trace(vec3 from, vec3 dir, inout vec3 hit, inout vec3 hitNormal) {
 			break;
 		}
 		if (totalDist > MaxDistance) {
+			fSteps -= (totalDist-MaxDistance)/dist;
 			break;
 		}
 	}
 
 	vec3 hitColor;
+	float stepFactor = clamp(fSteps / 20.0,0.0,1.0);
 	vec3 backColor = BackgroundColor;
 	
 	if (steps == MaxRaySteps) orbitTrap = vec4(0.0);
@@ -244,11 +298,16 @@ vec4 trace(vec3 from, vec3 dir, inout vec3 hit, inout vec3 hitNormal) {
 	float shadowStrength = 0.0;
 	if (dist < epsModified) {
 		hit = from + totalDist * direction;
+		float ao = AO.w*stepFactor;
 		
 		// Orbit coloring
 		hitColor = getColor();
 		
 		// Lighting
+		if (DetailAO < 0.0) {
+			ao = ambientOcclusion(hit, hitNormal);
+		}
+		hitColor = mix(hitColor, AO.xyz, ao);
 		hitNormal= normal(hit-NormalBackStep*epsModified*direction, epsModified);
 		hitColor = lighting(hitNormal, hitColor, hit, direction, epsModified, shadowStrength);
 		
@@ -264,6 +323,8 @@ vec4 trace(vec3 from, vec3 dir, inout vec3 hit, inout vec3 hitNormal) {
 }
 
 void main() {
+	init(); // some fractals require init
+	
 	vec3 hit_point;
 	vec3 hit_normal;
 	gl_FragColor = trace(camera_eye, camera_ray, hit_point, hit_normal);

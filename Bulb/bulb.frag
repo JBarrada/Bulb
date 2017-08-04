@@ -1,6 +1,8 @@
 #version 400
 
-#include "brocc.frag"
+#include "math_utils.frag"
+
+#include "cross_menger.frag"
 
 // Camera
 uniform vec3 camera_eye;
@@ -9,9 +11,11 @@ in vec3 camera_ray;
 
 // Raytrace
 uniform float Dither = 0.1; //~Raytrace,default,0.1|0|1|
-uniform float Detail = -2.5; //~Raytrace,default,-2|5|-7,0|
+uniform float Detail = -2.5; //~Raytrace,default,-2.5|-7|0|
+uniform float DetailAO = -0.5; //~Raytrace,default,-0.5|-7|0|
 
 float minDist = pow(10.0, Detail); 
+float aoEps = pow(10.0, DetailAO);
 float MaxDistance = 100000.0;
 
 uniform int MaxRaySteps = 110; //~Raytrace,default,110|0|500|
@@ -49,8 +53,17 @@ uniform float Specular = 0.4; //~Lighting,default,0.4|0|1|
 uniform float SpecularExp = 16.0; //~Lighting,default,16|0|100|
 uniform float SpecularMax = 10.0; //~Lighting,default,10|0|100|
 
-uniform float Fog = 0.0; //~Lighting,default,0.5|0|2|
+uniform vec4 AO = vec4(0.0,0.0,0.0,0.7); //~Lighting,color4,0,0,0,0.7|0,0,0,0|1,1,1,1|
 
+uniform float Fog = 0.4; //~Lighting,default,0.4|0|2|
+
+
+float fSteps = 0.0;
+
+float DEF(vec3 p) {
+	fSteps++;
+	return DE(p);
+}
 
 float shadow(vec3 pos, vec3 sdir, float eps) {
 	float totalDist =2.0*eps;
@@ -91,6 +104,25 @@ vec3 lighting(vec3 n, vec3 color, vec3 pos, vec3 dir, float eps, out float shado
 	return (SpotLight.xyz*diffuse+CamLight.xyz*ambient+ specular*SpotLight.xyz)*color;
 }
 
+float rand(vec2 co){
+	return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
+float ambientOcclusion(vec3 p, vec3 n) {
+	float ao = 0.0;
+	float de = DEF(p);
+	float wSum = 0.0;
+	float w = 1.0;
+	float d = 1.0-(Dither*rand(p.xy));
+	for (float i =1.0; i <6.0; i++) {
+		float D = (DEF(p+ d*n*i*i*aoEps) -de)/(d*i*i*aoEps);
+		w *= 0.6;
+		ao += w*clamp(1.0-D,0.0,1.0);
+		wSum += w;
+	}
+	return clamp(AO.w*ao/wSum, 0.0, 1.0);
+}
+
 vec3 cycle(vec3 c, float s) {
 	return vec3(0.5)+0.5*vec3(cos(s*Cycles+c.x),cos(s*Cycles+c.y),cos(s*Cycles+c.z));
 }
@@ -125,10 +157,6 @@ vec3 normal(vec3 pos, float normalDistance) {
 	return n;
 }
 
-float rand(vec2 co){
-	return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-}
-
 vec4 trace(vec3 from, vec3 dir, inout vec3 hit, inout vec3 hitNormal) {
 	hit = vec3(0.0);
 	orbitTrap = vec4(10000.0);
@@ -145,7 +173,7 @@ vec4 trace(vec3 from, vec3 dir, inout vec3 hit, inout vec3 hitNormal) {
 	for (steps=0; steps<MaxRaySteps; steps++) {
 		orbitTrap = vec4(10000.0);
 		vec3 p = from + totalDist * direction;
-		dist = DE(p);
+		dist = DEF(p);
 		dist *= FudgeFactor;
 		
 		if (steps == 0) { 
@@ -158,11 +186,13 @@ vec4 trace(vec3 from, vec3 dir, inout vec3 hit, inout vec3 hitNormal) {
 			break;
 		}
 		if (totalDist > MaxDistance) {
+			fSteps -= (totalDist-MaxDistance)/dist;
 			break;
 		}
 	}
 
 	vec3 hitColor;
+	float stepFactor = clamp(fSteps / 20.0,0.0,1.0);
 	vec3 backColor = BackgroundColor;
 	
 	if (steps == MaxRaySteps) orbitTrap = vec4(0.0);
@@ -170,11 +200,16 @@ vec4 trace(vec3 from, vec3 dir, inout vec3 hit, inout vec3 hitNormal) {
 	float shadowStrength = 0.0;
 	if (dist < epsModified) {
 		hit = from + totalDist * direction;
+		float ao = AO.w*stepFactor;
 		
 		// Orbit coloring
 		hitColor = getColor();
 		
 		// Lighting
+		if (DetailAO < 0.0) {
+			ao = ambientOcclusion(hit, hitNormal);
+		}
+		hitColor = mix(hitColor, AO.xyz, ao);
 		hitNormal= normal(hit-NormalBackStep*epsModified*direction, epsModified);
 		hitColor = lighting(hitNormal, hitColor, hit, direction, epsModified, shadowStrength);
 		
@@ -190,6 +225,8 @@ vec4 trace(vec3 from, vec3 dir, inout vec3 hit, inout vec3 hitNormal) {
 }
 
 void main() {
+	init(); // some fractals require init
+	
 	vec3 hit_point;
 	vec3 hit_normal;
 	gl_FragColor = trace(camera_eye, camera_ray, hit_point, hit_normal);

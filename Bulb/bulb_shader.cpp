@@ -51,6 +51,14 @@ ShaderVariable::ShaderVariable(string code) {
 	category = "";
 	type = "";
 
+	update = true;
+
+	animate = false;
+	animate_pos = 0.0;
+	animate_scale = 1.0;
+	animate_offset = 0.0;
+	animate_speed = 0.0;
+
 	if (code.substr(0, 7) == "uniform") {
 		int code_pos = 8;
 
@@ -84,28 +92,111 @@ ShaderVariable::ShaderVariable(string code) {
 			var_int[0] = stoi(var_default);
 			var_int[1] = stoi(var_min);
 			var_int[2] = stoi(var_max);
+			var_int[3] = var_int[2] - var_int[1];
 		}
 		if (var_type == VAR_FLOAT) {
 			var_float[0] = stof(var_default);
 			var_float[1] = stof(var_min);
 			var_float[2] = stof(var_max);
+			var_float[3] = var_float[2] - var_float[1];
 		}
 		if (var_type == VAR_VEC2) {
 			var_vec2[0] = stovec2(var_default);
 			var_vec2[1] = stovec2(var_min);
 			var_vec2[2] = stovec2(var_max);
+			var_vec2[3] = var_vec2[2] - var_vec2[1];
 		}
 		if (var_type == VAR_VEC3) {
 			var_vec3[0] = stovec3(var_default);
 			var_vec3[1] = stovec3(var_min);
 			var_vec3[2] = stovec3(var_max);
+			var_vec3[3] = var_vec3[2] - var_vec3[1];
 		}
 		if (var_type == VAR_VEC4) {
 			var_vec4[0] = stovec4(var_default);
 			var_vec4[1] = stovec4(var_min);
 			var_vec4[2] = stovec4(var_max);
+			var_vec4[3] = var_vec4[2] - var_vec4[1];
 		}
 	}
+}
+
+void ShaderVariable::update_program_variable(GLuint program) {
+	const char *var_name = name.c_str();
+	GLint var_pointer = glGetUniformLocation(program, var_name);
+
+	if (animate) {
+		animate_pos += 0.025f * animate_speed;
+		if (animate_pos > M_PI*2.0)
+			animate_pos -= M_PI*2.0;
+
+		float animate_wave = (((sin(animate_pos) * animate_scale) + 1.0f) / 2.0f) + (animate_offset / 2.0f);
+		if (var_type == VAR_INT) {
+			var_int[0] = (int)(animate_wave * var_int[3]) + var_int[1];
+		}
+		if (var_type == VAR_FLOAT) {
+			var_float[0] = (animate_wave * var_float[3]) + var_float[1];
+		}
+		if (var_type == VAR_VEC2) {
+			var_vec2[0] = (animate_wave * var_vec2[3]) + var_vec2[1];
+		}
+		if (var_type == VAR_VEC3) {
+			var_vec3[0] = (animate_wave * var_vec3[3]) + var_vec3[1];
+		}
+		if (var_type == VAR_VEC4) {
+			//glUniform4fv(var_pointer, 1, (float*)&var_vec4[0]);
+		}
+	}
+
+	if (var_type == VAR_BOOL) {
+		glUniform1i(var_pointer, (GLint)var_bool[0]);
+	}
+	if (var_type == VAR_INT) {
+		glUniform1i(var_pointer, (GLint)var_int[0]);
+	}
+	if (var_type == VAR_FLOAT) {
+		glUniform1f(var_pointer, (GLfloat)var_float[0]);
+	}
+	if (var_type == VAR_VEC2) {
+		glUniform2fv(var_pointer, 1, (float*)&var_vec2[0]);
+	}
+	if (var_type == VAR_VEC3) {
+		glUniform3fv(var_pointer, 1, (float*)&var_vec3[0]);
+	}
+	if (var_type == VAR_VEC4) {
+		glUniform4fv(var_pointer, 1, (float*)&var_vec4[0]);
+	}
+
+	update = false;
+}
+
+string ShaderVariable::get_string() {
+	char text[50];
+
+	if (var_type == VAR_BOOL) {
+		if (var_bool[0])
+			sprintf_s(text, "true");
+		else
+			sprintf_s(text, "false");
+	}
+	if (var_type == VAR_INT) {
+		sprintf_s(text, "%d", var_int[0]);
+	}
+	if (var_type == VAR_FLOAT) {
+		sprintf_s(text, "%f", var_float[0]);
+	}
+	if (var_type == VAR_VEC2) {
+		sprintf_s(text, "%0.2f, %0.2f", var_vec2[0].x, var_vec2[0].y);
+	}
+	if (var_type == VAR_VEC3) {
+		sprintf_s(text, "%0.2f, %0.2f, %0.2f", var_vec3[0].x, var_vec3[0].y, var_vec3[0].z);
+	}
+	if (var_type == VAR_VEC4) {
+		sprintf_s(text, "%0.2f, %0.2f, %0.2f, %0.2f", var_vec4[0].x, var_vec4[0].y, var_vec4[0].z, var_vec4[0].w);
+	}
+
+	string s(text);
+	return s;
 }
 
 void BulbShader::load(char *vertex, char *fragment) {
@@ -148,4 +239,26 @@ void BulbShader::load(char *vertex, char *fragment) {
 
 	frag_orig_file.close();
 	frag_temp_file.close();
+
+	std::sort(shader_variables.begin(), shader_variables.end(), [](const ShaderVariable& lhs, const ShaderVariable& rhs){ return lhs.category < rhs.category; });
+
+	load_shader(vertex, "bulb_temp.frag", &program_fp32);
+}
+
+void BulbShader::draw() {
+	glUseProgram(program_fp32);
+
+	glBegin(GL_QUADS);
+	glVertex2f(-1, -1);
+	glVertex2f(1, -1);
+	glVertex2f(1, 1);
+	glVertex2f(-1, 1);
+	glEnd();
+}
+
+void BulbShader::update_shader_variables() {
+	for (int i = 0; i < (int)shader_variables.size(); i++) {
+		if (shader_variables[i].update || shader_variables[i].animate) 
+			shader_variables[i].update_program_variable(program_fp32);
+	}
 }
