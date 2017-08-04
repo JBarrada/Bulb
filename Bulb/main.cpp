@@ -59,17 +59,6 @@ void update_program_variables() {
 	
 	GLint prog_camera_aspect = glGetUniformLocation(program_fp32, "camera_aspect");
 	glUniform1f(prog_camera_aspect, ASPECT);
-
-	
-	//GLint prog_de_iterations = glGetUniformLocation(program_fp32, "de_iterations");
-	//glUniform1i(prog_de_iterations, de_iterations);
-	//
-	//GLint prog_max_ray_steps = glGetUniformLocation(program_fp32, "max_ray_steps");
-	//glUniform1i(prog_max_ray_steps, max_ray_steps);
-	//
-	//GLint prog_min_distance = glGetUniformLocation(program_fp32, "min_distance");
-	//glUniform1f(prog_min_distance, min_distance);
-	
 }
 
 float get_avg_dist() {
@@ -89,14 +78,27 @@ float get_avg_dist() {
 	}
 }
 
+void frame_counter() {
+	frames++;
+	float time_seconds = (float)(clock() - frame_time) / CLOCKS_PER_SEC;
+	if (time_seconds > 0.25) {
+		float fps = frames / time_seconds;
+		printf("%0.1f\n", fps);
+
+		frames = 0;
+		frame_time = clock();
+	}
+}
+
 void render() {
 	glClear(GL_COLOR_BUFFER_BIT);
 	
 	bulb_shader.draw();
 	update_program_variables();
+	bulb_shader.update_control_variables(camera_eye, camera_target, camera_up, camera_fov, ASPECT);
 	bulb_shader.update_shader_variables();
 
-	if (bulb_settings.menu_open) bulb_settings.draw();
+	if (bulb_settings.settings_open) bulb_settings.draw();
 
 	glutSwapBuffers();
 	
@@ -107,18 +109,8 @@ void render() {
 	} else {
 		camera_prox +=  (prox_delta / 8.0f);
 	}
-	
-	//printf("%f\n", camera_prox);
 
-	frames++;
-	float time_seconds = (float)(clock() - frame_time) / CLOCKS_PER_SEC;
-	if (time_seconds > 0.25) {
-		float fps = frames / time_seconds;
-		printf("%0.1f\n", fps);
-
-		frames = 0;
-		frame_time = clock();
-	}
+	//frame_counter();
 }
 
 void keyboard_down(unsigned char key, int x, int y) {
@@ -209,22 +201,19 @@ void update_gamepad() {
 void force_redraw(int value) {
 	glutPostRedisplay();
 	
-	// update gamepad & stuff
 	if (pad->is_connected()) {
 		pad->update();
 
-		if (bulb_settings.menu_open) {
+		if (bulb_settings.settings_open) {
 			bulb_settings.gamepad_update(&pad->State);
 		} else {
 			if (pad->State.buttons_last[GamePad_Button_START] && pad->State.buttons[GamePad_Button_START]) {
-				bulb_settings.menu_open = true;
+				bulb_settings.settings_open = true;
 			} else {
 				update_gamepad();
 			}
 		}
 	}
-
-
 
 	glutTimerFunc(20, force_redraw, 0);
 }
@@ -259,6 +248,8 @@ int main(int argc, const char * argv[]) {
 
 	bulb_shader.load("bulb.vert", "bulb.frag");
 	program_fp32 = bulb_shader.program_fp32;
+
+	bulb_settings.update_shader_variables();
 	//load_shader("bulb.vert", "bulb_temp.frag", &program_fp32);
 
 	glutMainLoop();

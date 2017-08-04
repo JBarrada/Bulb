@@ -2,9 +2,10 @@
 
 todo:
 -strafing
--setting sorting
+#setting sorting
 -saving
 -more fractals
 -add movespeed and rotation speed to settings
 -add hsv color setting changing
 -in app other fractal loading
+-fullscreen

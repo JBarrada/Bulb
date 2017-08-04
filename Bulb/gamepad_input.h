@@ -53,6 +53,13 @@ struct GamePadState {
 
 		lt = rt = 0.0;
 	}
+
+	bool pressed(GamePadButton button) {
+		return (!buttons_last[button] && buttons[button]);
+	}
+	bool released(GamePadButton button) {
+		return (buttons_last[button] && !buttons[button]);
+	}
 };
 
 class GamePadXbox {

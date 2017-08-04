@@ -9,8 +9,7 @@ string parse_to_next(string input, string target, int &pos) {
 				return output;
 			}
 		}
-		output += input[pos];
-		pos++;
+		output += input[pos++];
 	}
 
 	return output;
@@ -144,7 +143,7 @@ void ShaderVariable::update_program_variable(GLuint program) {
 			var_vec3[0] = (animate_wave * var_vec3[3]) + var_vec3[1];
 		}
 		if (var_type == VAR_VEC4) {
-			//glUniform4fv(var_pointer, 1, (float*)&var_vec4[0]);
+			var_vec4[0] = (animate_wave * var_vec4[3]) + var_vec4[1];
 		}
 	}
 
@@ -174,10 +173,7 @@ string ShaderVariable::get_string() {
 	char text[50];
 
 	if (var_type == VAR_BOOL) {
-		if (var_bool[0])
-			sprintf_s(text, "true");
-		else
-			sprintf_s(text, "false");
+		sprintf_s(text, ((var_bool[0]) ? "true" : "false"));
 	}
 	if (var_type == VAR_INT) {
 		sprintf_s(text, "%d", var_int[0]);
@@ -261,4 +257,21 @@ void BulbShader::update_shader_variables() {
 		if (shader_variables[i].update || shader_variables[i].animate) 
 			shader_variables[i].update_program_variable(program_fp32);
 	}
+}
+
+void BulbShader::update_control_variables(glm::vec3 camera_eye, glm::vec3 camera_target, glm::vec3 camera_up, float camera_fov, float camera_aspect) {
+	GLint prog_camera_pos = glGetUniformLocation(program_fp32, "camera_eye");
+	glUniform3fv(prog_camera_pos, 1, (float*)&camera_eye);
+	
+	GLint prog_camera_target = glGetUniformLocation(program_fp32, "camera_target");
+	glUniform3fv(prog_camera_target, 1, (float*)&camera_target);
+
+	GLint prog_camera_up = glGetUniformLocation(program_fp32, "camera_up");
+	glUniform3fv(prog_camera_up, 1, (float*)&camera_up);
+
+	GLint prog_camera_fov = glGetUniformLocation(program_fp32, "camera_fov");
+	glUniform1f(prog_camera_fov, camera_fov);
+	
+	GLint prog_camera_aspect = glGetUniformLocation(program_fp32, "camera_aspect");
+	glUniform1f(prog_camera_aspect, camera_aspect);
 }

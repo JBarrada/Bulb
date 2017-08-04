@@ -68,6 +68,7 @@ public:
 	// stuct for camera pos/orient variables
 
 	void update_shader_variables();
+	void update_control_variables(glm::vec3 camera_eye, glm::vec3 camera_target, glm::vec3 camera_up, float camera_fov, float camera_aspect);
 
 	void draw();
 	
