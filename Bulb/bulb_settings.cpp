@@ -21,8 +21,8 @@ BulbSettings::BulbSettings(vector<ShaderVariable> *shader_variables, DrawingTool
 	settings_open = false;
 	menu_open = 0;
 
-	settings_font = GLUT_BITMAP_HELVETICA_10;
-	font_height = 15;
+	settings_font = GLUT_BITMAP_HELVETICA_12;
+	font_height = 20;
 
 	shader_categories.clear();
 	shader_categories_indexes.clear();
@@ -159,7 +159,7 @@ void BulbSettings::control_menu_draw() {
 void BulbSettings::control_menu_gamepad_update(GamePadState *state) {
 	if (control_menu_item_selected) {
 		if (state->pressed(GamePad_Button_B)) {
-			shader_menu_item_selected = false;
+			control_menu_item_selected = false;
 		}
 
 		float dpad_step = 0.0f;
@@ -511,7 +511,7 @@ void BulbSettings::main_menu_gamepad_update(GamePadState *state) {
 	if (state->pressed(GamePad_Button_DPAD_DOWN)) {
 		main_menu_item_highlight--;
 	}
-	shader_menu_item_highlight = glm::clamp(shader_menu_item_highlight, 0, menu_items_size-1);
+	main_menu_item_highlight = glm::clamp(main_menu_item_highlight, 0, menu_items_size - 1 - 2);
 }
 
 void BulbSettings::draw() {
@@ -529,11 +529,11 @@ void BulbSettings::draw() {
 }
 
 void BulbSettings::gamepad_update(GamePadState *state) {
-	
 	if (menu_open == 0) {
 		main_menu_gamepad_update(state);
-	}
-	if (menu_open == 1) {
+	} else if (menu_open == 1) {
 		shader_menu_gamepad_update(state);
+	} else if (menu_open == 2) {
+		control_menu_gamepad_update(state);
 	}
 }

@@ -14,8 +14,8 @@
 #include "bulb_shader.h"
 #include "bulb_settings.h"
 
-int SCREEN_W = 100;
-int SCREEN_H = 100;
+int SCREEN_W = 800;
+int SCREEN_H = 600;
 float ASPECT = (float)SCREEN_W / (float)SCREEN_H;
 
 bool fullscreen = false;
