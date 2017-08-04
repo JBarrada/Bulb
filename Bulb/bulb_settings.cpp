@@ -1,10 +1,24 @@
 #include "bulb_settings.h"
 
+BulbControlSettings::BulbControlSettings() {
+	camera_fov = 1.5f;
+
+	control_expo_power = 2;
+	control_move_speed_forward = 0.015f;
+	control_move_speed_lateral = 0.010f;
+	control_move_speed_vertical = 0.010f;
+	control_pitch_speed = 0.03f;
+	control_roll_speed = 0.06f;
+	control_yaw_speed = 0.03f;
+
+	control_vibrate = true;
+}
+
 BulbSettings::BulbSettings(vector<ShaderVariable> *shader_variables, DrawingTools *drawing_tools) {
 	this->shader_variables = shader_variables;
 	this->drawing_tools = drawing_tools;
 
-	settings_open = true;
+	settings_open = false;
 	menu_open = 0;
 
 	settings_font = GLUT_BITMAP_HELVETICA_10;
@@ -13,13 +27,17 @@ BulbSettings::BulbSettings(vector<ShaderVariable> *shader_variables, DrawingTool
 	shader_categories.clear();
 	shader_categories_indexes.clear();
 
+	control_menu_item_highlight = 0;
+	control_menu_item_selected = false;
+	control_menu_item_sub_highlight = 0;
+
 	shader_menu_item_highlight = 0;
 	shader_menu_item_selected = false;
 	shader_menu_item_sub_highlight = 0;
 	shader_menu_category = 0;
 }
 
-void BulbSettings::update_shader_variables() {
+void BulbSettings::update_shader_categories() {
 	shader_categories.clear();
 	shader_categories_indexes.clear();
 
@@ -56,6 +74,170 @@ void BulbSettings::draw_slider_bar(float x, float y, float bar_width, float bar_
 	drawing_tools->text(x + 5, y + 5, settings_font, string(text));
 }
 
+void BulbSettings::control_menu_draw() {
+	string control_variable_names[] = {"camera_fov", "control_expo_power", "control_move_speed_forward", "control_move_speed_lateral", "control_move_speed_vertical", "control_pitch_speed", "control_roll_speed", "control_yaw_speed", "control_vibrate"};
+	
+	if (control_menu_item_selected) {
+		float bar_width = 500;
+		float bar_height = (float)font_height;
+
+		glColor4f(0.2f,0.2f,0.2f,1.0f);
+		drawing_tools->rectangle_filled(0, 0, bar_width, bar_height + 5);
+
+		string variable_string = "Control : " + control_variable_names[control_menu_item_highlight];
+		glColor4f(0.6f,0.6f,0.6f,1.0f);
+		drawing_tools->text(5, 5, settings_font, variable_string);
+
+		if (control_menu_item_highlight == 0) { // "camera_fov"
+			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, control_settings.camera_fov, 0.0f, 4.0f, "%f", true);
+		}
+		if (control_menu_item_highlight == 1) { // "control_expo_power"
+			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, (float)control_settings.control_expo_power, 0.0f, 10.0f, "%0.0f", true);
+		}
+		if (control_menu_item_highlight == 2) { // "control_move_speed_forward"
+			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, control_settings.control_move_speed_forward, 0.0f, 0.1f, "%f", true);
+		}
+		if (control_menu_item_highlight == 3) { // "control_move_speed_lateral"
+			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, control_settings.control_move_speed_lateral, 0.0f, 0.1f, "%f", true);
+		}
+		if (control_menu_item_highlight == 4) { // "control_move_speed_vertical"
+			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, control_settings.control_move_speed_vertical, 0.0f, 0.1f, "%f", true);
+		}
+		if (control_menu_item_highlight == 5) { // "control_pitch_speed"
+			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, control_settings.control_pitch_speed, 0.0f, 0.1f, "%f", true);
+		}
+		if (control_menu_item_highlight == 6) { // "control_roll_speed"
+			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, control_settings.control_roll_speed, 0.0f, 0.1f, "%f", true);
+		}
+		if (control_menu_item_highlight == 7) { // "control_yaw_speed"
+			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, control_settings.control_yaw_speed, 0.0f, 0.1f, "%f", true);
+		}
+		if (control_menu_item_highlight == 8) { // "control_vibrate"
+			glColor4f(0.4f,0.4f,0.4f,1.0f);
+			drawing_tools->rectangle_filled(0, bar_height + 5, bar_width, bar_height);
+
+			glColor4f(1.0f,1.0f,1.0f,1.0f);
+			drawing_tools->text(5, bar_height + 10, settings_font, (control_settings.control_vibrate) ? "true" : "false");
+		}
+	} else {
+		int items_size = 9;
+
+		glColor4f(0.2f,0.2f,0.2f,1.0f);
+		drawing_tools->rectangle_filled(0, 0, 250, (float)(items_size + 1.0f) * font_height + 5);
+
+		glColor4f(0.3f,0.3f,0.3f,1.0f);
+		drawing_tools->rectangle_filled(250, 0, 200, (float)(items_size + 1.0f) * font_height + 5);
+
+		glColor4f(0.4f,0.4f,0.4f,1.0f);
+		drawing_tools->rectangle_filled(0, (control_menu_item_highlight + 1) * font_height, 250, font_height);
+
+		glColor4f(0.6f,0.6f,0.6f,1.0f);
+		drawing_tools->text(5, 0 * font_height + 5, settings_font, "Control Settings");
+
+		for (int i = 0; i < items_size; i++) {
+			string variable_string = "Control : " + control_variable_names[i];
+
+			glColor4f(1.0f,1.0f,1.0f,1.0f);
+			drawing_tools->text(5, (i + 1) * font_height + 5, settings_font, variable_string);
+			char text[50];
+
+			if (i == 0) sprintf_s(text, "%f", control_settings.camera_fov);
+			if (i == 1) sprintf_s(text, "%d", control_settings.control_expo_power);
+			if (i == 2) sprintf_s(text, "%f", control_settings.control_move_speed_forward);
+			if (i == 3) sprintf_s(text, "%f", control_settings.control_move_speed_lateral);
+			if (i == 4) sprintf_s(text, "%f", control_settings.control_move_speed_vertical);
+			if (i == 5) sprintf_s(text, "%f", control_settings.control_pitch_speed);
+			if (i == 6) sprintf_s(text, "%f", control_settings.control_roll_speed);
+			if (i == 7) sprintf_s(text, "%f", control_settings.control_yaw_speed);
+			if (i == 8) sprintf_s(text, (control_settings.control_vibrate) ? "true" : "false");
+
+			drawing_tools->text(255, (i + 1) * font_height + 5, settings_font, string(text));
+		}
+	}
+}
+
+void BulbSettings::control_menu_gamepad_update(GamePadState *state) {
+	if (control_menu_item_selected) {
+		if (state->pressed(GamePad_Button_B)) {
+			shader_menu_item_selected = false;
+		}
+
+		float dpad_step = 0.0f;
+		if (state->pressed(GamePad_Button_DPAD_RIGHT)) {
+			dpad_step += 1.0f;
+		}
+		if (state->pressed(GamePad_Button_DPAD_LEFT)) {
+			dpad_step -= 1.0f;
+		}
+
+		/*
+		if (state->pressed(GamePad_Button_DPAD_UP)) {
+			control_menu_item_sub_highlight++;
+		}
+		if (state->pressed(GamePad_Button_DPAD_DOWN)) {
+			control_menu_item_sub_highlight--;
+		}
+		*/
+
+		if (control_menu_item_highlight == 0) { // "camera_fov"
+			control_settings.camera_fov += dpad_step;
+			control_settings.camera_fov += (state->rt - state->lt) * (4.0f / 100.0f);
+			control_settings.camera_fov = glm::clamp(control_settings.camera_fov, 0.0f, 4.0f);
+		}
+		if (control_menu_item_highlight == 1) { // "control_expo_power"
+			control_settings.control_expo_power += (int)dpad_step;
+			control_settings.control_expo_power += (int)((state->rt - state->lt) * (10.0f / 100.0f));
+			control_settings.control_expo_power = glm::clamp(control_settings.control_expo_power, 0, 10);
+		}
+		if (control_menu_item_highlight == 2) { // "control_move_speed_forward"
+			control_settings.control_move_speed_forward += (state->rt - state->lt) * (0.1f / 100.0f);
+			control_settings.control_move_speed_forward = glm::clamp(control_settings.control_move_speed_forward, 0.0f, 0.1f);
+		}
+		if (control_menu_item_highlight == 3) { // "control_move_speed_lateral"
+			control_settings.control_move_speed_lateral += (state->rt - state->lt) * (0.1f / 100.0f);
+			control_settings.control_move_speed_lateral = glm::clamp(control_settings.control_move_speed_lateral, 0.0f, 0.1f);
+		}
+		if (control_menu_item_highlight == 4) { // "control_move_speed_vertical"
+			control_settings.control_move_speed_vertical += (state->rt - state->lt) * (0.1f / 100.0f);
+			control_settings.control_move_speed_vertical = glm::clamp(control_settings.control_move_speed_vertical, 0.0f, 0.1f);
+		}
+		if (control_menu_item_highlight == 5) { // "control_pitch_speed"
+			control_settings.control_pitch_speed += (state->rt - state->lt) * (0.1f / 100.0f);
+			control_settings.control_pitch_speed = glm::clamp(control_settings.control_pitch_speed, 0.0f, 0.1f);
+		}
+		if (control_menu_item_highlight == 6) { // "control_roll_speed"
+			control_settings.control_roll_speed += (state->rt - state->lt) * (0.1f / 100.0f);
+			control_settings.control_roll_speed = glm::clamp(control_settings.control_roll_speed, 0.0f, 0.1f);
+		}
+		if (control_menu_item_highlight == 7) { // "control_yaw_speed"
+			control_settings.control_yaw_speed += (state->rt - state->lt) * (0.1f / 100.0f);
+			control_settings.control_yaw_speed = glm::clamp(control_settings.control_yaw_speed, 0.0f, 0.1f);
+		}
+		if (control_menu_item_highlight == 8) { // "control_vibrate"
+			if (dpad_step) {
+				control_settings.control_vibrate = !control_settings.control_vibrate;
+			}
+		}
+	} else {
+		if (state->pressed(GamePad_Button_A)) {
+			control_menu_item_selected = true;
+			control_menu_item_sub_highlight = 0;
+		}
+		if (state->pressed(GamePad_Button_B)) {
+			menu_open = 0; // main menu
+		}
+
+		int items_size = 9;
+		if (state->pressed(GamePad_Button_DPAD_UP)) {
+			control_menu_item_highlight++;
+		}
+		if (state->pressed(GamePad_Button_DPAD_DOWN)) {
+			control_menu_item_highlight--;
+		}
+		control_menu_item_highlight = glm::clamp(control_menu_item_highlight, 0, items_size-1);
+	}
+}
+
 
 void BulbSettings::shader_menu_draw() {
 	if (shader_menu_item_selected) {
@@ -73,15 +255,15 @@ void BulbSettings::shader_menu_draw() {
 		drawing_tools->rectangle_filled(0, 0, bar_width, bar_height + 5);
 
 		string variable_string = selected_variable.category + " : " + selected_variable.name;
-		glColor4f(1.0f,1.0f,1.0f,1.0f);
+		glColor4f(0.6f,0.6f,0.6f,1.0f);
 		drawing_tools->text(5, 5, settings_font, variable_string);
 
 		if (selected_type == VAR_BOOL) {
-			glColor4f(0.2f,0.2f,0.2f,1.0f);
+			glColor4f(0.4f,0.4f,0.4f,1.0f);
 			drawing_tools->rectangle_filled(0, bar_height + 5, bar_width, bar_height);
 
 			glColor4f(1.0f,1.0f,1.0f,1.0f);
-			drawing_tools->text(5, bar_height + 5, settings_font, selected_variable.get_string());
+			drawing_tools->text(5, bar_height + 10, settings_font, selected_variable.get_string());
 		}
 		if (selected_type == VAR_INT) {
 			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, selected_variable.var_int[0], selected_variable.var_int[1], selected_variable.var_int[2], "%0.0f", !selected_variable.animate);
@@ -200,7 +382,7 @@ void BulbSettings::shader_menu_gamepad_update(GamePadState *state) {
 				}
 			}
 			if (selected_type == VAR_INT) {
-				float range = selected_variable->var_int[2] - selected_variable->var_int[1];
+				float range = (float)(selected_variable->var_int[2] - selected_variable->var_int[1]);
 				float step = range / 100.0f;
 
 				selected_variable->var_int[0] += (int)dpad_step;
@@ -340,6 +522,9 @@ void BulbSettings::draw() {
 	}
 	if (menu_open == 1) {
 		shader_menu_draw();
+	}
+	if (menu_open == 2) {
+		control_menu_draw();
 	}
 }
 

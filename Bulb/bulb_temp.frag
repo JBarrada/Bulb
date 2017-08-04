@@ -102,6 +102,8 @@ float DE(vec3 p) {
 	return dd*baseshape(p,Gap);
 }
 
+out vec4 frag_color;
+
 // Camera
 uniform vec3 camera_eye;
 in vec3 camera_ray;
@@ -327,5 +329,6 @@ void main() {
 	
 	vec3 hit_point;
 	vec3 hit_normal;
-	gl_FragColor = trace(camera_eye, camera_ray, hit_point, hit_normal);
+	//gl_FragColor = trace(camera_eye, camera_ray, hit_point, hit_normal);
+	frag_color = trace(camera_eye, camera_ray, hit_point, hit_normal);
 }

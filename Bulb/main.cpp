@@ -10,16 +10,15 @@
 #include "shader_utils.h"
 #include "gamepad_input.h"
 
-//#include "bulb_control.h"
-#include "bulb_shader.h"
 #include "drawing_tools.h"
+#include "bulb_shader.h"
 #include "bulb_settings.h"
-
-static GLuint program_fp32;
 
 int SCREEN_W = 100;
 int SCREEN_H = 100;
 float ASPECT = (float)SCREEN_W / (float)SCREEN_H;
+
+bool fullscreen = false;
 
 GamePadXbox* pad = new GamePadXbox(GamePadIndex_One);
 
@@ -29,8 +28,6 @@ glm::vec3 camera_up = glm::vec3(0, 0, 1);
 
 glm::vec3 camera_eye_prev = glm::vec3(camera_eye);
 glm::vec3 camera_velocity_prev = glm::vec3(0.0);
-
-float camera_fov = 1.5;
 
 glm::mat4 camera_orientation = glm::mat4(1.0);
 
@@ -43,23 +40,7 @@ clock_t frame_time;
 DrawingTools drawing_tools;
 BulbShader bulb_shader;
 BulbSettings bulb_settings(&bulb_shader.shader_variables, &drawing_tools);
-
-void update_program_variables() {
-	GLint prog_camera_pos = glGetUniformLocation(program_fp32, "camera_eye");
-	glUniform3fv(prog_camera_pos, 1, (float*)&camera_eye);
-	
-	GLint prog_camera_target = glGetUniformLocation(program_fp32, "camera_target");
-	glUniform3fv(prog_camera_target, 1, (float*)&camera_target);
-
-	GLint prog_camera_up = glGetUniformLocation(program_fp32, "camera_up");
-	glUniform3fv(prog_camera_up, 1, (float*)&camera_up);
-
-	GLint prog_camera_fov = glGetUniformLocation(program_fp32, "camera_fov");
-	glUniform1f(prog_camera_fov, camera_fov);
-	
-	GLint prog_camera_aspect = glGetUniformLocation(program_fp32, "camera_aspect");
-	glUniform1f(prog_camera_aspect, ASPECT);
-}
+BulbControlSettings *control_settings = &bulb_settings.control_settings;
 
 float get_avg_dist() {
 	float depth_total = 0.0;
@@ -94,8 +75,8 @@ void render() {
 	glClear(GL_COLOR_BUFFER_BIT);
 	
 	bulb_shader.draw();
-	update_program_variables();
-	bulb_shader.update_control_variables(camera_eye, camera_target, camera_up, camera_fov, ASPECT);
+
+	bulb_shader.update_control_variables(camera_eye, camera_target, camera_up, control_settings->camera_fov, ASPECT);
 	bulb_shader.update_shader_variables();
 
 	if (bulb_settings.settings_open) bulb_settings.draw();
@@ -110,7 +91,7 @@ void render() {
 		camera_prox +=  (prox_delta / 8.0f);
 	}
 
-	//frame_counter();
+	frame_counter();
 }
 
 void keyboard_down(unsigned char key, int x, int y) {
@@ -158,44 +139,58 @@ void keyboard_down(unsigned char key, int x, int y) {
 }
 
 float expo(float value) {
-	if (value < 0)
-		return -1.0f * pow(value, 2);
-	return pow(value, 2);
+	if (value < 0 && (control_settings->control_expo_power % 2 == 0)) {
+		return -1.0f * pow(value, control_settings->control_expo_power);
+	} else {
+		return pow(value, control_settings->control_expo_power);
+	}
 }
 
-void update_gamepad() {
+void update_gamepad_control(GamePadState *state) {
 	glm::vec3 forward_direction = glm::vec3(camera_orientation * glm::vec4(0, 1, 0, 0));
 	glm::vec3 left_direction = glm::vec3(camera_orientation * glm::vec4(1, 0, 0, 0));
 
-	float avg_dist = glm::max(camera_prox, 0.0001f);
-	float move_amount = 0.015f * avg_dist;
-		
-	// triggers
-	float trigger_sum = expo(pad->State.rt) - expo(pad->State.lt);
-	camera_eye -= (move_amount * trigger_sum) * forward_direction;
+	float prox_speed_forward = control_settings->control_move_speed_forward * glm::max(camera_prox, 0.0001f);
+	float prox_speed_lateral = control_settings->control_move_speed_lateral * glm::max(camera_prox, 0.0001f);
+	float prox_speed_vertical = control_settings->control_move_speed_vertical * glm::max(camera_prox, 0.0001f);
 
-	camera_eye += (move_amount * expo(pad->State.lstick_y)) * camera_up;
+	// forward
+	camera_eye -= (prox_speed_forward * (expo(state->rt) - expo(state->lt))) * forward_direction;
 
-	// rstick y
-	camera_orientation *= glm::rotate(glm::mat4(1.0), 0.03f * expo(pad->State.rstick_y), glm::vec3(1, 0, 0));
+	// vertical
+	camera_eye += (prox_speed_vertical * expo(state->lstick_y)) * camera_up;
 
-	// rstick x
-	camera_orientation *= glm::rotate(glm::mat4(1.0), 0.06f * expo(pad->State.rstick_x), glm::vec3(0, -1, 0));
+	// lateral
+	if (state->buttons[GamePad_Button_LEFT_SHOULDER] || state->buttons[GamePad_Button_RIGHT_SHOULDER]) {
+		camera_eye += (prox_speed_lateral * expo(state->lstick_x)) * left_direction; // may be inverted
+	}
 
-	// lstick x
-	camera_orientation *= glm::rotate(glm::mat4(1.0), 0.03f * expo(pad->State.lstick_x), glm::vec3(0, 0, -1));
+	// pitch
+	camera_orientation *= glm::rotate(glm::mat4(1.0), control_settings->control_pitch_speed * expo(state->rstick_y), glm::vec3(1, 0, 0));
+
+	// roll
+	camera_orientation *= glm::rotate(glm::mat4(1.0), control_settings->control_roll_speed * expo(state->rstick_x), glm::vec3(0, -1, 0));
+
+	// yaw
+	camera_orientation *= glm::rotate(glm::mat4(1.0), control_settings->control_yaw_speed * expo(state->lstick_x), glm::vec3(0, 0, -1));
 
 
+	// update
 	camera_target = camera_eye + glm::vec3(camera_orientation * glm::vec4(0, -1, 0, 0));
 	camera_up = glm::vec3(camera_orientation * glm::vec4(0, 0, 1, 0));
 
+
+	// velocity & accel
 	glm::vec3 velocity = camera_eye - camera_eye_prev;
 	camera_eye_prev = glm::vec3(camera_eye);
 
 	float accel = length(velocity - camera_velocity_prev);
 	camera_velocity_prev = glm::vec3(velocity);
 
-	pad->vibrate(accel * 100.0f, accel * 100.0f);
+	// vibrate
+	if (control_settings->control_vibrate) {
+		pad->vibrate(accel * 100.0f, accel * 100.0f);
+	}	
 }
 
 void force_redraw(int value) {
@@ -207,10 +202,19 @@ void force_redraw(int value) {
 		if (bulb_settings.settings_open) {
 			bulb_settings.gamepad_update(&pad->State);
 		} else {
-			if (pad->State.buttons_last[GamePad_Button_START] && pad->State.buttons[GamePad_Button_START]) {
+			if (pad->State.pressed(GamePad_Button_START)) {
 				bulb_settings.settings_open = true;
+			} else if (pad->State.pressed(GamePad_Button_BACK)) {
+				if (fullscreen) {
+					glutReshapeWindow(800, 600);
+					glutPositionWindow(0, 0);
+					fullscreen = false;
+				} else {
+					glutFullScreen();
+					fullscreen = true;
+				}
 			} else {
-				update_gamepad();
+				update_gamepad_control(&pad->State);
 			}
 		}
 	}
@@ -234,7 +238,6 @@ int main(int argc, const char * argv[]) {
 	glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA);
 	glutInitWindowSize(SCREEN_W, SCREEN_H);
 	glutCreateWindow("BULB");
-	//glutFullScreen();
 	glClearColor(1.0, 1.0, 1.0, 1.0);
 
 	GLuint error = glewInit();
@@ -247,10 +250,8 @@ int main(int argc, const char * argv[]) {
 	glEnable(GL_BLEND);
 
 	bulb_shader.load("bulb.vert", "bulb.frag");
-	program_fp32 = bulb_shader.program_fp32;
 
-	bulb_settings.update_shader_variables();
-	//load_shader("bulb.vert", "bulb_temp.frag", &program_fp32);
+	bulb_settings.update_shader_categories();
 
 	glutMainLoop();
 

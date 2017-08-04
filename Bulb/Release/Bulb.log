@@ -1,29 +1,41 @@
-﻿Build started 8/4/2017 3:01:46 PM.
-     1>Project "C:\Users\Justin B\Documents\Visual Studio 2010\Projects\Bulb\Bulb\Bulb.vcxproj" on node 2 (build target(s)).
-     1>InitializeBuildStatus:
+﻿Build started 8/4/2017 5:19:07 PM.
+     1>Project "C:\Users\Justin B\Documents\Visual Studio 2010\Projects\Bulb\Bulb\Bulb.vcxproj" on node 2 (rebuild target(s)).
+     1>_PrepareForClean:
+         Deleting file "Release\Bulb.lastbuildstate".
+       InitializeBuildStatus:
          Creating "Release\Bulb.unsuccessfulbuild" because "AlwaysCreate" was specified.
        ClCompile:
-         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /IC:\MinGW\include\GL /Zi /nologo /W3 /WX- /Ox /Oi /Ot /Oy- /GL /D _MBCS /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt bulb_settings.cpp
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /IC:\MinGW\include\GL /Zi /nologo /W3 /WX- /Ox /Oi /Ot /Oy- /GL /D _MBCS /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt bulb_settings.cpp bulb_shader.cpp drawing_tools.cpp gamepad_input.cpp main.cpp shader_utils.cpp
          bulb_settings.cpp
-     1>bulb_settings.cpp(87): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
-     1>bulb_settings.cpp(87): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
-     1>bulb_settings.cpp(87): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
-     1>bulb_settings.cpp(139): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
-     1>bulb_settings.cpp(139): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
-     1>bulb_settings.cpp(142): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
-     1>bulb_settings.cpp(152): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
-     1>bulb_settings.cpp(152): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
-     1>bulb_settings.cpp(156): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
-     1>bulb_settings.cpp(156): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
-     1>bulb_settings.cpp(160): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
-     1>bulb_settings.cpp(161): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
-     1>bulb_settings.cpp(203): warning C4244: 'initializing' : conversion from 'int' to 'float', possible loss of data
-     1>bulb_settings.cpp(305): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
-     1>bulb_settings.cpp(305): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
-     1>bulb_settings.cpp(309): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+     1>bulb_settings.cpp(132): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+     1>bulb_settings.cpp(132): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+     1>bulb_settings.cpp(135): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+     1>bulb_settings.cpp(141): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+     1>bulb_settings.cpp(154): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+     1>bulb_settings.cpp(269): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+     1>bulb_settings.cpp(269): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+     1>bulb_settings.cpp(269): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+     1>bulb_settings.cpp(321): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+     1>bulb_settings.cpp(321): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+     1>bulb_settings.cpp(324): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+     1>bulb_settings.cpp(334): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+     1>bulb_settings.cpp(334): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+     1>bulb_settings.cpp(338): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+     1>bulb_settings.cpp(338): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+     1>bulb_settings.cpp(342): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+     1>bulb_settings.cpp(343): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+     1>bulb_settings.cpp(487): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+     1>bulb_settings.cpp(487): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+     1>bulb_settings.cpp(491): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+         bulb_shader.cpp
+         drawing_tools.cpp
+         gamepad_input.cpp
+         main.cpp
+     1>main.cpp(232): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+     1>main.cpp(232): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+         shader_utils.cpp
        Link:
-         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Justin B\Documents\Visual Studio 2010\Projects\Bulb\Release\Bulb.exe" /NOLOGO /LIBPATH:C:\MinGW\lib /LIBPATH:C:\MinGW\lib\Release\Win32 /LIBPATH:"C:\Program Files (x86)\Windows Kits\8.0\Lib\win8\um\x86" XINPUT9_1_0.lib glew32.lib opengl32.lib freeglut.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Release\Bulb.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"C:\Users\Justin B\Documents\Visual Studio 2010\Projects\Bulb\Release\Bulb.pdb" /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Justin B\Documents\Visual Studio 2010\Projects\Bulb\Release\Bulb.lib" /MACHINE:X86 Release\bulb_control.obj
-         Release\bulb_settings.obj
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Justin B\Documents\Visual Studio 2010\Projects\Bulb\Release\Bulb.exe" /NOLOGO /LIBPATH:C:\MinGW\lib /LIBPATH:C:\MinGW\lib\Release\Win32 /LIBPATH:"C:\Program Files (x86)\Windows Kits\8.0\Lib\win8\um\x86" XINPUT9_1_0.lib glew32.lib opengl32.lib freeglut.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Release\Bulb.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"C:\Users\Justin B\Documents\Visual Studio 2010\Projects\Bulb\Release\Bulb.pdb" /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Justin B\Documents\Visual Studio 2010\Projects\Bulb\Release\Bulb.lib" /MACHINE:X86 Release\bulb_settings.obj
          Release\bulb_shader.obj
          Release\drawing_tools.obj
          Release\gamepad_input.obj
@@ -37,8 +49,8 @@
        FinalizeBuildStatus:
          Deleting file "Release\Bulb.unsuccessfulbuild".
          Touching "Release\Bulb.lastbuildstate".
-     1>Done Building Project "C:\Users\Justin B\Documents\Visual Studio 2010\Projects\Bulb\Bulb\Bulb.vcxproj" (build target(s)).
+     1>Done Building Project "C:\Users\Justin B\Documents\Visual Studio 2010\Projects\Bulb\Bulb\Bulb.vcxproj" (rebuild target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:02.71
+Time Elapsed 00:00:04.80

@@ -18,8 +18,29 @@
 #include "drawing_tools.h"
 #include "gamepad_input.h"
 
+class BulbControlSettings {
+public:
+	float camera_fov;
+
+	int control_expo_power;
+	float control_move_speed_forward;
+	float control_move_speed_lateral;
+	float control_move_speed_vertical;
+	float control_pitch_speed;
+	float control_roll_speed;
+	float control_yaw_speed;
+
+	bool control_vibrate;
+
+	BulbControlSettings();
+};
+
 class BulbSettings {
 private:
+	int control_menu_item_highlight;
+	bool control_menu_item_selected;
+	int control_menu_item_sub_highlight;
+
 	int shader_menu_item_highlight;
 	bool shader_menu_item_selected;
 	int shader_menu_item_sub_highlight;
@@ -38,16 +59,20 @@ public:
 	DrawingTools *drawing_tools;
 
 	vector<ShaderVariable> *shader_variables;
+	BulbControlSettings control_settings;
 
 	bool settings_open;
 	int menu_open;
 
 	BulbSettings(vector<ShaderVariable> *shader_variables, DrawingTools *drawing_tools);
 
-	void update_shader_variables();
+	void update_shader_categories();
 
 	void draw_slider_bar(float x, float y, float bar_width, float bar_height, float current, float min, float max, string format, bool selected);
 	
+	void control_menu_draw();
+	void control_menu_gamepad_update(GamePadState *state);
+
 	void shader_menu_draw();
 	void shader_menu_gamepad_update(GamePadState *state);
 
