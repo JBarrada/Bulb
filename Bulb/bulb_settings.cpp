@@ -129,6 +129,8 @@ BulbSettings::BulbSettings(vector<ShaderVariable> *shader_variables, DrawingTool
 	shader_menu_item_highlight = 0;
 	shader_menu_item_selected = false;
 	shader_menu_item_sub_highlight = 0;
+	shader_menu_item_sub_selected = false;
+	shader_menu_item_sub_animate_highlight = 0;
 	shader_menu_category = 0;
 }
 
@@ -290,6 +292,141 @@ void BulbSettings::shader_menu_draw() {
 		float bar_width = 500;
 		float bar_height = (float)font_height;
 
+		glColor4f(0.2f,0.2f,0.2f,1.0f);
+		drawing_tools->rectangle_filled(0, 0, bar_width, bar_height + 5);
+
+		glColor4f(0.6f,0.6f,0.6f,1.0f);
+		drawing_tools->text(5, 5, settings_font, selected_variable.category + " : " + selected_variable.name);
+
+		int sub_var_count[6] = {1, 1, 1, 2, 3, 4};
+		bool is_color = (shader_variable.type == "color" || shader_variable.type == "color4");
+
+		float var_bg_normal_color = (shader_menu_item_sub_selected) ? 0.1f : 0.2f;
+		float var_bg_selected_color = (shader_menu_item_sub_selected) ? 0.2f : 0.4f;
+		float var_fg_color = (shader_menu_item_sub_selected) ? 0.6f : 1.0f;
+
+		for (int i = 0; i < sub_var_count[shader_variable.var_type]; i++) {
+			float x = 0;
+			float y = (bar_height * (i+1)) + 5;
+
+			float var_bg_color = (i == shader_menu_item_sub_highlight) ? var_bg_selected_color : var_bg_normal_color;
+			glColor3f(var_bg_color,var_bg_color,var_bg_color);
+			drawing_tools->rectangle_filled(x, y, bar_width, bar_height);
+
+			
+			// draw animate stuff
+			if (selected_variable.animate_enable[i]) {
+				glColor3f(var_fg_color,var_fg_color,var_fg_color);
+				float a_scale = selected_variable.animate_values[i][1] * bar_width;
+				float a_offset = ((selected_variable.animate_values[i][2] + 1.0f) / 2.0f) * bar_width;
+				drawing_tools->rectangle_filled(x + a_offset - (a_scale / 2.0f), y + (bar_height / 2.0f) - 2.0f, a_scale, 4.0f);
+			}
+
+			// draw slider
+			glColor3f(var_fg_color,var_fg_color,var_fg_color);
+			float pos = ((selected_variable.value[0][i] - selected_variable.value[1][i]) / selected_variable.value[3][i]) * bar_width;
+			drawing_tools->rectangle_filled(x + pos - 2.0f, y, 4.0f, bar_height);
+		}
+
+
+		if (selected_type == VAR_BOOL) {
+			glColor4f(0.4f,0.4f,0.4f,1.0f);
+			drawing_tools->rectangle_filled(0, bar_height + 5, bar_width, bar_height);
+
+			glColor4f(1.0f,1.0f,1.0f,1.0f);
+			drawing_tools->text(5, bar_height + 10, settings_font, selected_variable.get_string());
+		}
+		if (selected_type == VAR_INT) {
+			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, selected_variable.var_int[0], selected_variable.var_int[1], selected_variable.var_int[2], "%0.0f", !selected_variable.animate);
+		}
+		if (selected_type == VAR_FLOAT) {
+			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, selected_variable.var_float[0], selected_variable.var_float[1], selected_variable.var_float[2], "%f", !selected_variable.animate);
+		}
+		if (selected_type == VAR_VEC2) {
+			animate_bar_offset = 1;
+			for (int i = 0; i < 2; i++) {
+				draw_slider_bar(0, (bar_height*(i+1)) + 5, bar_width, bar_height, selected_variable.var_vec2[0][i], selected_variable.var_vec2[1][i], selected_variable.var_vec2[2][i], "%f", (i == shader_menu_item_sub_highlight) && !selected_variable.animate);
+			}
+		}
+		if (selected_type == VAR_VEC3) {
+			animate_bar_offset = 2;
+			for (int i = 0; i < 3; i++) {
+				draw_slider_bar(0, (bar_height*(i+1)) + 5, bar_width, bar_height, selected_variable.var_vec3[0][i], selected_variable.var_vec3[1][i], selected_variable.var_vec3[2][i], "%f", (i == shader_menu_item_sub_highlight) && !selected_variable.animate);
+			}
+			
+			if (selected_variable.type == "color") {
+				animate_bar_offset++;
+				glm::vec3 color = selected_variable.var_vec3[0];
+				glColor4f(color.r, color.g, color.b,1.0f);
+				drawing_tools->rectangle_filled(0, (bar_height*4) + 5, bar_width, bar_height);
+			}
+		}
+		if (selected_type == VAR_VEC4) {
+			animate_bar_offset = 3;
+			for (int i = 0; i < 4; i++) {
+				draw_slider_bar(0, (bar_height*(i+1)) + 5, bar_width, bar_height, selected_variable.var_vec4[0][i], selected_variable.var_vec4[1][i], selected_variable.var_vec4[2][i], "%f", (i == shader_menu_item_sub_highlight) && !selected_variable.animate);
+			}
+
+			if (selected_variable.type == "color4") {
+				animate_bar_offset++;
+				glm::vec4 color = selected_variable.var_vec4[0];
+				glColor4f(color.r, color.g, color.b,1.0f);
+				drawing_tools->rectangle_filled(0, (bar_height*5) + 5, bar_width, bar_height);
+			}
+		}
+		if (selected_variable.animate) {
+			draw_slider_bar(0, (bar_height*(1+1+animate_bar_offset)) + 5, bar_width, bar_height, selected_variable.animate_speed, 0, 1, "Animate Speed: %f", shader_menu_item_sub_highlight == 0);
+			draw_slider_bar(0, (bar_height*(2+1+animate_bar_offset)) + 5, bar_width, bar_height, selected_variable.animate_scale, 0, 1, "Animate Scale: %f", shader_menu_item_sub_highlight == 1);
+			draw_slider_bar(0, (bar_height*(3+1+animate_bar_offset)) + 5, bar_width, bar_height, selected_variable.animate_offset, -1, 1, "Animate Offset: %f", shader_menu_item_sub_highlight == 2);
+		}
+	} else {
+		int category_size = (int)shader_categories_indexes[shader_menu_category].size();
+
+		glColor4f(0.2f,0.2f,0.2f,1.0f);
+		drawing_tools->rectangle_filled(0, 0, 250, (float)(category_size + 1.0f) * font_height + 5);
+
+		glColor4f(0.3f,0.3f,0.3f,1.0f);
+		drawing_tools->rectangle_filled(250, 0, 200, (float)(category_size + 1.0f) * font_height + 5);
+
+		glColor4f(0.4f,0.4f,0.4f,1.0f);
+		drawing_tools->rectangle_filled(0, (shader_menu_item_highlight + 1) * font_height, 250, font_height);
+
+		glColor4f(0.6f,0.6f,0.6f,1.0f);
+		drawing_tools->text(5, 0 * font_height + 5, settings_font, "< " + shader_categories[shader_menu_category] + " >");
+
+		for (int i = 0; i < category_size; i++) {
+			int actual_index = shader_categories_indexes[shader_menu_category][i];
+
+			string variable_string = (*shader_variables)[actual_index].category + " : " + (*shader_variables)[actual_index].name;
+
+			if ((*shader_variables)[actual_index].type == "color") {
+				glm::vec3 color = (*shader_variables)[actual_index].var_vec3[0];
+				glColor4f(color.r, color.g, color.b,1.0f);
+				drawing_tools->rectangle_filled(250, (i + 1) * font_height, 200, font_height);
+			} else if ((*shader_variables)[actual_index].type == "color4") {
+				glm::vec4 color = (*shader_variables)[actual_index].var_vec4[0];
+				glColor4f(color.r, color.g, color.b,1.0f);
+				drawing_tools->rectangle_filled(250, (i + 1) * font_height, 200, font_height);
+			}
+
+			glColor4f(1.0f,1.0f,1.0f,1.0f);
+			drawing_tools->text(5, (i + 1) * font_height + 5, settings_font, variable_string);
+			drawing_tools->text(255, (i + 1) * font_height + 5, settings_font, (*shader_variables)[actual_index].get_string());
+		}
+	}
+}
+
+/*
+void BulbSettings::shader_menu_draw() {
+	if (shader_menu_item_selected) {
+		int actual_highlight_index = shader_categories_indexes[shader_menu_category][shader_menu_item_highlight];
+
+		ShaderVariable selected_variable = (*shader_variables)[actual_highlight_index];
+		SHADER_VAR_TYPE selected_type = selected_variable.var_type;
+
+		float bar_width = 500;
+		float bar_height = (float)font_height;
+
 		int animate_bar_offset = 0;
 
 		glColor4f(0.2f,0.2f,0.2f,1.0f);
@@ -369,8 +506,6 @@ void BulbSettings::shader_menu_draw() {
 
 			string variable_string = (*shader_variables)[actual_index].category + " : " + (*shader_variables)[actual_index].name;
 
-
-
 			if ((*shader_variables)[actual_index].type == "color") {
 				glm::vec3 color = (*shader_variables)[actual_index].var_vec3[0];
 				glColor4f(color.r, color.g, color.b,1.0f);
@@ -387,6 +522,7 @@ void BulbSettings::shader_menu_draw() {
 		}
 	}
 }
+*/
 
 void BulbSettings::shader_menu_gamepad_update(GamePadState *state) {
 	if (shader_menu_item_selected) {
@@ -394,26 +530,41 @@ void BulbSettings::shader_menu_gamepad_update(GamePadState *state) {
 		ShaderVariable *selected_variable = &(*shader_variables)[actual_highlight_index];
 
 		if (state->pressed(GamePad_Button_X)) {
-			selected_variable->animate = !selected_variable->animate;
+			selected_variable->animate_enable[shader_menu_item_sub_highlight] = !selected_variable->animate_enable[shader_menu_item_sub_highlight];
+			// shader_menu_item_sub_selected = selected_variable->animate_enable[shader_menu_item_sub_highlight]; // auto enter menu
 		}
-		if (state->pressed(GamePad_Button_B)) {
-			shader_menu_item_selected = false;
-		}
-
-		if (state->pressed(GamePad_Button_DPAD_UP)) shader_menu_item_sub_highlight++;
-		if (state->pressed(GamePad_Button_DPAD_DOWN)) shader_menu_item_sub_highlight--;
 
 		float dpad_step = (state->pressed(GamePad_Button_DPAD_RIGHT) - state->pressed(GamePad_Button_DPAD_LEFT));
 		float trigger_step = (settings_expo(state->rt) - settings_expo(state->lt));
 
-		if (!selected_variable->animate) {
-			selected_variable->adjust_variable(dpad_step + trigger_step, shader_menu_item_sub_highlight);
+		if (shader_menu_item_sub_selected) {
+			if (state->pressed(GamePad_Button_B)) {
+				shader_menu_item_sub_selected = false;
+			}
+
+			if (state->pressed(GamePad_Button_DPAD_UP)) shader_menu_item_sub_animate_highlight++;
+			if (state->pressed(GamePad_Button_DPAD_DOWN)) shader_menu_item_sub_animate_highlight--;
+
+			selected_variable->adjust_animate(dpad_step + trigger_step, shader_menu_item_sub_highlight, shader_menu_item_sub_animate_highlight);
 		} else {
-			selected_variable->adjust_animate(dpad_step + trigger_step, shader_menu_item_sub_highlight);
+			if (state->pressed(GamePad_Button_A) && selected_variable->animate_enable[shader_menu_item_sub_highlight]) {
+				shader_menu_item_sub_selected = true;
+			}
+			if (state->pressed(GamePad_Button_B)) {
+				shader_menu_item_selected = false;
+			}
+
+			if (state->pressed(GamePad_Button_DPAD_UP)) shader_menu_item_sub_highlight++;
+			if (state->pressed(GamePad_Button_DPAD_DOWN)) shader_menu_item_sub_highlight--;
+
+			if (!selected_variable->animate_enable[shader_menu_item_sub_highlight]) {
+				selected_variable->adjust_variable(dpad_step + trigger_step, shader_menu_item_sub_highlight);
+			}
 		}
 	} else {
 		if (state->pressed(GamePad_Button_A)) {
 			shader_menu_item_selected = true;
+			shader_menu_item_sub_highlight = 0;
 		}
 		if (state->pressed(GamePad_Button_B)) {
 			menu_open = 0; // main menu

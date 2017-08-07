@@ -37,27 +37,20 @@ public:
 
 	SHADER_VAR_TYPE var_type;
 
-	bool var_bool[3];
-	int var_int[4];
-	float var_float[4];
-	glm::vec2 var_vec2[4];
-	glm::vec3 var_vec3[4];
-	glm::vec4 var_vec4[4];
+	glm::vec4 value[4];
+
+	bool animate_enable[4];
+	glm::vec4 animate_values[4];
 
 	bool update;
 
-	bool animate;
-	float animate_scale;
-	float animate_offset;
-	float animate_speed;
-	float animate_pos;
-
 	ShaderVariable(string code);
 
+	bool needs_update();
 	void update_program_variable(GLuint program);
 
 	void adjust_variable(float normalized_amount, int &sub_variable);
-	void adjust_animate(float normalized_amount, int &sub_variable);
+	void adjust_animate(float normalized_amount, int &sub_variable, int &animate_variable);
 
 	string get_string();
 };

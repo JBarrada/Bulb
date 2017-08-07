@@ -46,6 +46,8 @@ private:
 	int shader_menu_item_highlight;
 	bool shader_menu_item_selected;
 	int shader_menu_item_sub_highlight;
+	bool shader_menu_item_sub_selected;
+	int shader_menu_item_sub_animate_highlight;
 	int shader_menu_category;
 
 	vector<string> shader_categories;

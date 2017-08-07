@@ -15,6 +15,21 @@ string parse_to_next(string input, string target, int &pos) {
 	return output;
 }
 
+void stovec(string values_string, glm::vec4 &value) {
+	int values_string_pos = 0;
+
+	for (int i = 0; i < 4; i++) {
+		string current_value = parse_to_next(values_string, ",", values_string_pos); values_string_pos++;
+
+		try {
+			value[i] = stof(current_value);
+		} catch (std::invalid_argument) {
+			value[i] = 0.0f;
+			return;
+		}
+	}
+}
+
 glm::vec2 stovec2(string value_string) {
 	int value_string_pos = 0;
 
@@ -52,11 +67,13 @@ ShaderVariable::ShaderVariable(string code) {
 
 	update = true;
 
-	animate = false;
-	animate_pos = 0.0;
-	animate_scale = 1.0;
-	animate_offset = 0.0;
-	animate_speed = 0.0;
+	for (int i = 0; i < 4; i++) {
+		animate_enable[i] = false;
+		animate_values[i][0] = 0.0f; // speed
+		animate_values[i][1] = 1.0f; // scale
+		animate_values[i][2] = 0.0f; // offset
+		animate_values[i][3] = 0.0f; // pos
+	}
 
 	if (code.substr(0, 7) == "uniform") {
 		int code_pos = 8;
@@ -83,146 +100,93 @@ ShaderVariable::ShaderVariable(string code) {
 		string var_max = parse_to_next(code, "|", code_pos); code_pos++;
 
 		if (var_type == VAR_BOOL) {
-			var_bool[0] = (var_default[0] == 't');
-			var_bool[1] = (var_min[0] == 't');
-			var_bool[2] = (var_max[0] == 't');
+			value[0][0] = (float)(var_default[0] == 't');
+			value[1][0] = (float)(var_min[0] == 't');
+			value[2][0] = (float)(var_max[0] == 't');
+		} else {
+			stovec(var_default, value[0]);
+			stovec(var_min, value[1]);
+			stovec(var_max, value[2]);
 		}
-		if (var_type == VAR_INT) {
-			var_int[0] = stoi(var_default);
-			var_int[1] = stoi(var_min);
-			var_int[2] = stoi(var_max);
-			var_int[3] = var_int[2] - var_int[1];
-		}
-		if (var_type == VAR_FLOAT) {
-			var_float[0] = stof(var_default);
-			var_float[1] = stof(var_min);
-			var_float[2] = stof(var_max);
-			var_float[3] = var_float[2] - var_float[1];
-		}
-		if (var_type == VAR_VEC2) {
-			var_vec2[0] = stovec2(var_default);
-			var_vec2[1] = stovec2(var_min);
-			var_vec2[2] = stovec2(var_max);
-			var_vec2[3] = var_vec2[2] - var_vec2[1];
-		}
-		if (var_type == VAR_VEC3) {
-			var_vec3[0] = stovec3(var_default);
-			var_vec3[1] = stovec3(var_min);
-			var_vec3[2] = stovec3(var_max);
-			var_vec3[3] = var_vec3[2] - var_vec3[1];
-		}
-		if (var_type == VAR_VEC4) {
-			var_vec4[0] = stovec4(var_default);
-			var_vec4[1] = stovec4(var_min);
-			var_vec4[2] = stovec4(var_max);
-			var_vec4[3] = var_vec4[2] - var_vec4[1];
-		}
+		value[3] = value[2] - value[1];
 	}
 }
 
+bool ShaderVariable::needs_update() {
+	return (update + animate_enable[0] + animate_enable[1] + animate_enable[2] + animate_enable[3]);
+}
+
 void ShaderVariable::update_program_variable(GLuint program) {
+	for (int i = 0; i < 4; i++) {
+		if (animate_enable[i]) {
+			animate_values[i][3] += 0.025f * animate_values[i][0];
+			if (animate_values[i][3] > M_PI*2.0f) animate_values[i][3] -= M_PI*2.0f; 
+
+			float animate_wave = (((sin(animate_values[i][3]) * animate_values[i][1]) + 1.0f) / 2.0f) + (animate_values[i][2] / 2.0f);
+			value[0][i] = (animate_wave * value[3][i]) + value[1][i];
+		}
+	}
+
 	const char *var_name = name.c_str();
 	GLint var_pointer = glGetUniformLocation(program, var_name);
-
-	if (animate) {
-		animate_pos += 0.025f * animate_speed;
-		if (animate_pos > M_PI*2.0)
-			animate_pos -= M_PI*2.0;
-
-		float animate_wave = (((sin(animate_pos) * animate_scale) + 1.0f) / 2.0f) + (animate_offset / 2.0f);
-		if (var_type == VAR_INT) {
-			var_int[0] = (int)(animate_wave * var_int[3]) + var_int[1];
-		}
-		if (var_type == VAR_FLOAT) {
-			var_float[0] = (animate_wave * var_float[3]) + var_float[1];
-		}
-		if (var_type == VAR_VEC2) {
-			var_vec2[0] = (animate_wave * var_vec2[3]) + var_vec2[1];
-		}
-		if (var_type == VAR_VEC3) {
-			var_vec3[0] = (animate_wave * var_vec3[3]) + var_vec3[1];
-		}
-		if (var_type == VAR_VEC4) {
-			var_vec4[0] = (animate_wave * var_vec4[3]) + var_vec4[1];
-		}
-	}
-
+	
 	if (var_type == VAR_BOOL) {
-		glUniform1i(var_pointer, (GLint)var_bool[0]);
+		glUniform1i(var_pointer, (GLint)value[0][0]);
 	}
 	if (var_type == VAR_INT) {
-		glUniform1i(var_pointer, (GLint)var_int[0]);
+		glUniform1i(var_pointer, (GLint)value[0][0]);
 	}
 	if (var_type == VAR_FLOAT) {
-		glUniform1f(var_pointer, (GLfloat)var_float[0]);
+		glUniform1f(var_pointer, (GLfloat)value[0][0]);
 	}
 	if (var_type == VAR_VEC2) {
-		glUniform2fv(var_pointer, 1, (float*)&var_vec2[0]);
+		glUniform2fv(var_pointer, 1, (float*)&value[0]);
 	}
 	if (var_type == VAR_VEC3) {
-		glUniform3fv(var_pointer, 1, (float*)&var_vec3[0]);
+		glUniform3fv(var_pointer, 1, (float*)&value[0]);
 	}
 	if (var_type == VAR_VEC4) {
-		glUniform4fv(var_pointer, 1, (float*)&var_vec4[0]);
+		glUniform4fv(var_pointer, 1, (float*)&value[0]);
 	}
 
 	update = false;
 }
 
 void ShaderVariable::adjust_variable(float normalized_amount, int &sub_variable) {
-	float step = 0.0f;
+	int sub_var_count[6] = {1, 1, 1, 2, 3, 4};
+	sub_variable = glm::clamp(sub_variable, 0, sub_var_count[var_type] - 1);
+	
 	float resolution = 100.0f;
-
 	if (var_type == VAR_BOOL) {
-		if (abs(normalized_amount) == 1.0f) var_bool[0] = !var_bool[0];
-	}
-	if (var_type == VAR_INT) {
-		step = (float)var_int[3] / resolution;
-		var_int[0] = glm::clamp(var_int[0] + (int)(normalized_amount * step), var_int[1], var_int[2]);
-	}
-	if (var_type == VAR_FLOAT) {
-		step = var_float[3] / resolution;
-		var_float[0] = glm::clamp(var_float[0] + (normalized_amount * step), var_float[1], var_float[2]);
-	}
-	if (var_type == VAR_VEC2) {
-		sub_variable = glm::clamp(sub_variable, 0, 1);
-
-		step = var_vec2[3][sub_variable] / resolution;
-		var_vec2[0][sub_variable] = glm::clamp(var_vec2[0][sub_variable] + (normalized_amount * step), var_vec2[1][sub_variable], var_vec2[2][sub_variable]);
-	}
-	if (var_type == VAR_VEC3) {
-		sub_variable = glm::clamp(sub_variable, 0, 2);
-
-		step = var_vec3[3][sub_variable] / resolution;
-		var_vec3[0][sub_variable] = glm::clamp(var_vec3[0][sub_variable] + (normalized_amount * step), var_vec3[1][sub_variable], var_vec3[2][sub_variable]);
-	}
-	if (var_type == VAR_VEC4) {
-		sub_variable = glm::clamp(sub_variable, 0, 3);
-
-		step = var_vec4[3][sub_variable] / resolution;
-		var_vec4[0][sub_variable] = glm::clamp(var_vec4[0][sub_variable] + (normalized_amount * step), var_vec4[1][sub_variable], var_vec4[2][sub_variable]);
+		if (abs(normalized_amount) == 1.0f) {
+			value[0][sub_variable] = (value[0][sub_variable] == 1.0f) ? 0.0f : 1.0f;
+		}
+	} else {
+		float step = value[3][sub_variable] / resolution;
+		value[0][sub_variable] = glm::clamp(value[0][sub_variable] + (normalized_amount * step), value[1][sub_variable], value[2][sub_variable]);
 	}
 
 	update = true;
 }
 
-void ShaderVariable::adjust_animate(float normalized_amount, int &sub_variable) {
+void ShaderVariable::adjust_animate(float normalized_amount, int &sub_variable, int &animate_variable) {
+	int sub_var_count[6] = {1, 1, 1, 2, 3, 4};
+	sub_variable = glm::clamp(sub_variable, 0, sub_var_count[var_type] - 1);
+	animate_variable = glm::clamp(animate_variable, 0, 2);
+
 	float step = 0.0f;
 	float resolution = 100.0f;
-
-	sub_variable = glm::clamp(sub_variable, 0, 2);
-
-	if (sub_variable == 0) {
+	if (animate_variable == 0) {
 		step = 1.0f / resolution;
-		animate_speed = glm::clamp(animate_speed + (normalized_amount * step), 0.0f, 1.0f);
+		animate_values[sub_variable][animate_variable] = glm::clamp(animate_values[sub_variable][animate_variable] + (normalized_amount * step), 0.0f, 1.0f);
 	}
-	if (sub_variable == 1) {
+	if (animate_variable == 1) {
 		step = 1.0f / resolution;
-		animate_scale = glm::clamp(animate_scale + (normalized_amount * step), 0.0f, 1.0f);
+		animate_values[sub_variable][animate_variable] = glm::clamp(animate_values[sub_variable][animate_variable] + (normalized_amount * step), 0.0f, 1.0f);
 	}
-	if (sub_variable == 2) {
+	if (animate_variable == 2) {
 		step = 2.0f / resolution;
-		animate_offset = glm::clamp(animate_offset + (normalized_amount * step), -1.0f, 1.0f);
+		animate_values[sub_variable][animate_variable] = glm::clamp(animate_values[sub_variable][animate_variable] + (normalized_amount * step), -1.0f, 1.0f);
 	}
 }
 
@@ -230,22 +194,22 @@ string ShaderVariable::get_string() {
 	char text[50];
 
 	if (var_type == VAR_BOOL) {
-		sprintf_s(text, ((var_bool[0]) ? "true" : "false"));
+		sprintf_s(text, ((value[0][0]) ? "true" : "false"));
 	}
 	if (var_type == VAR_INT) {
-		sprintf_s(text, "%d", var_int[0]);
+		sprintf_s(text, "%d", value[0][0]);
 	}
 	if (var_type == VAR_FLOAT) {
-		sprintf_s(text, "%f", var_float[0]);
+		sprintf_s(text, "%f", value[0][0]);
 	}
 	if (var_type == VAR_VEC2) {
-		sprintf_s(text, "%0.2f, %0.2f", var_vec2[0].x, var_vec2[0].y);
+		sprintf_s(text, "%0.2f, %0.2f", value[0].x, value[0].y);
 	}
 	if (var_type == VAR_VEC3) {
-		sprintf_s(text, "%0.2f, %0.2f, %0.2f", var_vec3[0].x, var_vec3[0].y, var_vec3[0].z);
+		sprintf_s(text, "%0.2f, %0.2f, %0.2f", value[0].x, value[0].y, value[0].z);
 	}
 	if (var_type == VAR_VEC4) {
-		sprintf_s(text, "%0.2f, %0.2f, %0.2f, %0.2f", var_vec4[0].x, var_vec4[0].y, var_vec4[0].z, var_vec4[0].w);
+		sprintf_s(text, "%0.2f, %0.2f, %0.2f, %0.2f", value[0].x, value[0].y, value[0].z, value[0].w);
 	}
 
 	string s(text);
@@ -311,7 +275,7 @@ void BulbShader::draw() {
 
 void BulbShader::update_shader_variables() {
 	for (int i = 0; i < (int)shader_variables.size(); i++) {
-		if (shader_variables[i].update || shader_variables[i].animate) 
+		if (shader_variables[i].needs_update()) 
 			shader_variables[i].update_program_variable(program_fp32);
 	}
 }
