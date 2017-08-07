@@ -56,6 +56,9 @@ public:
 
 	void update_program_variable(GLuint program);
 
+	void adjust_variable(float normalized_amount, int &sub_variable);
+	void adjust_animate(float normalized_amount, int &sub_variable);
+
 	string get_string();
 };
 

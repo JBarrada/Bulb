@@ -76,7 +76,7 @@ void render() {
 	
 	bulb_shader.draw();
 
-	bulb_shader.update_control_variables(camera_eye, camera_target, camera_up, control_settings->camera_fov, ASPECT);
+	bulb_shader.update_control_variables(camera_eye, camera_target, camera_up, control_settings->camera_fov[0], ASPECT);
 	bulb_shader.update_shader_variables();
 
 	if (bulb_settings.settings_open) bulb_settings.draw();
@@ -139,41 +139,41 @@ void keyboard_down(unsigned char key, int x, int y) {
 }
 
 float expo(float value) {
-	if (value < 0 && (control_settings->control_expo_power % 2 == 0)) {
-		return -1.0f * pow(value, control_settings->control_expo_power);
+	if (value < 0 && (control_settings->control_expo_power[0] % 2 == 0)) {
+		return -1.0f * pow(value, control_settings->control_expo_power[0]);
 	} else {
-		return pow(value, control_settings->control_expo_power);
+		return pow(value, control_settings->control_expo_power[0]);
 	}
 }
 
-void update_gamepad_control(GamePadState *state) {
+void update_gamepad_control(GamePadState *state, bool sticks_only) {
 	glm::vec3 forward_direction = glm::vec3(camera_orientation * glm::vec4(0, 1, 0, 0));
 	glm::vec3 left_direction = glm::vec3(camera_orientation * glm::vec4(1, 0, 0, 0));
 
-	float prox_speed_forward = control_settings->control_move_speed_forward * glm::max(camera_prox, 0.0001f);
-	float prox_speed_lateral = control_settings->control_move_speed_lateral * glm::max(camera_prox, 0.0001f);
-	float prox_speed_vertical = control_settings->control_move_speed_vertical * glm::max(camera_prox, 0.0001f);
+	float prox_speed_forward = control_settings->control_move_speed_forward[0] * glm::max(camera_prox, 0.0001f);
+	float prox_speed_lateral = control_settings->control_move_speed_lateral[0] * glm::max(camera_prox, 0.0001f);
+	float prox_speed_vertical = control_settings->control_move_speed_vertical[0] * glm::max(camera_prox, 0.0001f);
 
 	// forward
-	camera_eye -= (prox_speed_forward * (expo(state->rt) - expo(state->lt))) * forward_direction;
+	if (!sticks_only) {
+		camera_eye -= (prox_speed_forward * (expo(state->rt) - expo(state->lt))) * forward_direction;
+	}
 
 	// vertical
 	camera_eye += (prox_speed_vertical * expo(state->lstick_y)) * camera_up;
 
-	// lateral
+	// lateral & yaw
 	if (state->buttons[GamePad_Button_LEFT_SHOULDER] || state->buttons[GamePad_Button_RIGHT_SHOULDER]) {
 		camera_eye += (prox_speed_lateral * expo(state->lstick_x)) * left_direction; // may be inverted
+	} else {
+		camera_orientation *= glm::rotate(glm::mat4(1.0), control_settings->control_yaw_speed[0] * expo(state->lstick_x), glm::vec3(0, 0, -1));
 	}
 
 	// pitch
-	camera_orientation *= glm::rotate(glm::mat4(1.0), control_settings->control_pitch_speed * expo(state->rstick_y), glm::vec3(1, 0, 0));
+	camera_orientation *= glm::rotate(glm::mat4(1.0), control_settings->control_pitch_speed[0] * expo(state->rstick_y), glm::vec3(1, 0, 0));
 
 	// roll
-	camera_orientation *= glm::rotate(glm::mat4(1.0), control_settings->control_roll_speed * expo(state->rstick_x), glm::vec3(0, -1, 0));
-
-	// yaw
-	camera_orientation *= glm::rotate(glm::mat4(1.0), control_settings->control_yaw_speed * expo(state->lstick_x), glm::vec3(0, 0, -1));
-
+	camera_orientation *= glm::rotate(glm::mat4(1.0), control_settings->control_roll_speed[0] * expo(state->rstick_x), glm::vec3(0, -1, 0));
 
 	// update
 	camera_target = camera_eye + glm::vec3(camera_orientation * glm::vec4(0, -1, 0, 0));
@@ -201,6 +201,8 @@ void force_redraw(int value) {
 
 		if (bulb_settings.settings_open) {
 			bulb_settings.gamepad_update(&pad->State);
+
+			update_gamepad_control(&pad->State, true);
 		} else {
 			if (pad->State.pressed(GamePad_Button_START)) {
 				bulb_settings.settings_open = true;
@@ -214,7 +216,7 @@ void force_redraw(int value) {
 					fullscreen = true;
 				}
 			} else {
-				update_gamepad_control(&pad->State);
+				update_gamepad_control(&pad->State, false);
 			}
 		}
 	}

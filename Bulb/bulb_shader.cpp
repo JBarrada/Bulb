@@ -169,6 +169,63 @@ void ShaderVariable::update_program_variable(GLuint program) {
 	update = false;
 }
 
+void ShaderVariable::adjust_variable(float normalized_amount, int &sub_variable) {
+	float step = 0.0f;
+	float resolution = 100.0f;
+
+	if (var_type == VAR_BOOL) {
+		if (abs(normalized_amount) == 1.0f) var_bool[0] = !var_bool[0];
+	}
+	if (var_type == VAR_INT) {
+		step = (float)var_int[3] / resolution;
+		var_int[0] = glm::clamp(var_int[0] + (int)(normalized_amount * step), var_int[1], var_int[2]);
+	}
+	if (var_type == VAR_FLOAT) {
+		step = var_float[3] / resolution;
+		var_float[0] = glm::clamp(var_float[0] + (normalized_amount * step), var_float[1], var_float[2]);
+	}
+	if (var_type == VAR_VEC2) {
+		sub_variable = glm::clamp(sub_variable, 0, 1);
+
+		step = var_vec2[3][sub_variable] / resolution;
+		var_vec2[0][sub_variable] = glm::clamp(var_vec2[0][sub_variable] + (normalized_amount * step), var_vec2[1][sub_variable], var_vec2[2][sub_variable]);
+	}
+	if (var_type == VAR_VEC3) {
+		sub_variable = glm::clamp(sub_variable, 0, 2);
+
+		step = var_vec3[3][sub_variable] / resolution;
+		var_vec3[0][sub_variable] = glm::clamp(var_vec3[0][sub_variable] + (normalized_amount * step), var_vec3[1][sub_variable], var_vec3[2][sub_variable]);
+	}
+	if (var_type == VAR_VEC4) {
+		sub_variable = glm::clamp(sub_variable, 0, 3);
+
+		step = var_vec4[3][sub_variable] / resolution;
+		var_vec4[0][sub_variable] = glm::clamp(var_vec4[0][sub_variable] + (normalized_amount * step), var_vec4[1][sub_variable], var_vec4[2][sub_variable]);
+	}
+
+	update = true;
+}
+
+void ShaderVariable::adjust_animate(float normalized_amount, int &sub_variable) {
+	float step = 0.0f;
+	float resolution = 100.0f;
+
+	sub_variable = glm::clamp(sub_variable, 0, 2);
+
+	if (sub_variable == 0) {
+		step = 1.0f / resolution;
+		animate_speed = glm::clamp(animate_speed + (normalized_amount * step), 0.0f, 1.0f);
+	}
+	if (sub_variable == 1) {
+		step = 1.0f / resolution;
+		animate_scale = glm::clamp(animate_scale + (normalized_amount * step), 0.0f, 1.0f);
+	}
+	if (sub_variable == 2) {
+		step = 2.0f / resolution;
+		animate_offset = glm::clamp(animate_offset + (normalized_amount * step), -1.0f, 1.0f);
+	}
+}
+
 string ShaderVariable::get_string() {
 	char text[50];
 

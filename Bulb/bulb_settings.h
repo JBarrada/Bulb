@@ -20,19 +20,21 @@
 
 class BulbControlSettings {
 public:
-	float camera_fov;
-
-	int control_expo_power;
-	float control_move_speed_forward;
-	float control_move_speed_lateral;
-	float control_move_speed_vertical;
-	float control_pitch_speed;
-	float control_roll_speed;
-	float control_yaw_speed;
-
-	bool control_vibrate;
+	float camera_fov[4];
+	int control_expo_power[4];
+	float control_move_speed_forward[4];
+	float control_move_speed_lateral[4];
+	float control_move_speed_vertical[4];
+	float control_pitch_speed[4];
+	float control_roll_speed[4];
+	float control_yaw_speed[4];
+	bool control_vibrate[4];
 
 	BulbControlSettings();
+
+	void adjust_variable(float normalized_amount, int variable);
+	string get_variable_name(int variable);
+	string get_variable_value(int variable);
 };
 
 class BulbSettings {
@@ -68,8 +70,12 @@ public:
 
 	void update_shader_categories();
 
+	float settings_expo(float value);
+
 	void draw_slider_bar(float x, float y, float bar_width, float bar_height, float current, float min, float max, string format, bool selected);
-	
+	void draw_slider_bar(float x, float y, float bar_width, float bar_height, float *values, string format, bool selected);
+	void draw_slider_bar(float x, float y, float bar_width, float bar_height, int *values, string format, bool selected);
+
 	void control_menu_draw();
 	void control_menu_gamepad_update(GamePadState *state);
 
