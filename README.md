@@ -13,7 +13,8 @@ todo:
 #dpad setting changing improvements
 #setting changing expo
 #move camera during setting changing
--fix shader menu light color text
--improve animate settings display
--improve vec2+ animate 
+#fix shader menu light color text
+#improve animate settings display
+#improve vec2+ animate 
 -scale animation to proximity setting
+-skyboxes

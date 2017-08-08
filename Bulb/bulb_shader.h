@@ -35,6 +35,8 @@ public:
 	string category;
 	string type;
 
+	bool is_color;
+
 	SHADER_VAR_TYPE var_type;
 
 	glm::vec4 value[4];
@@ -53,6 +55,11 @@ public:
 	void adjust_animate(float normalized_amount, int &sub_variable, int &animate_variable);
 
 	string get_string();
+	string get_string(int &sub_variable);
+	string get_string_animate(int &sub_variable, int &animate_variable);
+
+	bool is_bright();
+
 };
 
 

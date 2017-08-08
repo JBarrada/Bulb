@@ -47,59 +47,46 @@ mat4 scale4(float s) {
 }
 
 uniform int Iterations = 15; //~Fractal,default,15|0|200
-uniform float Gap = 1.0; //~Fractal,default,1|0|1
+uniform int ColorIterations = 3; //~Fractal,default,3|0|200
+uniform float MinRad2 = 0.25; //~Fractal,default,0.25|0|2
+uniform float Scale = 3.0; //~Fractal,default,3|-5|5
 
-uniform vec3 Rot1 = vec3(0.0); //~Fractal,default,0,0,0|-180,-180,-180|180,180,180
-uniform vec3 Rot2 = vec3(0.0); //~Fractal,default,0,0,0|-180,-180,-180|180,180,180
+uniform vec3 RotVector = vec3(0.0); //~Fractal,default,1,1,1|0,0,0|1,1,1
+uniform float RotAngle = 0.0; //~Fractal,default,0|0|180
 
-mat3 fracRotation1;
-mat3 fracRotation2;
+mat3 rot;
 
 vec4 orbitTrap = vec4(10000.0);
 
+vec4 scale = vec4(Scale, Scale, Scale, abs(Scale)) / MinRad2;
+float absScalem1 = abs(Scale - 1.0);
+float AbsScaleRaisedTo1mIters = pow(abs(Scale), float(1-Iterations));
+
 void init() {
-	fracRotation1 = rotationMatrixXYZ(vec3(Rot1.x,0.0,0.0))*rotationMatrixXYZ(vec3(0.0,Rot1.y,0.0))*rotationMatrixXYZ(vec3(0.0,0.0,Rot1.z));
-	fracRotation2 = rotationMatrixXYZ(vec3(Rot2.x,0.0,0.0))*rotationMatrixXYZ(vec3(0.0,Rot2.y,0.0))*rotationMatrixXYZ(vec3(0.0,0.0,Rot2.z));
+	rot = rotationMatrix3(normalize(RotVector), RotAngle);
 }
 
-float baseshape(vec3 p, float s) {
-	p.yz = abs(p.yz);
-	float t = 2.0 * max(0.0, dot(p.xy, vec2(-sqrt(3.0) * 0.5, 0.5)));
-    p.xy -= t * vec2(-sqrt(3.0), 1.0) * 0.5;
-	p.y = abs(p.y);
+float DE(vec3 pos) {
+	vec4 p = vec4(pos,1), p0 = p;
 	
-	if (p.y > p.z) p.yz = p.zy;
-	
-	p -= s * vec3(0.5*sqrt(3.0), 1.5, 1.5);
-	
-	if (p.z > p.x) p.xz = p.zx;
-	
-	if (p.x < 0.0) return p.x;
-	
-	p.yz = max(vec2(0.0), p.yz);
-	return length(p);
-}
-
-float DE(vec3 p) {
-	float dd = 1.0;
-	for(int i = 0; i<Iterations; i++){
-		p=fracRotation1*p;
-		p.yz=abs(p.yz); 
-		float t = 2.0 * max(0.0, dot(p.xy, vec2(-sqrt(3.0) * 0.5, 0.5)) );
-		p.xy -= t*vec2(-sqrt(3.0),1.0)*0.5;
-		p.y=abs(p.y);
+	for (int i=0; i<Iterations; i++) {
+		p.xyz*=rot;
+		p.xyz = clamp(p.xyz, -1.0, 1.0) * 2.0 - p.xyz;
 		
-		if(p.y>p.z) p.yz=p.zy;
-		p.y=abs(p.y-0.5)+0.5; 
-		p-=vec3(0.5*sqrt(3.0),1.5,1.5);
+		float r2 = dot(p.xyz, p.xyz);
 		
-		p*=3.0;
-		dd*=1.0/3.0;
-		p+=vec3(0.5*sqrt(3.0),1.5,1.5);
-		p=fracRotation2*p;
-		orbitTrap = min(orbitTrap, abs(vec4(p.xyz,dot(p,p))));
+		if (i < ColorIterations) {
+			orbitTrap = min(orbitTrap, abs(vec4(p.xyz,r2)));
+		}
+		
+		p *= clamp(max(MinRad2/r2, MinRad2), 0.0, 1.0);
+		p = p*scale + p0;
+		
+        if (r2 > 1000.0) {
+			break;
+		}
 	}
-	return dd*baseshape(p,Gap);
+	return ((length(p.xyz) - absScalem1) / p.w - AbsScaleRaisedTo1mIters);
 }
 
 out vec4 frag_color;

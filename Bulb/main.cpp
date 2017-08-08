@@ -164,7 +164,7 @@ void update_gamepad_control(GamePadState *state, bool sticks_only) {
 
 	// lateral & yaw
 	if (state->buttons[GamePad_Button_LEFT_SHOULDER] || state->buttons[GamePad_Button_RIGHT_SHOULDER]) {
-		camera_eye += (prox_speed_lateral * expo(state->lstick_x)) * left_direction; // may be inverted
+		camera_eye -= (prox_speed_lateral * expo(state->lstick_x)) * left_direction; // may be inverted
 	} else {
 		camera_orientation *= glm::rotate(glm::mat4(1.0), control_settings->control_yaw_speed[0] * expo(state->lstick_x), glm::vec3(0, 0, -1));
 	}
@@ -231,7 +231,7 @@ void reshape(int width, int height) {
 
 	glViewport(0, 0, (GLsizei)width, (GLsizei)height);
 
-	drawing_tools.reshape(SCREEN_W, SCREEN_H);
+	drawing_tools.reshape((float)SCREEN_W, (float)SCREEN_H);
 }
 
 int main(int argc, const char * argv[]) {

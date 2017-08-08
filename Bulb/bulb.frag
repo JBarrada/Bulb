@@ -2,7 +2,7 @@
 
 #include "math_utils.frag"
 
-#include "cross_menger.frag"
+#include "mandelbox.frag"
 
 out vec4 frag_color;
 

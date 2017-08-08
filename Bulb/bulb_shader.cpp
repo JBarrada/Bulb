@@ -30,40 +30,12 @@ void stovec(string values_string, glm::vec4 &value) {
 	}
 }
 
-glm::vec2 stovec2(string value_string) {
-	int value_string_pos = 0;
-
-	float x = stof(parse_to_next(value_string, ",", value_string_pos)); value_string_pos++;
-	float y = stof(parse_to_next(value_string, ",", value_string_pos)); value_string_pos++;
-
-	return glm::vec2(x, y);
-}
-
-glm::vec3 stovec3(string value_string) {
-	int value_string_pos = 0;
-
-	float x = stof(parse_to_next(value_string, ",", value_string_pos)); value_string_pos++;
-	float y = stof(parse_to_next(value_string, ",", value_string_pos)); value_string_pos++;
-	float z = stof(parse_to_next(value_string, ",", value_string_pos)); value_string_pos++;
-
-	return glm::vec3(x, y, z);
-}
-
-glm::vec4 stovec4(string value_string) {
-	int value_string_pos = 0;
-
-	float x = stof(parse_to_next(value_string, ",", value_string_pos)); value_string_pos++;
-	float y = stof(parse_to_next(value_string, ",", value_string_pos)); value_string_pos++;
-	float z = stof(parse_to_next(value_string, ",", value_string_pos)); value_string_pos++;
-	float w = stof(parse_to_next(value_string, ",", value_string_pos)); value_string_pos++;
-
-	return glm::vec4(x, y, z, w);
-}
-
 ShaderVariable::ShaderVariable(string code) {
 	name = "";
 	category = "";
 	type = "";
+
+	is_color = false;
 
 	update = true;
 
@@ -110,10 +82,12 @@ ShaderVariable::ShaderVariable(string code) {
 		}
 		value[3] = value[2] - value[1];
 	}
+
+	is_color = (type == "color" || type == "color4");
 }
 
 bool ShaderVariable::needs_update() {
-	return (update + animate_enable[0] + animate_enable[1] + animate_enable[2] + animate_enable[3]);
+	return (update + animate_enable[0] + animate_enable[1] + animate_enable[2] + animate_enable[3]) != 0;
 }
 
 void ShaderVariable::update_program_variable(GLuint program) {
@@ -156,17 +130,19 @@ void ShaderVariable::adjust_variable(float normalized_amount, int &sub_variable)
 	int sub_var_count[6] = {1, 1, 1, 2, 3, 4};
 	sub_variable = glm::clamp(sub_variable, 0, sub_var_count[var_type] - 1);
 	
-	float resolution = 100.0f;
-	if (var_type == VAR_BOOL) {
-		if (abs(normalized_amount) == 1.0f) {
-			value[0][sub_variable] = (value[0][sub_variable] == 1.0f) ? 0.0f : 1.0f;
+	if (!animate_enable[sub_variable]) {
+		float resolution = 100.0f;
+		if (var_type == VAR_BOOL) {
+			if (abs(normalized_amount) == 1.0f) {
+				value[0][sub_variable] = (value[0][sub_variable] == 1.0f) ? 0.0f : 1.0f;
+			}
+		} else {
+			float step = value[3][sub_variable] / resolution;
+			value[0][sub_variable] = glm::clamp(value[0][sub_variable] + (normalized_amount * step), value[1][sub_variable], value[2][sub_variable]);
 		}
-	} else {
-		float step = value[3][sub_variable] / resolution;
-		value[0][sub_variable] = glm::clamp(value[0][sub_variable] + (normalized_amount * step), value[1][sub_variable], value[2][sub_variable]);
+		
+		update = true;
 	}
-
-	update = true;
 }
 
 void ShaderVariable::adjust_animate(float normalized_amount, int &sub_variable, int &animate_variable) {
@@ -197,7 +173,7 @@ string ShaderVariable::get_string() {
 		sprintf_s(text, ((value[0][0]) ? "true" : "false"));
 	}
 	if (var_type == VAR_INT) {
-		sprintf_s(text, "%d", value[0][0]);
+		sprintf_s(text, "%0.0f", value[0][0]);
 	}
 	if (var_type == VAR_FLOAT) {
 		sprintf_s(text, "%f", value[0][0]);
@@ -212,9 +188,45 @@ string ShaderVariable::get_string() {
 		sprintf_s(text, "%0.2f, %0.2f, %0.2f, %0.2f", value[0].x, value[0].y, value[0].z, value[0].w);
 	}
 
-	string s(text);
-	return s;
+	return string(text);
 }
+
+string ShaderVariable::get_string(int &sub_variable) {
+	char text[50];
+
+	string color_prefix[4] = {"R: ", "G: ", "B: ", ""};
+	string other_prefix[4] = {"X: ", "Y: ", "Z: ", ""};
+
+	if (var_type == VAR_BOOL) {
+		sprintf_s(text, ((value[0][0]) ? "true" : "false"));
+	} else if (var_type == VAR_INT) {
+		sprintf_s(text, "%0.0f", value[0][0]);
+	} else if (var_type == VAR_FLOAT) {
+		sprintf_s(text, "%f", value[0][0]);
+	} else {
+		sprintf_s(text, "%s%f",((is_color) ? color_prefix[sub_variable].c_str() : other_prefix[sub_variable].c_str()), value[0][sub_variable]);
+	}
+
+	return string(text);
+}
+
+string ShaderVariable::get_string_animate(int &sub_variable, int &animate_variable) {
+	char text[50];
+	
+	string animate_prefix[3] = {"Animate Speed: ", "Animate Scale: ", "Animate Offset: "};
+
+	sprintf_s(text, "%s%f", animate_prefix[animate_variable].c_str(), animate_values[sub_variable][animate_variable]);
+
+	return string(text);
+}
+
+bool ShaderVariable::is_bright() {
+	if (is_color && ((value[0].r + value[0].g + value[0].b) > 2.0f)) {
+		return true;
+	}
+	return false;
+}
+
 
 void BulbShader::load(char *vertex, char *fragment) {
 	shader_variables.clear();
