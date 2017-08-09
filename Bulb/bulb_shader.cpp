@@ -30,11 +30,28 @@ void stovec(string values_string, glm::vec4 &value) {
 	}
 }
 
-ShaderVariable::ShaderVariable(string code) {
+glm::vec4 rgb2hsv(glm::vec4 c) {
+	glm::vec4 K = glm::vec4(0.0f, -1.0f / 3.0f, 2.0f / 3.0f, -1.0f);
+	glm::vec4 p = glm::mix(glm::vec4(c.b, c.g, K.w, K.z), glm::vec4(c.g, c.b, K.x, K.y), (c.g < c.b) ? 0.0f : 1.0f); // glm::step(c.b, c.g)
+	glm::vec4 q = glm::mix(glm::vec4(p.x, p.y, p.w, c.r), glm::vec4(c.r, p.y, p.z, p.x), (c.r < p.x) ? 0.0f : 1.0f); // glm::step(p.x, c.r)
+
+	float d = q.x - glm::min(q.w, q.y);
+	float e = 1.0e-10f;
+	return glm::vec4(glm::abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x, c.w);
+}
+
+glm::vec4 hsv2rgb(glm::vec4 c) {
+	glm::vec4 K = glm::vec4(1.0f, 2.0f / 3.0f, 1.0f / 3.0f, 3.0f);
+    glm::vec3 p = glm::abs(glm::fract(glm::vec3(c.x) + glm::vec3(K.x, K.y, K.z)) * 6.0f - glm::vec3(K.w));
+    return glm::vec4(c.z * glm::mix(glm::vec3(K.x), glm::clamp(p - glm::vec3(K.x), 0.0f, 1.0f), c.y), c.w);
+}
+
+ShaderVariable::ShaderVariable() {
 	name = "";
 	category = "";
 	type = "";
 
+	hsv_mode = false;
 	is_color = false;
 
 	update = true;
@@ -46,7 +63,9 @@ ShaderVariable::ShaderVariable(string code) {
 		animate_values[i][2] = 0.0f; // offset
 		animate_values[i][3] = 0.0f; // pos
 	}
+}
 
+void ShaderVariable::load_from_shader_comment(string code) {
 	if (code.substr(0, 7) == "uniform") {
 		int code_pos = 8;
 
@@ -86,6 +105,16 @@ ShaderVariable::ShaderVariable(string code) {
 	is_color = (type == "color" || type == "color4");
 }
 
+void ShaderVariable::load_from_bulb_save_string(string code) {
+
+}
+
+string ShaderVariable::get_bulb_save_string() {
+	//string save_string = "SV:" + name + "," + category + "," + type + "," + std::to_string(var_type) + "," + std::to_string(is_color);
+
+
+}
+
 bool ShaderVariable::needs_update() {
 	return (update + animate_enable[0] + animate_enable[1] + animate_enable[2] + animate_enable[3]) != 0;
 }
@@ -117,10 +146,20 @@ void ShaderVariable::update_program_variable(GLuint program) {
 		glUniform2fv(var_pointer, 1, (float*)&value[0]);
 	}
 	if (var_type == VAR_VEC3) {
-		glUniform3fv(var_pointer, 1, (float*)&value[0]);
+		if (hsv_mode) {
+			glm::vec4 color_rgb = hsv2rgb(value[0]);
+			glUniform3fv(var_pointer, 1, (float*)&color_rgb);
+		} else {
+			glUniform3fv(var_pointer, 1, (float*)&value[0]);
+		}
 	}
 	if (var_type == VAR_VEC4) {
-		glUniform4fv(var_pointer, 1, (float*)&value[0]);
+		if (hsv_mode) {
+			glm::vec4 color_rgb = hsv2rgb(value[0]);
+			glUniform3fv(var_pointer, 1, (float*)&color_rgb);
+		} else {
+			glUniform4fv(var_pointer, 1, (float*)&value[0]);
+		}
 	}
 
 	update = false;
@@ -166,6 +205,19 @@ void ShaderVariable::adjust_animate(float normalized_amount, int &sub_variable, 
 	}
 }
 
+void ShaderVariable::set_hsv_mode(bool enable) {
+	if (is_color) {
+		if (hsv_mode != enable) {
+			hsv_mode = enable;
+			if (enable) {
+				value[0] = rgb2hsv(value[0]);
+			} else {
+				value[0] = hsv2rgb(value[0]);
+			}
+		}
+	}
+}
+
 string ShaderVariable::get_string() {
 	char text[50];
 
@@ -194,8 +246,7 @@ string ShaderVariable::get_string() {
 string ShaderVariable::get_string(int &sub_variable) {
 	char text[50];
 
-	string color_prefix[4] = {"R: ", "G: ", "B: ", ""};
-	string other_prefix[4] = {"X: ", "Y: ", "Z: ", ""};
+	string prefixes[3][4] = {{"X: ", "Y: ", "Z: ", ""}, {"R: ", "G: ", "B: ", ""}, {"H: ", "S: ", "V: ", ""}};
 
 	if (var_type == VAR_BOOL) {
 		sprintf_s(text, ((value[0][0]) ? "true" : "false"));
@@ -204,7 +255,15 @@ string ShaderVariable::get_string(int &sub_variable) {
 	} else if (var_type == VAR_FLOAT) {
 		sprintf_s(text, "%f", value[0][0]);
 	} else {
-		sprintf_s(text, "%s%f",((is_color) ? color_prefix[sub_variable].c_str() : other_prefix[sub_variable].c_str()), value[0][sub_variable]);
+		int prefix_index = 0;
+		if (is_color) {
+			if (hsv_mode) {
+				prefix_index = 2;
+			} else {
+				prefix_index = 1;
+			}
+		}
+		sprintf_s(text, "%s%f", prefixes[prefix_index][sub_variable].c_str(), value[0][sub_variable]);
 	}
 
 	return string(text);
@@ -227,6 +286,13 @@ bool ShaderVariable::is_bright() {
 	return false;
 }
 
+bool ShaderVariable::operator==(const ShaderVariable& rhs) {
+	if ((rhs.category == category) && (rhs.name == name)) {
+		return true;
+	} else {
+		return false;
+	}
+}
 
 BulbShader::BulbShader() {
 	fractal_file = "mandelbox.frag";
@@ -254,13 +320,14 @@ BulbShader::BulbShader() {
 }
 
 void BulbShader::load() {
-	shader_variables.clear(); // maybe dont clear (try to keep similar consistent)
-
 	ofstream frag_temp_file;
 	frag_temp_file.open("bulb_temp.frag", ios::out);
 
 	ifstream frag_orig_file;
 	frag_orig_file.open("bulb.frag", ios::in);
+
+	vector<ShaderVariable> shader_variables_old(shader_variables);
+	vector<ShaderVariable> shader_variables_new;
 
 	string current_line;
 	while (getline(frag_orig_file, current_line)) {
@@ -280,8 +347,9 @@ void BulbShader::load() {
 			while (getline(include_file, include_file_line)) {
 				frag_temp_file << include_file_line << endl;
 				if (include_file_line.substr(0, 7) == "uniform" && include_file_line.find("~") != std::string::npos) {
-					ShaderVariable sv(include_file_line);
-					shader_variables.push_back(sv);
+					ShaderVariable sv;
+					sv.load_from_shader_comment(include_file_line);
+					shader_variables_new.push_back(sv);
 				}
 			}
 
@@ -289,8 +357,9 @@ void BulbShader::load() {
 		} else {
 			frag_temp_file << current_line << endl;
 			if (current_line.substr(0, 7) == "uniform" && current_line.find("~") != std::string::npos) {
-				ShaderVariable sv(current_line);
-				shader_variables.push_back(sv);
+				ShaderVariable sv;
+				sv.load_from_shader_comment(current_line);
+				shader_variables_new.push_back(sv);
 			}
 		}
 	}
@@ -298,12 +367,26 @@ void BulbShader::load() {
 	frag_orig_file.close();
 	frag_temp_file.close();
 
+	shader_variables.clear();
+	for (int i = 0; i < (int)shader_variables_new.size(); i++) {
+		if (shader_variables_new[i].category == "Fractal") {
+			shader_variables.push_back(shader_variables_new[i]);
+		} else {
+			vector<ShaderVariable>::iterator found = std::find(shader_variables_old.begin(), shader_variables_old.end(), shader_variables_new[i]);
+			
+			if (found != shader_variables_old.end()) {
+				shader_variables.push_back(shader_variables_old[found - shader_variables_old.begin()]);
+			} else {
+				shader_variables.push_back(shader_variables_new[i]);
+			}
+		}
+	}
+
 	std::sort(shader_variables.begin(), shader_variables.end(), [](const ShaderVariable& lhs, const ShaderVariable& rhs){ return lhs.category < rhs.category; });
 
 	// shader categories
 	shader_categories.clear();
 	shader_categories_indexes.clear();
-
 	for (int i = 0; i < (int)(shader_variables.size()); i++) {
 		if (std::find(shader_categories.begin(), shader_categories.end(), shader_variables[i].category) == shader_categories.end()) {
 			shader_categories.push_back(shader_variables[i].category);

@@ -3,12 +3,12 @@
 todo:
 #strafing
 #setting sorting
--saving
+-saving (in progress)
 -loading
 -more fractals
 #add movespeed and rotation speed to settings
--add hsv color setting changing
-?in app other fractal loading - keep raytracer settings
+?add hsv color setting changing (untested)
+#in app other fractal loading & keep raytracer settings
 #fullscreen
 #dpad setting changing improvements
 #setting changing expo
@@ -19,5 +19,4 @@ todo:
 -scale animation to proximity setting
 -skyboxes (space, ocean, gradient)
 -volumetric/atmospheric lighting/shadows 
-
-#todo: move controlsettings into bulbsettings as pointer
+#move controlsettings into bulbsettings as pointer

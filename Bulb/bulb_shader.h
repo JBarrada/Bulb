@@ -36,9 +36,10 @@ public:
 	string category;
 	string type;
 
-	bool is_color;
-
 	SHADER_VAR_TYPE var_type;
+
+	bool hsv_mode;
+	bool is_color;
 
 	glm::vec4 value[4];
 
@@ -47,7 +48,13 @@ public:
 
 	bool update;
 
-	ShaderVariable(string code);
+
+	ShaderVariable();
+
+	void load_from_shader_comment(string code);
+	void load_from_bulb_save_string(string code);
+
+	string get_bulb_save_string();
 
 	bool needs_update();
 	void update_program_variable(GLuint program);
@@ -55,12 +62,15 @@ public:
 	void adjust_variable(float normalized_amount, int &sub_variable);
 	void adjust_animate(float normalized_amount, int &sub_variable, int &animate_variable);
 
+	void set_hsv_mode(bool enable);
+
 	string get_string();
 	string get_string(int &sub_variable);
 	string get_string_animate(int &sub_variable, int &animate_variable);
 
 	bool is_bright();
 
+	bool operator==(const ShaderVariable& rhs);
 };
 
 
