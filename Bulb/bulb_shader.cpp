@@ -15,6 +15,19 @@ string parse_to_next(string input, string target, int &pos) {
 	return output;
 }
 
+vector<string> split_string(string input, string target) {
+	vector<string> split_output;
+
+	int input_pos = 0;
+	while (input_pos < (int)input.size()) {
+		string current_output = parse_to_next(input, target, input_pos); input_pos++;
+
+		split_output.push_back(current_output);
+	}
+
+	return split_output;
+}
+
 void stovec(string values_string, glm::vec4 &value) {
 	int values_string_pos = 0;
 
@@ -106,13 +119,68 @@ void ShaderVariable::load_from_shader_comment(string code) {
 }
 
 void ShaderVariable::load_from_bulb_save_string(string code) {
+	vector<string> code_split = split_string(code, "|");
 
+	if ((int)code_split.size() >= 16) {
+		if (code_split[0] == "SV") {
+			name = code_split[1];
+			category = code_split[2];
+			type = code_split[3];
+
+			// flags
+			var_type = (SHADER_VAR_TYPE)stoi(code_split[4]);
+			hsv_mode = (stoi(code_split[5]) == 1);
+			is_color = (stoi(code_split[6]) == 1);
+
+			// values
+			for (int i = 0; i < 4; i++) {
+				stovec(code_split[7+i], value[i]);
+			}
+
+			// animate enable
+			vector<string> animate_enable_split = split_string(code_split[11], ",");
+			for (int i = 0; i < 4; i++) {
+				animate_enable[i] = (stoi(animate_enable_split[i]) == 1);
+			}
+
+			// animate values
+			for (int i = 0; i < 4; i++) {
+				stovec(code_split[12+i], animate_values[i]);
+			}
+
+			update = true;
+		}
+	}
 }
 
 string ShaderVariable::get_bulb_save_string() {
-	//string save_string = "SV:" + name + "," + category + "," + type + "," + std::to_string(var_type) + "," + std::to_string(is_color);
+	string save_string = "SV|" + name + "|" + category + "|" + type + "|";
 
+	// flags
+	char flags_chars[50];
+	sprintf_s(flags_chars, "%d|%d|%d|", var_type, hsv_mode, is_color);
+	save_string += string(flags_chars);
 
+	// values
+	for (int i = 0; i < 4; i++) {
+		char value_chars[100];
+		sprintf_s(value_chars, "%f,%f,%f,%f|", value[i][0], value[i][1], value[i][2], value[i][3]);
+		save_string += string(value_chars);
+	}
+
+	// animate enable
+	char animate_enable_chars[50];
+	sprintf_s(animate_enable_chars, "%d,%d,%d,%d|", animate_enable[0], animate_enable[1], animate_enable[2], animate_enable[3]);
+	save_string += string(animate_enable_chars);
+
+	// animate values
+	for (int i = 0; i < 4; i++) {
+		char animate_value_chars[100];
+		sprintf_s(animate_value_chars, "%f,%f,%f,%f|", animate_values[i][0], animate_values[i][1], animate_values[i][2], animate_values[i][3]);
+		save_string += string(animate_value_chars);
+	}
+
+	return save_string;
 }
 
 bool ShaderVariable::needs_update() {
@@ -293,6 +361,7 @@ bool ShaderVariable::operator==(const ShaderVariable& rhs) {
 		return false;
 	}
 }
+
 
 BulbShader::BulbShader() {
 	fractal_file = "mandelbox.frag";

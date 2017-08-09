@@ -253,6 +253,8 @@ int main(int argc, const char * argv[]) {
 
 	bulb_shader.load();
 
+	bulb_shader.shader_variables[0].get_bulb_save_string();
+
 	glutMainLoop();
 
 	return 0;

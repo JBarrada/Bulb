@@ -20,3 +20,4 @@ todo:
 -skyboxes (space, ocean, gradient)
 -volumetric/atmospheric lighting/shadows 
 #move controlsettings into bulbsettings as pointer
+-fix dpad int adjustments
