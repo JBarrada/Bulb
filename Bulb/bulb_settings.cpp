@@ -109,8 +109,9 @@ string BulbControlSettings::get_variable_value(int variable) {
 	return string(text);
 }
 
-BulbSettings::BulbSettings(vector<ShaderVariable> *shader_variables, DrawingTools *drawing_tools) {
-	this->shader_variables = shader_variables;
+BulbSettings::BulbSettings(BulbShader *bulb_shader, BulbControlSettings *control_settings, DrawingTools *drawing_tools) {
+	this->bulb_shader = bulb_shader;
+	this->control_settings = control_settings;
 	this->drawing_tools = drawing_tools;
 
 	settings_open = false;
@@ -119,8 +120,10 @@ BulbSettings::BulbSettings(vector<ShaderVariable> *shader_variables, DrawingTool
 	settings_font = GLUT_BITMAP_HELVETICA_12;
 	font_height = 20;
 
-	shader_categories.clear();
-	shader_categories_indexes.clear();
+
+	load_menu_item_highlight = 0;
+	load_menu_item_selected = false;
+	load_menu_item_sub_highlight = 0; 
 
 	control_menu_item_highlight = 0;
 	control_menu_item_selected = false;
@@ -132,22 +135,9 @@ BulbSettings::BulbSettings(vector<ShaderVariable> *shader_variables, DrawingTool
 	shader_menu_item_sub_selected = false;
 	shader_menu_item_sub_animate_highlight = 0;
 	shader_menu_category = 0;
-}
 
-void BulbSettings::update_shader_categories() {
-	shader_categories.clear();
-	shader_categories_indexes.clear();
-
-	for (int i = 0; i < (int)(shader_variables->size()); i++) {
-		if (std::find(shader_categories.begin(), shader_categories.end(), (*shader_variables)[i].category) == shader_categories.end()) {
-			shader_categories.push_back((*shader_variables)[i].category);
-			vector<int> new_category;
-			shader_categories_indexes.push_back(new_category);
-		}
-
-		int found_index = std::find(shader_categories.begin(), shader_categories.end(), (*shader_variables)[i].category) - shader_categories.begin();
-		shader_categories_indexes[found_index].push_back(i);
-	}
+	main_menu_item_highlight = 0;
+	main_menu_item_selected = false;
 }
 
 float BulbSettings::settings_expo(float value) {
@@ -197,40 +187,40 @@ void BulbSettings::control_menu_draw() {
 		glColor4f(0.2f,0.2f,0.2f,1.0f);
 		drawing_tools->rectangle_filled(0, 0, bar_width, bar_height + 5);
 
-		string variable_string = "Control : " + control_settings.get_variable_name(control_menu_item_highlight);
+		string variable_string = "Control : " + control_settings->get_variable_name(control_menu_item_highlight);
 		glColor4f(0.6f,0.6f,0.6f,1.0f);
 		drawing_tools->text(5, 5, settings_font, variable_string);
 
 		if (control_menu_item_highlight == 0) { // "camera_fov"
-			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, control_settings.camera_fov, "%f", true);
+			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, control_settings->camera_fov, "%f", true);
 		}
 		if (control_menu_item_highlight == 1) { // "control_expo_power"
-			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, control_settings.control_expo_power, "%0.0f", true);
+			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, control_settings->control_expo_power, "%0.0f", true);
 		}
 		if (control_menu_item_highlight == 2) { // "control_move_speed_forward"
-			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, control_settings.control_move_speed_forward, "%f", true);
+			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, control_settings->control_move_speed_forward, "%f", true);
 		}
 		if (control_menu_item_highlight == 3) { // "control_move_speed_lateral"
-			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, control_settings.control_move_speed_lateral, "%f", true);
+			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, control_settings->control_move_speed_lateral, "%f", true);
 		}
 		if (control_menu_item_highlight == 4) { // "control_move_speed_vertical"
-			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, control_settings.control_move_speed_vertical, "%f", true);
+			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, control_settings->control_move_speed_vertical, "%f", true);
 		}
 		if (control_menu_item_highlight == 5) { // "control_pitch_speed"
-			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, control_settings.control_pitch_speed, "%f", true);
+			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, control_settings->control_pitch_speed, "%f", true);
 		}
 		if (control_menu_item_highlight == 6) { // "control_roll_speed"
-			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, control_settings.control_roll_speed, "%f", true);
+			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, control_settings->control_roll_speed, "%f", true);
 		}
 		if (control_menu_item_highlight == 7) { // "control_yaw_speed"
-			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, control_settings.control_yaw_speed, "%f", true);
+			draw_slider_bar(0, bar_height + 5, bar_width, bar_height, control_settings->control_yaw_speed, "%f", true);
 		}
 		if (control_menu_item_highlight == 8) { // "control_vibrate"
 			glColor4f(0.4f,0.4f,0.4f,1.0f);
 			drawing_tools->rectangle_filled(0, bar_height + 5, bar_width, bar_height);
 
 			glColor4f(1.0f,1.0f,1.0f,1.0f);
-			drawing_tools->text(5, bar_height + 10, settings_font, control_settings.get_variable_value(control_menu_item_highlight));
+			drawing_tools->text(5, bar_height + 10, settings_font, control_settings->get_variable_value(control_menu_item_highlight));
 		}
 	} else {
 		int items_size = 9;
@@ -249,9 +239,9 @@ void BulbSettings::control_menu_draw() {
 
 		glColor4f(1.0f,1.0f,1.0f,1.0f);
 		for (int i = 0; i < items_size; i++) {
-			string variable_string = "Control : " + control_settings.get_variable_name(i);
+			string variable_string = "Control : " + control_settings->get_variable_name(i);
 			drawing_tools->text(5, (i + 1) * font_height + 5, settings_font, variable_string);
-			drawing_tools->text(255, (i + 1) * font_height + 5, settings_font, control_settings.get_variable_value(i));
+			drawing_tools->text(255, (i + 1) * font_height + 5, settings_font, control_settings->get_variable_value(i));
 		}
 	}
 }
@@ -265,7 +255,7 @@ void BulbSettings::control_menu_gamepad_update(GamePadState *state) {
 		float dpad_step = (state->pressed(GamePad_Button_DPAD_RIGHT) - state->pressed(GamePad_Button_DPAD_LEFT));
 		float trigger_step = (settings_expo(state->rt) - settings_expo(state->lt));
 
-		control_settings.adjust_variable(dpad_step + trigger_step, control_menu_item_highlight);
+		control_settings->adjust_variable(dpad_step + trigger_step, control_menu_item_highlight);
 	} else {
 		if (state->pressed(GamePad_Button_A)) {
 			control_menu_item_selected = true;
@@ -284,9 +274,9 @@ void BulbSettings::control_menu_gamepad_update(GamePadState *state) {
 
 void BulbSettings::shader_menu_draw() {
 	if (shader_menu_item_selected) {
-		int actual_highlight_index = shader_categories_indexes[shader_menu_category][shader_menu_item_highlight];
+		int actual_highlight_index = bulb_shader->shader_categories_indexes[shader_menu_category][shader_menu_item_highlight];
 
-		ShaderVariable selected_variable = (*shader_variables)[actual_highlight_index];
+		ShaderVariable selected_variable = bulb_shader->shader_variables[actual_highlight_index];
 		SHADER_VAR_TYPE selected_type = selected_variable.var_type;
 
 		float bar_width = 500;
@@ -368,7 +358,7 @@ void BulbSettings::shader_menu_draw() {
 			}
 		}
 	} else {
-		int category_size = (int)shader_categories_indexes[shader_menu_category].size();
+		int category_size = (int)bulb_shader->shader_categories_indexes[shader_menu_category].size();
 
 		glColor4f(0.2f,0.2f,0.2f,1.0f);
 		drawing_tools->rectangle_filled(0, 0, 250, (float)(category_size + 1.0f) * font_height + 5);
@@ -380,32 +370,33 @@ void BulbSettings::shader_menu_draw() {
 		drawing_tools->rectangle_filled(0, (shader_menu_item_highlight + 1) * font_height, 250, font_height);
 
 		glColor4f(0.6f,0.6f,0.6f,1.0f);
-		drawing_tools->text(5, 0 * font_height + 5, settings_font, "< " + shader_categories[shader_menu_category] + " >");
+		drawing_tools->text(5, 0 * font_height + 5, settings_font, "< " + bulb_shader->shader_categories[shader_menu_category] + " >");
 
 		for (int i = 0; i < category_size; i++) {
-			int actual_index = shader_categories_indexes[shader_menu_category][i];
+			int actual_index = bulb_shader->shader_categories_indexes[shader_menu_category][i];
+			ShaderVariable *current_variable = &bulb_shader->shader_variables[actual_index];
 
-			string variable_string = (*shader_variables)[actual_index].category + " : " + (*shader_variables)[actual_index].name;
+			string variable_string = current_variable->category + " : " + current_variable->name;
 
-			if ((*shader_variables)[actual_index].is_color) {
-				glColor3f((*shader_variables)[actual_index].value[0].r, (*shader_variables)[actual_index].value[0].g, (*shader_variables)[actual_index].value[0].b);
+			if (current_variable->is_color) {
+				glColor3f(current_variable->value[0].r, current_variable->value[0].g, current_variable->value[0].b);
 				drawing_tools->rectangle_filled(250, (i + 1) * font_height, 200, font_height);
 			}
 
 			glColor3f(1.0f,1.0f,1.0f);
 			drawing_tools->text(5, (i + 1) * font_height + 5, settings_font, variable_string);
-			if ((*shader_variables)[actual_index].is_bright()) {
+			if (current_variable->is_bright()) {
 				glColor3f(0.0f,0.0f,0.0f);
 			}
-			drawing_tools->text(255, (i + 1) * font_height + 5, settings_font, (*shader_variables)[actual_index].get_string());
+			drawing_tools->text(255, (i + 1) * font_height + 5, settings_font, current_variable->get_string());
 		}
 	}
 }
 
 void BulbSettings::shader_menu_gamepad_update(GamePadState *state) {
 	if (shader_menu_item_selected) {
-		int actual_highlight_index = shader_categories_indexes[shader_menu_category][shader_menu_item_highlight];
-		ShaderVariable *selected_variable = &(*shader_variables)[actual_highlight_index];
+		int actual_highlight_index = bulb_shader->shader_categories_indexes[shader_menu_category][shader_menu_item_highlight];
+		ShaderVariable *selected_variable = &bulb_shader->shader_variables[actual_highlight_index];
 
 		if (state->pressed(GamePad_Button_X)) {
 			selected_variable->animate_enable[shader_menu_item_sub_highlight] = !selected_variable->animate_enable[shader_menu_item_sub_highlight];
@@ -448,17 +439,17 @@ void BulbSettings::shader_menu_gamepad_update(GamePadState *state) {
 
 		if (state->pressed(GamePad_Button_RIGHT_SHOULDER)) shader_menu_category++;
 		if (state->pressed(GamePad_Button_LEFT_SHOULDER)) shader_menu_category--;
-		shader_menu_category = glm::clamp(shader_menu_category, 0, (int)shader_categories.size() - 1);
+		shader_menu_category = glm::clamp(shader_menu_category, 0, (int)bulb_shader->shader_categories.size() - 1);
 
 		if (state->pressed(GamePad_Button_DPAD_UP)) shader_menu_item_highlight++;
 		if (state->pressed(GamePad_Button_DPAD_DOWN)) shader_menu_item_highlight--;
-		int category_size = (int)shader_categories_indexes[shader_menu_category].size();
+		int category_size = (int)bulb_shader->shader_categories_indexes[shader_menu_category].size();
 		shader_menu_item_highlight = glm::clamp(shader_menu_item_highlight, 0, category_size-1);
 	}
 }
 
 void BulbSettings::main_menu_draw() {
-	string menu_items[] = {"Shader Settings", "Control Settings", "Load", "Save"};
+	string menu_items[] = {"Shader Settings", "Control Settings", "Load", "Save (TODO)"};
 	int menu_items_size = 4;
 		
 	glColor4f(0.2f,0.2f,0.2f,1.0f);
@@ -478,8 +469,6 @@ void BulbSettings::main_menu_gamepad_update(GamePadState *state) {
 
 	if (state->pressed(GamePad_Button_A)) {
 		main_menu_item_selected = true;
-		main_menu_item_sub_highlight = 0;
-
 		menu_open = main_menu_item_highlight + 1;
 	}
 	if (state->pressed(GamePad_Button_B)) {
@@ -488,7 +477,77 @@ void BulbSettings::main_menu_gamepad_update(GamePadState *state) {
 
 	if (state->pressed(GamePad_Button_DPAD_UP)) main_menu_item_highlight++;
 	if (state->pressed(GamePad_Button_DPAD_DOWN)) main_menu_item_highlight--;
-	main_menu_item_highlight = glm::clamp(main_menu_item_highlight, 0, menu_items_size - 1 - 2);
+	main_menu_item_highlight = glm::clamp(main_menu_item_highlight, 0, menu_items_size - 1 - 1);
+}
+
+void BulbSettings::load_menu_draw() {
+	if (!load_menu_item_selected) {
+		string menu_items[] = {"Fractals", "Saves (TODO)"};
+		int menu_items_size = 2;
+		
+		glColor4f(0.2f,0.2f,0.2f,1.0f);
+		drawing_tools->rectangle_filled(0, 0, 250, (float)(menu_items_size) * font_height + 5);
+
+		glColor4f(0.4f,0.4f,0.4f,1.0f);
+		drawing_tools->rectangle_filled(0, load_menu_item_highlight * font_height, 250, font_height);
+	
+		glColor4f(1.0f,1.0f,1.0f,1.0f);
+		for (int i = 0; i < menu_items_size; i++) {	
+			drawing_tools->text(5, i * font_height + 5, settings_font, menu_items[i]);
+		}
+	} else {
+		int menu_items_size = (int)bulb_shader->fractal_files.size();
+		
+		glColor4f(0.2f,0.2f,0.2f,1.0f);
+		drawing_tools->rectangle_filled(0, 0, 250, (float)(menu_items_size) * font_height + 5);
+
+		glColor4f(0.4f,0.4f,0.4f,1.0f);
+		drawing_tools->rectangle_filled(0, load_menu_item_sub_highlight * font_height, 250, font_height);
+	
+		glColor4f(1.0f,1.0f,1.0f,1.0f);
+		for (int i = 0; i < menu_items_size; i++) {
+			string file_text = bulb_shader->fractal_files[i];
+			if (bulb_shader->fractal_files[i] == bulb_shader->fractal_file) {
+				file_text += " (Loaded)";
+			}
+			drawing_tools->text(5, i * font_height + 5, settings_font, file_text);
+		}
+	}
+}
+
+void BulbSettings::load_menu_gamepad_update(GamePadState *state) {
+	if (!load_menu_item_selected) {
+		int menu_items_size = 2;
+		if (state->pressed(GamePad_Button_A)) {
+			load_menu_item_selected = true;
+			load_menu_item_sub_highlight = 0;
+		}
+		if (state->pressed(GamePad_Button_B)) {
+			menu_open = 0; // main menu
+		}
+
+		if (state->pressed(GamePad_Button_DPAD_UP)) load_menu_item_highlight++;
+		if (state->pressed(GamePad_Button_DPAD_DOWN)) load_menu_item_highlight--;
+		load_menu_item_highlight = glm::clamp(load_menu_item_highlight, 0, menu_items_size - 1 - 1);
+	} else {
+		if (state->pressed(GamePad_Button_B)) {
+			load_menu_item_selected = false;
+		}
+
+		if (state->pressed(GamePad_Button_DPAD_UP)) load_menu_item_sub_highlight++;
+		if (state->pressed(GamePad_Button_DPAD_DOWN)) load_menu_item_sub_highlight--;
+
+		if (load_menu_item_highlight == 0) {
+			load_menu_item_sub_highlight = glm::clamp(load_menu_item_sub_highlight, 0, (int)bulb_shader->fractal_files.size() - 1);
+			
+			if (state->pressed(GamePad_Button_A)) {
+				bulb_shader->fractal_file = bulb_shader->fractal_files[load_menu_item_sub_highlight];
+				bulb_shader->load();
+			}
+		} else if (load_menu_item_highlight == 1) {
+
+		}
+	}
 }
 
 void BulbSettings::draw() {
@@ -496,12 +555,12 @@ void BulbSettings::draw() {
 
 	if (menu_open == 0) {
 		main_menu_draw();
-	}
-	if (menu_open == 1) {
+	} else if (menu_open == 1) {
 		shader_menu_draw();
-	}
-	if (menu_open == 2) {
+	} else if (menu_open == 2) {
 		control_menu_draw();
+	} else if (menu_open == 3) {
+		load_menu_draw();
 	}
 }
 
@@ -512,5 +571,8 @@ void BulbSettings::gamepad_update(GamePadState *state) {
 		shader_menu_gamepad_update(state);
 	} else if (menu_open == 2) {
 		control_menu_gamepad_update(state);
+	} else if (menu_open == 3) {
+		load_menu_gamepad_update(state);
 	}
+
 }

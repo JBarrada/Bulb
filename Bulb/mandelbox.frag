@@ -1,3 +1,5 @@
+//FRACTAL_FILE
+
 uniform int Iterations = 15; //~Fractal,default,15|0|200
 uniform int ColorIterations = 3; //~Fractal,default,3|0|200
 uniform float MinRad2 = 0.25; //~Fractal,default,0.25|0|2

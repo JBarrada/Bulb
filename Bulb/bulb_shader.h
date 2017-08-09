@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <Windows.h>
 
 #include <glew.h>
 #include <glut.h>
@@ -68,14 +69,21 @@ public:
 	GLuint program_fp32;
 	
 	vector<ShaderVariable> shader_variables;
-	// stuct for camera pos/orient variables
+	vector<string> shader_categories;
+	vector<vector<int>> shader_categories_indexes;
+
+	string fractal_file;
+
+	vector<string> fractal_files;
+
+	BulbShader();
 
 	void update_shader_variables();
 	void update_control_variables(glm::vec3 camera_eye, glm::vec3 camera_target, glm::vec3 camera_up, float camera_fov, float camera_aspect);
 
 	void draw();
 	
-	void load(char *vertex, char *fragment);
+	void load();
 };
 
 

@@ -2,7 +2,7 @@
 
 #include "math_utils.frag"
 
-#include "mandelbox.frag"
+#include "FRACTAL"
 
 out vec4 frag_color;
 

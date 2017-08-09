@@ -39,6 +39,10 @@ public:
 
 class BulbSettings {
 private:
+	int load_menu_item_highlight;
+	bool load_menu_item_selected;
+	int load_menu_item_sub_highlight; 
+
 	int control_menu_item_highlight;
 	bool control_menu_item_selected;
 	int control_menu_item_sub_highlight;
@@ -50,27 +54,21 @@ private:
 	int shader_menu_item_sub_animate_highlight;
 	int shader_menu_category;
 
-	vector<string> shader_categories;
-	vector<vector<int>> shader_categories_indexes;
-
 	int main_menu_item_highlight;
 	bool main_menu_item_selected;
-	int main_menu_item_sub_highlight; // maybe for loading fractal
 
 	void *settings_font;
 	int font_height;
 public:
 	DrawingTools *drawing_tools;
 
-	vector<ShaderVariable> *shader_variables;
-	BulbControlSettings control_settings;
+	BulbShader *bulb_shader;
+	BulbControlSettings *control_settings;
 
 	bool settings_open;
 	int menu_open;
 
-	BulbSettings(vector<ShaderVariable> *shader_variables, DrawingTools *drawing_tools);
-
-	void update_shader_categories();
+	BulbSettings(BulbShader *bulb_shader, BulbControlSettings *control_settings, DrawingTools *drawing_tools);
 
 	float settings_expo(float value);
 
@@ -87,6 +85,9 @@ public:
 	void main_menu_draw();
 	void main_menu_gamepad_update(GamePadState *state);
 	
+	void load_menu_draw();
+	void load_menu_gamepad_update(GamePadState *state);
+
 	void draw();
 
 	void gamepad_update(GamePadState *state);

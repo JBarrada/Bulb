@@ -14,8 +14,8 @@
 #include "bulb_shader.h"
 #include "bulb_settings.h"
 
-int SCREEN_W = 800;
-int SCREEN_H = 600;
+int SCREEN_W = 640;
+int SCREEN_H = 480;
 float ASPECT = (float)SCREEN_W / (float)SCREEN_H;
 
 bool fullscreen = false;
@@ -39,8 +39,8 @@ clock_t frame_time;
 
 DrawingTools drawing_tools;
 BulbShader bulb_shader;
-BulbSettings bulb_settings(&bulb_shader.shader_variables, &drawing_tools);
-BulbControlSettings *control_settings = &bulb_settings.control_settings;
+BulbControlSettings control_settings;
+BulbSettings bulb_settings(&bulb_shader, &control_settings, &drawing_tools);
 
 float get_avg_dist() {
 	float depth_total = 0.0;
@@ -76,7 +76,7 @@ void render() {
 	
 	bulb_shader.draw();
 
-	bulb_shader.update_control_variables(camera_eye, camera_target, camera_up, control_settings->camera_fov[0], ASPECT);
+	bulb_shader.update_control_variables(camera_eye, camera_target, camera_up, control_settings.camera_fov[0], ASPECT);
 	bulb_shader.update_shader_variables();
 
 	if (bulb_settings.settings_open) bulb_settings.draw();
@@ -91,7 +91,7 @@ void render() {
 		camera_prox +=  (prox_delta / 8.0f);
 	}
 
-	frame_counter();
+	//frame_counter();
 }
 
 void keyboard_down(unsigned char key, int x, int y) {
@@ -139,10 +139,10 @@ void keyboard_down(unsigned char key, int x, int y) {
 }
 
 float expo(float value) {
-	if (value < 0 && (control_settings->control_expo_power[0] % 2 == 0)) {
-		return -1.0f * pow(value, control_settings->control_expo_power[0]);
+	if (value < 0 && (control_settings.control_expo_power[0] % 2 == 0)) {
+		return -1.0f * pow(value, control_settings.control_expo_power[0]);
 	} else {
-		return pow(value, control_settings->control_expo_power[0]);
+		return pow(value, control_settings.control_expo_power[0]);
 	}
 }
 
@@ -150,9 +150,9 @@ void update_gamepad_control(GamePadState *state, bool sticks_only) {
 	glm::vec3 forward_direction = glm::vec3(camera_orientation * glm::vec4(0, 1, 0, 0));
 	glm::vec3 left_direction = glm::vec3(camera_orientation * glm::vec4(1, 0, 0, 0));
 
-	float prox_speed_forward = control_settings->control_move_speed_forward[0] * glm::max(camera_prox, 0.0001f);
-	float prox_speed_lateral = control_settings->control_move_speed_lateral[0] * glm::max(camera_prox, 0.0001f);
-	float prox_speed_vertical = control_settings->control_move_speed_vertical[0] * glm::max(camera_prox, 0.0001f);
+	float prox_speed_forward = control_settings.control_move_speed_forward[0] * glm::max(camera_prox, 0.0001f);
+	float prox_speed_lateral = control_settings.control_move_speed_lateral[0] * glm::max(camera_prox, 0.0001f);
+	float prox_speed_vertical = control_settings.control_move_speed_vertical[0] * glm::max(camera_prox, 0.0001f);
 
 	// forward
 	if (!sticks_only) {
@@ -166,14 +166,14 @@ void update_gamepad_control(GamePadState *state, bool sticks_only) {
 	if (state->buttons[GamePad_Button_LEFT_SHOULDER] || state->buttons[GamePad_Button_RIGHT_SHOULDER]) {
 		camera_eye -= (prox_speed_lateral * expo(state->lstick_x)) * left_direction; // may be inverted
 	} else {
-		camera_orientation *= glm::rotate(glm::mat4(1.0), control_settings->control_yaw_speed[0] * expo(state->lstick_x), glm::vec3(0, 0, -1));
+		camera_orientation *= glm::rotate(glm::mat4(1.0), control_settings.control_yaw_speed[0] * expo(state->lstick_x), glm::vec3(0, 0, -1));
 	}
 
 	// pitch
-	camera_orientation *= glm::rotate(glm::mat4(1.0), control_settings->control_pitch_speed[0] * expo(state->rstick_y), glm::vec3(1, 0, 0));
+	camera_orientation *= glm::rotate(glm::mat4(1.0), control_settings.control_pitch_speed[0] * expo(state->rstick_y), glm::vec3(1, 0, 0));
 
 	// roll
-	camera_orientation *= glm::rotate(glm::mat4(1.0), control_settings->control_roll_speed[0] * expo(state->rstick_x), glm::vec3(0, -1, 0));
+	camera_orientation *= glm::rotate(glm::mat4(1.0), control_settings.control_roll_speed[0] * expo(state->rstick_x), glm::vec3(0, -1, 0));
 
 	// update
 	camera_target = camera_eye + glm::vec3(camera_orientation * glm::vec4(0, -1, 0, 0));
@@ -188,7 +188,7 @@ void update_gamepad_control(GamePadState *state, bool sticks_only) {
 	camera_velocity_prev = glm::vec3(velocity);
 
 	// vibrate
-	if (control_settings->control_vibrate) {
+	if (control_settings.control_vibrate) {
 		pad->vibrate(accel * 100.0f, accel * 100.0f);
 	}	
 }
@@ -251,9 +251,7 @@ int main(int argc, const char * argv[]) {
 
 	glEnable(GL_BLEND);
 
-	bulb_shader.load("bulb.vert", "bulb.frag");
-
-	bulb_settings.update_shader_categories();
+	bulb_shader.load();
 
 	glutMainLoop();
 

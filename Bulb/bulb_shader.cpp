@@ -228,14 +228,39 @@ bool ShaderVariable::is_bright() {
 }
 
 
-void BulbShader::load(char *vertex, char *fragment) {
-	shader_variables.clear();
+BulbShader::BulbShader() {
+	fractal_file = "mandelbox.frag";
+
+	// load fractal files
+	string directory = "*";
+	WIN32_FIND_DATA fileData; 
+	HANDLE hFind;
+	if ( !((hFind = FindFirstFile(directory.c_str(), &fileData)) == INVALID_HANDLE_VALUE) ) {
+		while(FindNextFile(hFind, &fileData)) {
+			ifstream current_file;
+			current_file.open(fileData.cFileName, ios::in);
+
+			string first_line;
+			getline(current_file, first_line);
+
+			if (first_line.substr(0, 9) == "//FRACTAL") {
+				fractal_files.push_back(fileData.cFileName);
+			}
+			current_file.close();
+		}
+	}
+	
+	FindClose(hFind);
+}
+
+void BulbShader::load() {
+	shader_variables.clear(); // maybe dont clear (try to keep similar consistent)
 
 	ofstream frag_temp_file;
 	frag_temp_file.open("bulb_temp.frag", ios::out);
 
 	ifstream frag_orig_file;
-	frag_orig_file.open(fragment, ios::in);
+	frag_orig_file.open("bulb.frag", ios::in);
 
 	string current_line;
 	while (getline(frag_orig_file, current_line)) {
@@ -243,6 +268,10 @@ void BulbShader::load(char *vertex, char *fragment) {
 			string include_file_name = current_line.substr(9);
 			include_file_name.erase(0, 1);
 			include_file_name.erase(include_file_name.size() - 1);
+
+			if (include_file_name == "FRACTAL") {
+				include_file_name = fractal_file;
+			}
 
 			ifstream include_file;
 			include_file.open(include_file_name, ios::in);
@@ -271,7 +300,22 @@ void BulbShader::load(char *vertex, char *fragment) {
 
 	std::sort(shader_variables.begin(), shader_variables.end(), [](const ShaderVariable& lhs, const ShaderVariable& rhs){ return lhs.category < rhs.category; });
 
-	load_shader(vertex, "bulb_temp.frag", &program_fp32);
+	// shader categories
+	shader_categories.clear();
+	shader_categories_indexes.clear();
+
+	for (int i = 0; i < (int)(shader_variables.size()); i++) {
+		if (std::find(shader_categories.begin(), shader_categories.end(), shader_variables[i].category) == shader_categories.end()) {
+			shader_categories.push_back(shader_variables[i].category);
+			vector<int> new_category;
+			shader_categories_indexes.push_back(new_category);
+		}
+
+		int found_index = std::find(shader_categories.begin(), shader_categories.end(), shader_variables[i].category) - shader_categories.begin();
+		shader_categories_indexes[found_index].push_back(i);
+	}
+
+	load_shader("bulb.vert", "bulb_temp.frag", &program_fp32);
 }
 
 void BulbShader::draw() {

@@ -1,3 +1,5 @@
+//FRACTAL_FILE
+
 uniform int Iterations = 15; //~Fractal,default,15|0|200
 uniform float Gap = 1.0; //~Fractal,default,1|0|1
 
