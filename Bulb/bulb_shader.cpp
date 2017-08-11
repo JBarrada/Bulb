@@ -388,6 +388,42 @@ BulbShader::BulbShader() {
 	FindClose(hFind);
 }
 
+void BulbShader::write_to_save_file(ofstream &save_file) {
+	save_file << "SF|" << fractal_file << endl; 
+	for (int i = 0; i < (int)shader_variables.size(); i++) {
+		save_file << shader_variables[i].get_bulb_save_string() << endl;
+	}
+}
+
+void BulbShader::read_from_save_file(ifstream &save_file) {
+	save_file.clear();
+	save_file.seekg(0, ios::beg);
+	
+	vector<ShaderVariable> shader_variables_new;
+
+	string save_file_line;
+	while (getline(save_file, save_file_line)) {
+		if (save_file_line.substr(0, 2) == "SF") {
+			fractal_file = save_file_line.substr(3);
+		}
+		if (save_file_line.substr(0, 2) == "SV") {
+			ShaderVariable sv;
+			sv.load_from_bulb_save_string(save_file_line);
+			shader_variables_new.push_back(sv);
+		}
+	}
+
+	load();
+
+	for (int i = 0; i < (int)shader_variables_new.size(); i++) {
+		vector<ShaderVariable>::iterator found = std::find(shader_variables.begin(), shader_variables.end(), shader_variables_new[i]);
+			
+		if (found != shader_variables.end()) {
+			shader_variables[found - shader_variables.begin()] = shader_variables_new[i];
+		}
+	}
+}
+
 void BulbShader::load() {
 	ofstream frag_temp_file;
 	frag_temp_file.open("bulb_temp.frag", ios::out);

@@ -88,6 +88,9 @@ public:
 
 	BulbShader();
 
+	void write_to_save_file(ofstream &save_file);
+	void read_from_save_file(ifstream &save_file);
+
 	void update_shader_variables();
 	void update_control_variables(glm::vec3 camera_eye, glm::vec3 camera_target, glm::vec3 camera_up, float camera_fov, float camera_aspect);
 

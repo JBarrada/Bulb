@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <cmath>
 #include <time.h>
 
@@ -251,9 +252,23 @@ int main(int argc, const char * argv[]) {
 
 	glEnable(GL_BLEND);
 
-	bulb_shader.load();
+	//bulb_shader.load();
 
-	bulb_shader.shader_variables[0].get_bulb_save_string();
+	/*
+	ofstream save_file;
+	save_file.open("testsave.bulbsave");
+
+	bulb_shader.write_to_save_file(save_file);
+
+	save_file.close();
+	*/
+
+	ifstream save_file;
+	save_file.open("testsave.bulbsave", ios::in);
+
+	bulb_shader.read_from_save_file(save_file);
+
+	save_file.close();
 
 	glutMainLoop();
 
