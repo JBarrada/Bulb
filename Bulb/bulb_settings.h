@@ -20,6 +20,11 @@
 
 class BulbControlSettings {
 public:
+	glm::vec3 camera_eye;
+	glm::vec3 camera_target;
+	glm::vec3 camera_up;
+	glm::mat4 camera_orientation;
+
 	float camera_fov[4];
 	int control_expo_power[4];
 	float control_move_speed_forward[4];

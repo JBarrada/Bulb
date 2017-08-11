@@ -19,18 +19,18 @@ int SCREEN_W = 640;
 int SCREEN_H = 480;
 float ASPECT = (float)SCREEN_W / (float)SCREEN_H;
 
-bool fullscreen = false;
+bool is_fullscreen = false;
 
 GamePadXbox* pad = new GamePadXbox(GamePadIndex_One);
 
 glm::vec3 camera_eye = glm::vec3(0.0, 4.0, 10.0);
 glm::vec3 camera_target = glm::vec3(0.0, 0.0, 0.0);
 glm::vec3 camera_up = glm::vec3(0, 0, 1);
+glm::mat4 camera_orientation = glm::mat4(1.0);
 
 glm::vec3 camera_eye_prev = glm::vec3(camera_eye);
 glm::vec3 camera_velocity_prev = glm::vec3(0.0);
 
-glm::mat4 camera_orientation = glm::mat4(1.0);
 
 float camera_prox = 1.0;
 float camera_prox_target = 1.0;
@@ -194,6 +194,18 @@ void update_gamepad_control(GamePadState *state, bool sticks_only) {
 	}	
 }
 
+void set_fullscreen(bool fullscreen) {
+	if (fullscreen != is_fullscreen) {
+		is_fullscreen = fullscreen;
+		if (is_fullscreen) {
+			glutFullScreen();
+		} else {
+			glutReshapeWindow(800, 600);
+			glutPositionWindow(0, 0);
+		}
+	}
+}
+
 void force_redraw(int value) {
 	glutPostRedisplay();
 	
@@ -208,14 +220,7 @@ void force_redraw(int value) {
 			if (pad->State.pressed(GamePad_Button_START)) {
 				bulb_settings.settings_open = true;
 			} else if (pad->State.pressed(GamePad_Button_BACK)) {
-				if (fullscreen) {
-					glutReshapeWindow(800, 600);
-					glutPositionWindow(0, 0);
-					fullscreen = false;
-				} else {
-					glutFullScreen();
-					fullscreen = true;
-				}
+				set_fullscreen(!is_fullscreen);
 			} else {
 				update_gamepad_control(&pad->State, false);
 			}

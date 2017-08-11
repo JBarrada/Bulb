@@ -1,6 +1,12 @@
 #include "bulb_settings.h"
 
 BulbControlSettings::BulbControlSettings() {
+	camera_eye = glm::vec3(0.0, 4.0, 10.0);
+	camera_target = glm::vec3(0.0, 0.0, 0.0);
+	camera_up = glm::vec3(0, 0, 1);
+	camera_orientation = glm::mat4(1.0);
+
+
 	camera_fov[0] = 1.5f;
 	camera_fov[1] = 0.0f;
 	camera_fov[2] = 4.0f;
