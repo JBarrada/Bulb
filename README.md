@@ -21,5 +21,6 @@ todo:
 -volumetric/atmospheric lighting/shadows 
 #move controlsettings into bulbsettings as pointer
 -fix dpad int adjustments
--move gamepad update for exploring into controlsettings
+#move gamepad update for exploring into controlsettings
 -create folders for shaders fractals and saves
+#add keyboard menu control
