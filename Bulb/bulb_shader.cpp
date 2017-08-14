@@ -286,6 +286,14 @@ void ShaderVariable::set_hsv_mode(bool enable) {
 	}
 }
 
+glm::vec4 ShaderVariable::get_color() {
+	if (hsv_mode) {
+		return hsv2rgb(value[0]);
+	} else {
+		return value[0];
+	}
+}
+
 string ShaderVariable::get_string() {
 	char text[50];
 
@@ -348,7 +356,8 @@ string ShaderVariable::get_string_animate(int &sub_variable, int &animate_variab
 }
 
 bool ShaderVariable::is_bright() {
-	if (is_color && ((value[0].r + value[0].g + value[0].b) > 2.0f)) {
+	glm::vec4 variable_color = get_color();
+	if (is_color && ((variable_color.r + variable_color.g + variable_color.b) > 2.0f)) {
 		return true;
 	}
 	return false;

@@ -63,6 +63,7 @@ public:
 	void adjust_animate(float normalized_amount, int &sub_variable, int &animate_variable);
 
 	void set_hsv_mode(bool enable);
+	glm::vec4 get_color();
 
 	string get_string();
 	string get_string(int &sub_variable);

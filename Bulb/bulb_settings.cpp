@@ -489,7 +489,8 @@ void BulbSettings::shader_menu_draw() {
 
 		// draw color bar
 		if (selected_variable.is_color) {
-			glColor3f(selected_variable.value[0].r, selected_variable.value[0].g, selected_variable.value[0].b);
+			glm::vec4 variable_color = selected_variable.get_color();
+			glColor3f(variable_color.r, variable_color.g, variable_color.b);
 			drawing_tools->rectangle_filled(0, (bar_height*(sub_var_count[selected_variable.var_type] + 1)) + 5, bar_width, bar_height);
 		}
 
@@ -544,7 +545,8 @@ void BulbSettings::shader_menu_draw() {
 			string variable_string = current_variable->category + " : " + current_variable->name;
 
 			if (current_variable->is_color) {
-				glColor3f(current_variable->value[0].r, current_variable->value[0].g, current_variable->value[0].b);
+				glm::vec4 variable_color = current_variable->get_color();
+				glColor3f(variable_color.r, variable_color.g, variable_color.b);
 				drawing_tools->rectangle_filled(250, (i + 1) * font_height, 200, font_height);
 			}
 
@@ -586,6 +588,10 @@ void BulbSettings::shader_menu_gamepad_update(GamePadState *state) {
 			}
 			if (state->pressed(GamePad_Button_B)) {
 				shader_menu_item_selected = false;
+			}
+
+			if (state->pressed(GamePad_Button_Y)) {
+				selected_variable->set_hsv_mode(!selected_variable->hsv_mode);
 			}
 
 			if (state->pressed(GamePad_Button_DPAD_UP)) shader_menu_item_sub_highlight++;
@@ -641,6 +647,10 @@ void BulbSettings::shader_menu_keyboard_update(int key) {
 			}
 			if (key == 27) {
 				shader_menu_item_selected = false;
+			}
+
+			if (key == 'y') {
+				selected_variable->set_hsv_mode(!selected_variable->hsv_mode);
 			}
 
 			if (key == GLUT_KEY_UP) shader_menu_item_sub_highlight++;

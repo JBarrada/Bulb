@@ -7,7 +7,7 @@ todo:
 -loading
 -more fractals
 #add movespeed and rotation speed to settings
-?add hsv color setting changing (untested)
+#add hsv color setting changing
 #in app other fractal loading & keep raytracer settings
 #fullscreen
 #dpad setting changing improvements
