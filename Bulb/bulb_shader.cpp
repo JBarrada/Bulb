@@ -373,22 +373,22 @@ bool ShaderVariable::operator==(const ShaderVariable& rhs) {
 
 
 BulbShader::BulbShader() {
-	fractal_file = "mandelbox.frag";
+	fractal_file = "BulbFractals\\mandelbox.frag";
 
 	// load fractal files
-	string directory = "*";
+	string directory = "BulbFractals\\*";
 	WIN32_FIND_DATA fileData; 
 	HANDLE hFind;
 	if ( !((hFind = FindFirstFile(directory.c_str(), &fileData)) == INVALID_HANDLE_VALUE) ) {
 		while(FindNextFile(hFind, &fileData)) {
 			ifstream current_file;
-			current_file.open(fileData.cFileName, ios::in);
+			current_file.open("BulbFractals\\" + string(fileData.cFileName), ios::in);
 
 			string first_line;
 			getline(current_file, first_line);
 
 			if (first_line.substr(0, 9) == "//FRACTAL") {
-				fractal_files.push_back(fileData.cFileName);
+				fractal_files.push_back("BulbFractals\\" + string(fileData.cFileName));
 			}
 			current_file.close();
 		}
@@ -435,10 +435,10 @@ void BulbShader::read_from_save_file(ifstream &save_file) {
 
 void BulbShader::load() {
 	ofstream frag_temp_file;
-	frag_temp_file.open("bulb_temp.frag", ios::out);
+	frag_temp_file.open("BulbShaders\\bulb_temp.frag", ios::out);
 
 	ifstream frag_orig_file;
-	frag_orig_file.open("bulb.frag", ios::in);
+	frag_orig_file.open("BulbShaders\\bulb.frag", ios::in);
 
 	vector<ShaderVariable> shader_variables_old(shader_variables);
 	vector<ShaderVariable> shader_variables_new;
@@ -512,7 +512,7 @@ void BulbShader::load() {
 		shader_categories_indexes[found_index].push_back(i);
 	}
 
-	load_shader("bulb.vert", "bulb_temp.frag", &program_fp32);
+	load_shader("BulbShaders\\bulb.vert", "BulbShaders\\bulb_temp.frag", &program_fp32);
 }
 
 void BulbShader::draw() {

@@ -76,7 +76,6 @@ void set_fullscreen(bool fullscreen) {
 void keyboard_down_special(int key, int x, int y) {
 	if (bulb_settings.settings_open) {
 		bulb_settings.keyboard_update(key);
-
 		//control_settings.camera_keyboard_update(key);
 	} else {
 		if (key == 27) {
@@ -101,7 +100,6 @@ void force_redraw(int value) {
 
 		if (bulb_settings.settings_open) {
 			bulb_settings.gamepad_update(&pad->State);
-
 			control_settings.camera_gamepad_update(&pad->State, true);
 		} else {
 			if (pad->State.pressed(GamePad_Button_START)) {

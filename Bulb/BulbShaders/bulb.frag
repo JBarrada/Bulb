@@ -1,6 +1,6 @@
 #version 400
 
-#include "math_utils.frag"
+#include "BulbShaders\math_utils.frag"
 
 #include "FRACTAL"
 
