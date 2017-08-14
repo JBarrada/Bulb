@@ -25,6 +25,12 @@ public:
 	glm::vec3 camera_up;
 	glm::mat4 camera_orientation;
 
+	//glm::vec3 camera_eye_prev;
+	//glm::vec3 camera_velocity_prev;
+
+	float camera_prox_target;
+	float camera_prox;
+
 	float camera_fov[4];
 	int control_expo_power[4];
 	float control_move_speed_forward[4];
@@ -36,6 +42,11 @@ public:
 	bool control_vibrate[4];
 
 	BulbControlSettings();
+
+	void update_camera_prox(int SCREEN_W,  int SCREEN_H);
+	void camera_gamepad_update(GamePadState *state, bool sticks_only);
+	void camera_keyboard_update(int key);
+	float expo(float value);
 
 	void adjust_variable(float normalized_amount, int variable);
 	string get_variable_name(int variable);
@@ -83,19 +94,24 @@ public:
 
 	void control_menu_draw();
 	void control_menu_gamepad_update(GamePadState *state);
+	void control_menu_keyboard_update(int key);
 
 	void shader_menu_draw();
 	void shader_menu_gamepad_update(GamePadState *state);
+	void shader_menu_keyboard_update(int key);
 
 	void main_menu_draw();
 	void main_menu_gamepad_update(GamePadState *state);
+	void main_menu_keyboard_update(int key);
 	
 	void load_menu_draw();
 	void load_menu_gamepad_update(GamePadState *state);
+	void load_menu_keyboard_update(int key);
 
 	void draw();
 
 	void gamepad_update(GamePadState *state);
+	void keyboard_update(int key);
 };
 
 

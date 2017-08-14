@@ -6,6 +6,11 @@ BulbControlSettings::BulbControlSettings() {
 	camera_up = glm::vec3(0, 0, 1);
 	camera_orientation = glm::mat4(1.0);
 
+	//camera_eye_prev = glm::vec3(camera_eye);
+	//camera_velocity_prev = glm::vec3(0.0);
+
+	camera_prox_target = 1.0f;
+	camera_prox = 1.0f;
 
 	camera_fov[0] = 1.5f;
 	camera_fov[1] = 0.0f;
@@ -51,6 +56,134 @@ BulbControlSettings::BulbControlSettings() {
 	control_vibrate[1] = false;
 	control_vibrate[2] = true;
 	control_vibrate[3] = true;
+}
+
+void BulbControlSettings::update_camera_prox(int SCREEN_W,  int SCREEN_H) {
+	float depth_total = 0.0f;
+	int depth_samples = 0;
+	GLfloat depth_comp;
+	for (int i = 0; i < 100; i++) {
+		glReadPixels(rand() % SCREEN_W, rand() % SCREEN_H, 1, 1, GL_ALPHA, GL_FLOAT, &depth_comp);
+		depth_total += depth_comp;
+		depth_samples++;
+	}
+
+	camera_prox_target = depth_total / (float)depth_samples;
+
+	float prox_delta = (camera_prox_target - camera_prox);
+	if (prox_delta > 0.0f) {
+		camera_prox +=  (prox_delta / 160.0f);
+	} else {
+		camera_prox +=  (prox_delta / 8.0f);
+	}
+}
+
+void BulbControlSettings::camera_gamepad_update(GamePadState *state, bool sticks_only) {
+	glm::vec3 forward_direction = glm::vec3(camera_orientation * glm::vec4(0, 1, 0, 0));
+	glm::vec3 left_direction = glm::vec3(camera_orientation * glm::vec4(1, 0, 0, 0));
+
+	float prox_speed_forward = control_move_speed_forward[0] * glm::max(camera_prox, 0.0001f);
+	float prox_speed_lateral = control_move_speed_lateral[0] * glm::max(camera_prox, 0.0001f);
+	float prox_speed_vertical = control_move_speed_vertical[0] * glm::max(camera_prox, 0.0001f);
+
+	// forward
+	if (!sticks_only) {
+		camera_eye -= (prox_speed_forward * (expo(state->rt) - expo(state->lt))) * forward_direction;
+	}
+
+	// vertical
+	camera_eye += (prox_speed_vertical * expo(state->lstick_y)) * camera_up;
+
+	// lateral & yaw
+	if (state->buttons[GamePad_Button_LEFT_SHOULDER] || state->buttons[GamePad_Button_RIGHT_SHOULDER]) {
+		camera_eye -= (prox_speed_lateral * expo(state->lstick_x)) * left_direction;
+	} else {
+		camera_orientation *= glm::rotate(glm::mat4(1.0), control_yaw_speed[0] * expo(state->lstick_x), glm::vec3(0, 0, -1));
+	}
+
+	// pitch
+	camera_orientation *= glm::rotate(glm::mat4(1.0), control_pitch_speed[0] * expo(state->rstick_y), glm::vec3(1, 0, 0));
+
+	// roll
+	camera_orientation *= glm::rotate(glm::mat4(1.0), control_roll_speed[0] * expo(state->rstick_x), glm::vec3(0, -1, 0));
+
+	// update
+	camera_target = camera_eye + glm::vec3(camera_orientation * glm::vec4(0, -1, 0, 0));
+	camera_up = glm::vec3(camera_orientation * glm::vec4(0, 0, 1, 0));
+
+	/*
+	// velocity & accel
+	glm::vec3 velocity = camera_eye - camera_eye_prev;
+	camera_eye_prev = glm::vec3(camera_eye);
+
+	float accel = length(velocity - camera_velocity_prev);
+	camera_velocity_prev = glm::vec3(velocity);
+
+	// vibrate
+	if (control_vibrate) {
+		pad->vibrate(accel * 100.0f, accel * 100.0f);
+	}
+	*/
+}
+
+void BulbControlSettings::camera_keyboard_update(int key) {
+	glm::vec3 forward_direction = glm::vec3(camera_orientation * glm::vec4(0, 1, 0, 0));
+	glm::vec3 left_direction = glm::vec3(camera_orientation * glm::vec4(1, 0, 0, 0));
+
+	float prox_speed_forward = control_move_speed_forward[0] * glm::max(camera_prox, 0.0001f);
+	float prox_speed_lateral = control_move_speed_lateral[0] * glm::max(camera_prox, 0.0001f);
+	float prox_speed_vertical = control_move_speed_vertical[0] * glm::max(camera_prox, 0.0001f);
+
+	if (key == 'w') {
+		camera_eye -= prox_speed_forward * forward_direction;
+	}
+	if (key == 's') {
+		camera_eye += prox_speed_forward * forward_direction;
+	}
+	if (key == 'a') {
+		camera_eye += prox_speed_lateral * left_direction;
+	}
+	if (key == 'd') {
+		camera_eye -= prox_speed_lateral * left_direction;
+	}
+	
+	if (key == 'q') {
+		camera_orientation *= glm::rotate(glm::mat4(1.0), control_roll_speed[0] * 1.0f, glm::vec3(0, -1, 0));
+	}
+	if (key == 'e') {
+		camera_orientation *= glm::rotate(glm::mat4(1.0), control_roll_speed[0] * -1.0f, glm::vec3(0, -1, 0));
+	}
+
+	if (key == 'r') {
+		camera_eye += prox_speed_vertical * camera_up;
+	}
+	if (key == 'f') {
+		camera_eye -= prox_speed_vertical * camera_up;
+	}
+	
+	if (key == GLUT_KEY_UP) {
+		camera_orientation *= glm::rotate(glm::mat4(1.0), control_pitch_speed[0] * 1.0f, glm::vec3(1, 0, 0));
+	}
+	if (key == GLUT_KEY_DOWN) {
+		camera_orientation *= glm::rotate(glm::mat4(1.0), control_pitch_speed[0] * -1.0f, glm::vec3(1, 0, 0));
+	}
+	if (key == GLUT_KEY_LEFT) {
+		camera_orientation *= glm::rotate(glm::mat4(1.0), control_yaw_speed[0] * 1.0f, glm::vec3(0, 0, -1));
+	}
+	if (key == GLUT_KEY_RIGHT) {
+		camera_orientation *= glm::rotate(glm::mat4(1.0), control_yaw_speed[0] * -1.0f, glm::vec3(0, 0, -1));
+	}
+
+	camera_target = camera_eye + glm::vec3(camera_orientation * glm::vec4(0, -1, 0, 0));
+	camera_up = glm::vec3(camera_orientation * glm::vec4(0, 0, 1, 0));
+}
+
+float BulbControlSettings::expo(float value) {
+	if (value < 0 && (control_expo_power[0] % 2 == 0)) {
+		return -1.0f * pow(value, control_expo_power[0]);
+	} else {
+		return pow(value, control_expo_power[0]);
+	}
 }
 
 void BulbControlSettings::adjust_variable(float normalized_amount, int variable) {
@@ -278,6 +411,32 @@ void BulbSettings::control_menu_gamepad_update(GamePadState *state) {
 	}
 }
 
+void BulbSettings::control_menu_keyboard_update(int key) {
+	if (control_menu_item_selected) {
+		if (key == 27) {
+			control_menu_item_selected = false;
+		}
+
+		float dpad_step = ((key == GLUT_KEY_RIGHT) - (key == GLUT_KEY_LEFT));
+		float trigger_step = 0.0f; // (settings_expo(state->rt) - settings_expo(state->lt));
+
+		control_settings->adjust_variable(dpad_step + trigger_step, control_menu_item_highlight);
+	} else {
+		if (key == 13) {
+			control_menu_item_selected = true;
+			control_menu_item_sub_highlight = 0;
+		}
+		if (key == 27) {
+			menu_open = 0; // main menu
+		}
+
+		if (key == GLUT_KEY_UP) control_menu_item_highlight++;
+		if (key == GLUT_KEY_DOWN) control_menu_item_highlight--;
+		int items_size = 9;
+		control_menu_item_highlight = glm::clamp(control_menu_item_highlight, 0, items_size-1);
+	}
+}
+
 void BulbSettings::shader_menu_draw() {
 	if (shader_menu_item_selected) {
 		int actual_highlight_index = bulb_shader->shader_categories_indexes[shader_menu_category][shader_menu_item_highlight];
@@ -454,6 +613,61 @@ void BulbSettings::shader_menu_gamepad_update(GamePadState *state) {
 	}
 }
 
+void BulbSettings::shader_menu_keyboard_update(int key) {
+	if (shader_menu_item_selected) {
+		int actual_highlight_index = bulb_shader->shader_categories_indexes[shader_menu_category][shader_menu_item_highlight];
+		ShaderVariable *selected_variable = &bulb_shader->shader_variables[actual_highlight_index];
+
+		if (key == 'x') {
+			selected_variable->animate_enable[shader_menu_item_sub_highlight] = !selected_variable->animate_enable[shader_menu_item_sub_highlight];
+			shader_menu_item_sub_selected = selected_variable->animate_enable[shader_menu_item_sub_highlight]; // auto enter menu
+		}
+
+		float dpad_step = ((key == GLUT_KEY_RIGHT) - (key == GLUT_KEY_LEFT));
+		float trigger_step = 0.0f; //(settings_expo(state->rt) - settings_expo(state->lt));
+
+		if (shader_menu_item_sub_selected) {
+			if (key == 27) {
+				shader_menu_item_sub_selected = false;
+			}
+
+			if (key == GLUT_KEY_UP) shader_menu_item_sub_animate_highlight++;
+			if (key == GLUT_KEY_DOWN) shader_menu_item_sub_animate_highlight--;
+
+			selected_variable->adjust_animate(dpad_step + trigger_step, shader_menu_item_sub_highlight, shader_menu_item_sub_animate_highlight);
+		} else {
+			if ((key == 13) && selected_variable->animate_enable[shader_menu_item_sub_highlight]) {
+				shader_menu_item_sub_selected = true;
+			}
+			if (key == 27) {
+				shader_menu_item_selected = false;
+			}
+
+			if (key == GLUT_KEY_UP) shader_menu_item_sub_highlight++;
+			if (key == GLUT_KEY_DOWN) shader_menu_item_sub_highlight--;
+
+			selected_variable->adjust_variable(dpad_step + trigger_step, shader_menu_item_sub_highlight);
+		}
+	} else {
+		if (key == 13) {
+			shader_menu_item_selected = true;
+			shader_menu_item_sub_highlight = 0;
+		}
+		if (key == 27) {
+			menu_open = 0; // main menu
+		}
+
+		if (key == GLUT_KEY_RIGHT) shader_menu_category++;
+		if (key == GLUT_KEY_LEFT) shader_menu_category--;
+		shader_menu_category = glm::clamp(shader_menu_category, 0, (int)bulb_shader->shader_categories.size() - 1);
+
+		if (key == GLUT_KEY_UP) shader_menu_item_highlight++;
+		if (key == GLUT_KEY_DOWN) shader_menu_item_highlight--;
+		int category_size = (int)bulb_shader->shader_categories_indexes[shader_menu_category].size();
+		shader_menu_item_highlight = glm::clamp(shader_menu_item_highlight, 0, category_size-1);
+	}
+}
+
 void BulbSettings::main_menu_draw() {
 	string menu_items[] = {"Shader Settings", "Control Settings", "Load", "Save (TODO)"};
 	int menu_items_size = 4;
@@ -480,9 +694,25 @@ void BulbSettings::main_menu_gamepad_update(GamePadState *state) {
 	if (state->pressed(GamePad_Button_B)) {
 		settings_open = false;
 	}
-
+	
 	if (state->pressed(GamePad_Button_DPAD_UP)) main_menu_item_highlight++;
 	if (state->pressed(GamePad_Button_DPAD_DOWN)) main_menu_item_highlight--;
+	main_menu_item_highlight = glm::clamp(main_menu_item_highlight, 0, menu_items_size - 1 - 1);
+}
+
+void BulbSettings::main_menu_keyboard_update(int key) {
+	int menu_items_size = 4;
+
+	if (key == 13) {
+		main_menu_item_selected = true;
+		menu_open = main_menu_item_highlight + 1;
+	}
+	if (key == 27) {
+		settings_open = false;
+	}
+
+	if (key == GLUT_KEY_UP) main_menu_item_highlight++;
+	if (key == GLUT_KEY_DOWN) main_menu_item_highlight--;
 	main_menu_item_highlight = glm::clamp(main_menu_item_highlight, 0, menu_items_size - 1 - 1);
 }
 
@@ -556,6 +786,41 @@ void BulbSettings::load_menu_gamepad_update(GamePadState *state) {
 	}
 }
 
+void BulbSettings::load_menu_keyboard_update(int key) {
+	if (!load_menu_item_selected) {
+		int menu_items_size = 2;
+		if (key == 13) {
+			load_menu_item_selected = true;
+			load_menu_item_sub_highlight = 0;
+		}
+		if (key == 27) {
+			menu_open = 0; // main menu
+		}
+
+		if (key == GLUT_KEY_UP) load_menu_item_highlight++;
+		if (key == GLUT_KEY_DOWN) load_menu_item_highlight--;
+		load_menu_item_highlight = glm::clamp(load_menu_item_highlight, 0, menu_items_size - 1 - 1);
+	} else {
+		if (key == 27) {
+			load_menu_item_selected = false;
+		}
+
+		if (key == GLUT_KEY_UP) load_menu_item_sub_highlight++;
+		if (key == GLUT_KEY_DOWN) load_menu_item_sub_highlight--;
+
+		if (load_menu_item_highlight == 0) {
+			load_menu_item_sub_highlight = glm::clamp(load_menu_item_sub_highlight, 0, (int)bulb_shader->fractal_files.size() - 1);
+			
+			if (key == 13) {
+				bulb_shader->fractal_file = bulb_shader->fractal_files[load_menu_item_sub_highlight];
+				bulb_shader->load();
+			}
+		} else if (load_menu_item_highlight == 1) {
+
+		}
+	}
+}
+
 void BulbSettings::draw() {
 	glUseProgram(0);
 
@@ -580,5 +845,16 @@ void BulbSettings::gamepad_update(GamePadState *state) {
 	} else if (menu_open == 3) {
 		load_menu_gamepad_update(state);
 	}
+}
 
+void BulbSettings::keyboard_update(int key) {
+	if (menu_open == 0) {
+		main_menu_keyboard_update(key);
+	} else if (menu_open == 1) {
+		shader_menu_keyboard_update(key);
+	} else if (menu_open == 2) {
+		control_menu_keyboard_update(key);
+	} else if (menu_open == 3) {
+		load_menu_keyboard_update(key);
+	}
 }
