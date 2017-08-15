@@ -100,5 +100,7 @@ public:
 	void load();
 };
 
+vector<string> split_string(string input, string target);
+void stovec(string values_string, glm::vec4 &value);
 
 #endif

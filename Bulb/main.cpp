@@ -149,7 +149,7 @@ int main(int argc, const char * argv[]) {
 	ofstream save_file;
 	save_file.open("testsave.bulbsave");
 
-	bulb_shader.write_to_save_file(save_file);
+	control_settings.write_to_save_file(save_file);
 
 	save_file.close();
 	*/
@@ -158,7 +158,7 @@ int main(int argc, const char * argv[]) {
 	ifstream save_file;
 	save_file.open("testsave.bulbsave", ios::in);
 
-	bulb_shader.read_from_save_file(save_file);
+	control_settings.read_from_save_file(save_file);
 
 	save_file.close();
 	*/

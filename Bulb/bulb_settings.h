@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <Windows.h>
 
 #include <glew.h>
 #include <glut.h>
@@ -43,6 +44,9 @@ public:
 
 	BulbControlSettings();
 
+	void write_to_save_file(ofstream &save_file);
+	void read_from_save_file(ifstream &save_file);
+
 	void update_camera_prox(int SCREEN_W,  int SCREEN_H);
 	void camera_gamepad_update(GamePadState *state, bool sticks_only);
 	void camera_keyboard_update(int key);
@@ -57,7 +61,8 @@ class BulbSettings {
 private:
 	int load_menu_item_highlight;
 	bool load_menu_item_selected;
-	int load_menu_item_sub_highlight; 
+	int load_menu_item_sub_highlight;
+	vector<string> save_files;
 
 	int control_menu_item_highlight;
 	bool control_menu_item_selected;
@@ -107,6 +112,10 @@ public:
 	void load_menu_draw();
 	void load_menu_gamepad_update(GamePadState *state);
 	void load_menu_keyboard_update(int key);
+
+	void update_save_files();
+	void load_save_file(string save_file_name);
+	void save_save_file(string save_file_name);
 
 	void draw();
 

@@ -25,3 +25,4 @@ todo:
 #create folders for shaders fractals and saves
 #add keyboard menu control
 -fix controller vibrate
+-somehow un-fuck control variables (maybe take inspiration from shadervariables)

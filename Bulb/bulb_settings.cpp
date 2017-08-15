@@ -58,6 +58,130 @@ BulbControlSettings::BulbControlSettings() {
 	control_vibrate[3] = true;
 }
 
+void BulbControlSettings::write_to_save_file(ofstream &save_file) {
+	char value_chars[100];
+
+	string camera_vec3_names[] = {"CAMERA_EYE", "CAMERA_TARGET", "CAMERA_UP"};
+	glm::vec3 *camera_vec3_vars[] = {&camera_eye, &camera_target, &camera_up};
+
+	for (int i = 0; i < 3; i++) {
+		memset(value_chars, 0, 100);
+		sprintf_s(value_chars, "%f,%f,%f|", (*camera_vec3_vars[i])[0], (*camera_vec3_vars[i])[1], (*camera_vec3_vars[i])[2]);
+		save_file << "CV|" << camera_vec3_names[i] << "|" << string(value_chars) << endl;
+	}
+
+	string mat_string = "";
+	for (int i = 0; i < 4; i++) {
+		memset(value_chars, 0, 100);
+		sprintf_s(value_chars, "%f,%f,%f,%f|", camera_orientation[i][0], camera_orientation[i][1], camera_orientation[i][2], camera_orientation[i][3]);
+		mat_string += string(value_chars);
+	}
+	save_file << "CV|" << "CAMERA_ORIENTATION" << "|" << mat_string << endl;
+
+	// floats
+	string float_names[] = {"CAMERA_FOV", "CONTROL_MOVE_SPEED_FORWARD", "CONTROL_MOVE_SPEED_LATERAL", "CONTROL_MOVE_SPEED_VERTICAL", "CONTROL_PITCH_SPEED", "CONTROL_ROLL_SPEED", "CONTROL_YAW_SPEED"};
+	float* float_vars[] = {camera_fov, control_move_speed_forward, control_move_speed_lateral, control_move_speed_vertical, control_pitch_speed, control_roll_speed, control_yaw_speed};
+
+	for (int i = 0; i < 7; i++) {
+		memset(value_chars, 0, 100);
+		sprintf_s(value_chars, "%f|%f|%f|%f|", float_vars[i][0], float_vars[i][1], float_vars[i][2], float_vars[i][3]);
+		save_file << "CV|" << float_names[i] << "|" << string(value_chars) << endl;
+	}
+
+	// int
+	memset(value_chars, 0, 100);
+	sprintf_s(value_chars, "%d|%d|%d|%d|", control_expo_power[0], control_expo_power[1], control_expo_power[2], control_expo_power[3]);
+	save_file << "CV|" << "CONTROL_EXPO_POWER" << "|" << string(value_chars) << endl;
+
+	// bool
+	memset(value_chars, 0, 100);
+	sprintf_s(value_chars, "%d|%d|%d|%d|", control_vibrate[0], control_vibrate[1], control_vibrate[2], control_vibrate[3]);
+	save_file << "CV|" << "CONTROL_VIBRATE" << "|" << string(value_chars) << endl;
+}
+
+void BulbControlSettings::read_from_save_file(ifstream &save_file) {
+	save_file.clear();
+	save_file.seekg(0, ios::beg);
+
+	string save_file_line;
+	while (getline(save_file, save_file_line)) {
+		if (save_file_line.substr(0, 2) == "CV") {
+			vector<string> line_split = split_string(save_file_line, "|");
+			
+			glm::vec4 value;
+
+			if (line_split[1] == "CAMERA_EYE") {
+				stovec(line_split[2], value);
+				camera_eye = glm::vec3(value.x, value.y, value.z);
+			}
+
+			if (line_split[1] == "CAMERA_TARGET") {
+				stovec(line_split[2], value);
+				camera_target = glm::vec3(value.x, value.y, value.z);
+			}
+
+			if (line_split[1] == "CAMERA_UP") {
+				stovec(line_split[2], value);
+				camera_up = glm::vec3(value.x, value.y, value.z);
+			}
+
+			if (line_split[1] == "CAMERA_ORIENTATION") {
+				for (int i = 0; i < 4; i++) {
+					stovec(line_split[2+i], value);
+					camera_orientation[i] = glm::vec4(value);
+				}
+			}
+
+			if (line_split[1] == "CAMERA_FOV") {
+				for (int i = 0; i < 4; i++) {
+					camera_fov[i] = stof(line_split[2+i]);
+				}
+			}
+			if (line_split[1] == "CONTROL_MOVE_SPEED_FORWARD") {
+				for (int i = 0; i < 4; i++) {
+					control_move_speed_forward[i] = stof(line_split[2+i]);
+				}
+			}
+			if (line_split[1] == "CONTROL_MOVE_SPEED_LATERAL") {
+				for (int i = 0; i < 4; i++) {
+					control_move_speed_lateral[i] = stof(line_split[2+i]);
+				}
+			}
+			if (line_split[1] == "CONTROL_MOVE_SPEED_VERTICAL") {
+				for (int i = 0; i < 4; i++) {
+					control_move_speed_vertical[i] = stof(line_split[2+i]);
+				}
+			}
+			if (line_split[1] == "CONTROL_PITCH_SPEED") {
+				for (int i = 0; i < 4; i++) {
+					control_pitch_speed[i] = stof(line_split[2+i]);
+				}
+			}
+			if (line_split[1] == "CONTROL_ROLL_SPEED") {
+				for (int i = 0; i < 4; i++) {
+					control_roll_speed[i] = stof(line_split[2+i]);
+				}
+			}
+			if (line_split[1] == "CONTROL_YAW_SPEED") {
+				for (int i = 0; i < 4; i++) {
+					control_yaw_speed[i] = stof(line_split[2+i]);
+				}
+			}
+			
+			if (line_split[1] == "CONTROL_EXPO_POWER") {
+				for (int i = 0; i < 4; i++) {
+					control_expo_power[i] = stoi(line_split[2+i]);
+				}
+			}
+			if (line_split[1] == "CONTROL_VIBRATE") {
+				for (int i = 0; i < 4; i++) {
+					control_vibrate[i] = (stoi(line_split[2+i]) == 1);
+				}
+			}
+		}
+	}
+}
+
 void BulbControlSettings::update_camera_prox(int SCREEN_W,  int SCREEN_H) {
 	float depth_total = 0.0f;
 	int depth_samples = 0;
@@ -707,7 +831,7 @@ void BulbSettings::main_menu_gamepad_update(GamePadState *state) {
 	
 	if (state->pressed(GamePad_Button_DPAD_UP)) main_menu_item_highlight++;
 	if (state->pressed(GamePad_Button_DPAD_DOWN)) main_menu_item_highlight--;
-	main_menu_item_highlight = glm::clamp(main_menu_item_highlight, 0, menu_items_size - 1 - 1);
+	main_menu_item_highlight = glm::clamp(main_menu_item_highlight, 0, menu_items_size - 1);
 }
 
 void BulbSettings::main_menu_keyboard_update(int key) {
@@ -767,6 +891,8 @@ void BulbSettings::load_menu_gamepad_update(GamePadState *state) {
 		if (state->pressed(GamePad_Button_A)) {
 			load_menu_item_selected = true;
 			load_menu_item_sub_highlight = 0;
+
+			if (load_menu_item_highlight == 1) update_save_files();
 		}
 		if (state->pressed(GamePad_Button_B)) {
 			menu_open = 0; // main menu
@@ -774,7 +900,7 @@ void BulbSettings::load_menu_gamepad_update(GamePadState *state) {
 
 		if (state->pressed(GamePad_Button_DPAD_UP)) load_menu_item_highlight++;
 		if (state->pressed(GamePad_Button_DPAD_DOWN)) load_menu_item_highlight--;
-		load_menu_item_highlight = glm::clamp(load_menu_item_highlight, 0, menu_items_size - 1 - 1);
+		load_menu_item_highlight = glm::clamp(load_menu_item_highlight, 0, menu_items_size - 1);
 	} else {
 		if (state->pressed(GamePad_Button_B)) {
 			load_menu_item_selected = false;
@@ -791,7 +917,11 @@ void BulbSettings::load_menu_gamepad_update(GamePadState *state) {
 				bulb_shader->load();
 			}
 		} else if (load_menu_item_highlight == 1) {
+			load_menu_item_sub_highlight = glm::clamp(load_menu_item_sub_highlight, 0, (int)save_files.size() - 1);
 
+			if (state->pressed(GamePad_Button_A)) {
+				// load save file
+			}
 		}
 	}
 }
@@ -829,6 +959,24 @@ void BulbSettings::load_menu_keyboard_update(int key) {
 
 		}
 	}
+}
+
+void BulbSettings::update_save_files() {
+	save_files.clear();
+
+	string directory = "BulbSaves\\*";
+	WIN32_FIND_DATA fileData; 
+	HANDLE hFind;
+	if ( !((hFind = FindFirstFile(directory.c_str(), &fileData)) == INVALID_HANDLE_VALUE) ) {
+		while(FindNextFile(hFind, &fileData)) {
+			vector<string> file_name_split = split_string(fileData.cFileName, ".");
+			if (file_name_split[1] == "BULBSAVE" || file_name_split[1] == "bulbsave") {
+				save_files.push_back("BulbSaves\\" + string(fileData.cFileName));
+			}
+		}
+	}
+	
+	FindClose(hFind);
 }
 
 void BulbSettings::draw() {
