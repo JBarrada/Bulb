@@ -33,6 +33,9 @@
     <ClCompile Include="drawing_tools.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="string_tools.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="shader_utils.h">
@@ -48,6 +51,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="drawing_tools.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="string_tools.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

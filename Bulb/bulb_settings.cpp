@@ -803,7 +803,7 @@ void BulbSettings::shader_menu_keyboard_update(int key) {
 }
 
 void BulbSettings::main_menu_draw() {
-	string menu_items[] = {"Shader Settings", "Control Settings", "Load", "Save (TODO)"};
+	string menu_items[] = {"Shader Settings", "Control Settings", "Load", "Save"};
 	int menu_items_size = 4;
 		
 	glColor4f(0.2f,0.2f,0.2f,1.0f);
@@ -824,6 +824,24 @@ void BulbSettings::main_menu_gamepad_update(GamePadState *state) {
 	if (state->pressed(GamePad_Button_A)) {
 		main_menu_item_selected = true;
 		menu_open = main_menu_item_highlight + 1;
+
+		if (main_menu_item_highlight == 3) {
+			main_menu_item_selected = false;
+			menu_open = 0;
+
+			// save (todo: make this better)
+
+			time_t rawtime;
+			struct tm * timeinfo;
+			char buffer[100];
+
+			time(&rawtime);
+			timeinfo = localtime(&rawtime);
+
+			strftime(buffer, sizeof(buffer), "%j %H_%M_%S", timeinfo);
+
+			save_save_file("BulbSaves\\" + string(buffer) + ".bulbsave");
+		}
 	}
 	if (state->pressed(GamePad_Button_B)) {
 		settings_open = false;
@@ -840,6 +858,24 @@ void BulbSettings::main_menu_keyboard_update(int key) {
 	if (key == 13) {
 		main_menu_item_selected = true;
 		menu_open = main_menu_item_highlight + 1;
+
+		if (main_menu_item_highlight == 3) {
+			main_menu_item_selected = false;
+			menu_open = 0;
+
+			// save (todo: make this better)
+
+			time_t rawtime;
+			struct tm * timeinfo;
+			char buffer[100];
+
+			time(&rawtime);
+			timeinfo = localtime(&rawtime);
+
+			strftime(buffer, sizeof(buffer), "%j %H_%M_%S", timeinfo);
+
+			save_save_file("BulbSaves\\" + string(buffer) + ".bulbsave");
+		}
 	}
 	if (key == 27) {
 		settings_open = false;
@@ -847,12 +883,12 @@ void BulbSettings::main_menu_keyboard_update(int key) {
 
 	if (key == GLUT_KEY_UP) main_menu_item_highlight++;
 	if (key == GLUT_KEY_DOWN) main_menu_item_highlight--;
-	main_menu_item_highlight = glm::clamp(main_menu_item_highlight, 0, menu_items_size - 1 - 1);
+	main_menu_item_highlight = glm::clamp(main_menu_item_highlight, 0, menu_items_size - 1);
 }
 
 void BulbSettings::load_menu_draw() {
 	if (!load_menu_item_selected) {
-		string menu_items[] = {"Fractals", "Saves (TODO)"};
+		string menu_items[] = {"Fractals", "Saves"};
 		int menu_items_size = 2;
 		
 		glColor4f(0.2f,0.2f,0.2f,1.0f);
@@ -865,7 +901,7 @@ void BulbSettings::load_menu_draw() {
 		for (int i = 0; i < menu_items_size; i++) {	
 			drawing_tools->text(5, i * font_height + 5, settings_font, menu_items[i]);
 		}
-	} else {
+	} else if (load_menu_item_highlight == 0) {
 		int menu_items_size = (int)bulb_shader->fractal_files.size();
 		
 		glColor4f(0.2f,0.2f,0.2f,1.0f);
@@ -880,6 +916,20 @@ void BulbSettings::load_menu_draw() {
 			if (bulb_shader->fractal_files[i] == bulb_shader->fractal_file) {
 				file_text += " (Loaded)";
 			}
+			drawing_tools->text(5, i * font_height + 5, settings_font, file_text);
+		}
+	} else if (load_menu_item_highlight == 1) {
+		int menu_items_size = (int)save_files.size();
+		
+		glColor4f(0.2f,0.2f,0.2f,1.0f);
+		drawing_tools->rectangle_filled(0, 0, 250, (float)(menu_items_size) * font_height + 5);
+
+		glColor4f(0.4f,0.4f,0.4f,1.0f);
+		drawing_tools->rectangle_filled(0, load_menu_item_sub_highlight * font_height, 250, font_height);
+	
+		glColor4f(1.0f,1.0f,1.0f,1.0f);
+		for (int i = 0; i < menu_items_size; i++) {
+			string file_text = save_files[i];
 			drawing_tools->text(5, i * font_height + 5, settings_font, file_text);
 		}
 	}
@@ -932,6 +982,8 @@ void BulbSettings::load_menu_keyboard_update(int key) {
 		if (key == 13) {
 			load_menu_item_selected = true;
 			load_menu_item_sub_highlight = 0;
+
+			if (load_menu_item_highlight == 1) update_save_files();
 		}
 		if (key == 27) {
 			menu_open = 0; // main menu
@@ -939,7 +991,7 @@ void BulbSettings::load_menu_keyboard_update(int key) {
 
 		if (key == GLUT_KEY_UP) load_menu_item_highlight++;
 		if (key == GLUT_KEY_DOWN) load_menu_item_highlight--;
-		load_menu_item_highlight = glm::clamp(load_menu_item_highlight, 0, menu_items_size - 1 - 1);
+		load_menu_item_highlight = glm::clamp(load_menu_item_highlight, 0, menu_items_size - 1);
 	} else {
 		if (key == 27) {
 			load_menu_item_selected = false;
@@ -956,7 +1008,11 @@ void BulbSettings::load_menu_keyboard_update(int key) {
 				bulb_shader->load();
 			}
 		} else if (load_menu_item_highlight == 1) {
+			load_menu_item_sub_highlight = glm::clamp(load_menu_item_sub_highlight, 0, (int)save_files.size() - 1);
 
+			if (key == 13) {
+				// load save file
+			}
 		}
 	}
 }
@@ -1003,6 +1059,26 @@ void BulbSettings::gamepad_update(GamePadState *state) {
 	} else if (menu_open == 3) {
 		load_menu_gamepad_update(state);
 	}
+}
+
+void BulbSettings::load_save_file(string save_file_name) {
+	ifstream save_file;
+	save_file.open(save_file_name, ios::in);
+
+	control_settings->read_from_save_file(save_file);
+	bulb_shader->read_from_save_file(save_file);
+
+	save_file.close();
+}
+
+void BulbSettings::save_save_file(string save_file_name) {
+	ofstream save_file;
+	save_file.open(save_file_name);
+
+	control_settings->write_to_save_file(save_file);
+	bulb_shader->write_to_save_file(save_file);
+
+	save_file.close();
 }
 
 void BulbSettings::keyboard_update(int key) {

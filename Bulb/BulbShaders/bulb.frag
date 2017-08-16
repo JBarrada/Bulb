@@ -12,52 +12,52 @@ in vec3 camera_ray;
 
 
 // Raytrace
-uniform float Dither = 0.1; //~Raytrace,default,0.1|0|1|
-uniform float Detail = -2.5; //~Raytrace,default,-2.5|-7|0|
-uniform float DetailAO = -0.5; //~Raytrace,default,-0.5|-7|0|
+uniform float Dither = 0.1; //~Raytrace|default|0.1|0|1|
+uniform float Detail = -2.5; //~Raytrace|default|-2.5|-7|0|
+uniform float DetailAO = -0.5; //~Raytrace|default|-0.5|-7|0|
 
 float minDist = pow(10.0, Detail); 
 float aoEps = pow(10.0, DetailAO);
 float MaxDistance = 100000.0;
 
-uniform int MaxRaySteps = 110; //~Raytrace,default,110|0|500|
-uniform float FudgeFactor = 1.0; //~Raytrace,default,1|0|1|
+uniform int MaxRaySteps = 110; //~Raytrace|default|110|0|500|
+uniform float FudgeFactor = 1.0; //~Raytrace|default|1|0|1|
 
-uniform float NormalBackStep = 1.0; //~Raytrace,default,1|0|10|
+uniform float NormalBackStep = 1.0; //~Raytrace|default|1|0|10|
 
 
 // Color
-uniform vec3 BackgroundColor = vec3(0.8); //~Color,color,0.8,0.8,0.8|0,0,0|1,1,1|
-uniform vec3 BaseColor = vec3(0.5, 0.1, 0.7); //~Color,color,0.5,0.1,0.7|0,0,0|1,1,1|
+uniform vec3 BackgroundColor = vec3(0.8); //~Color|color|0.8,0.8,0.8|0,0,0|1,1,1|
+uniform vec3 BaseColor = vec3(0.5, 0.1, 0.7); //~Color|color|0.5,0.1,0.7|0,0,0|1,1,1|
 
-uniform float OrbitStrength = 0.5; //~Color,default,0.5|0|1|
+uniform float OrbitStrength = 0.5; //~Color|default|0.5|0|1|
 
-uniform bool CycleColors = false; //~Color,default,false|false|true|
-uniform float Cycles = 1.1; //~Color,default,1.1|0.1|30|
+uniform bool CycleColors = false; //~Color|default|false|false|true|
+uniform float Cycles = 1.1; //~Color|default|1.1|0.1|30|
 
-uniform vec4 X = vec4(0.5,0.6,0.6,0.7); //~Color,color4,0.5,0.6,0.6,0.7|0,0,0,-1|1,1,1,1|
-uniform vec4 Y = vec4(1.0,0.6,0.0,0.4); //~Color,color4,1.0,0.6,0.0,0.4|0,0,0,-1|1,1,1,1|
-uniform vec4 Z = vec4(0.8,0.78,1.0,0.5); //~Color,color4,0.8,0.78,1.0,0.5|0,0,0,-1|1,1,1,1|
-uniform vec4 R = vec4(0.4,0.7,1.0,0.12); //~Color,color4,0.4,0.7,1.0,0.12|0,0,0,-1|1,1,1,1|
+uniform vec4 X = vec4(0.5,0.6,0.6,0.7); //~Color|color4|0.5,0.6,0.6,0.7|0,0,0,-1|1,1,1,1|
+uniform vec4 Y = vec4(1.0,0.6,0.0,0.4); //~Color|color4|1.0,0.6,0.0,0.4|0,0,0,-1|1,1,1,1|
+uniform vec4 Z = vec4(0.8,0.78,1.0,0.5); //~Color|color4|0.8,0.78,1.0,0.5|0,0,0,-1|1,1,1,1|
+uniform vec4 R = vec4(0.4,0.7,1.0,0.12); //~Color|color4|0.4,0.7,1.0,0.12|0,0,0,-1|1,1,1,1|
 
 
 // Lighting
-uniform vec2 SpotLightDir = vec2(0.1, 0.1); //~Lighting,default,0.1,0.1|-1,-1|1,1|
-uniform vec4 SpotLight = vec4(1,1,1,0.4); //~Lighting,color4,1,1,1,0.4|0,0,0,0|1,1,1,1|
+uniform vec2 SpotLightDir = vec2(0.1, 0.1); //~Lighting|default|0.1,0.1|-1,-1|1,1|
+uniform vec4 SpotLight = vec4(1,1,1,0.4); //~Lighting|color4|1,1,1,0.4|0,0,0,0|1,1,1,1|
 
-uniform vec4 CamLight = vec4(1.0); //~Lighting,color4,1,1,1,1|0,0,0,0|1,1,1,2|
-uniform float CamLightMin = 0.5; //~Lighting,default,0.5|0|1|
+uniform vec4 CamLight = vec4(1.0); //~Lighting|color4|1,1,1,1|0,0,0,0|1,1,1,2|
+uniform float CamLightMin = 0.5; //~Lighting|default|0.5|0|1|
 
-uniform float ShadowSoft = 2.0; //~Lighting,default,2|0|20|
-uniform float HardShadow = 0.5; //~Lighting,default,0.5|0|1|
+uniform float ShadowSoft = 2.0; //~Lighting|default|2|0|20|
+uniform float HardShadow = 0.5; //~Lighting|default|0.5|0|1|
 
-uniform float Specular = 0.4; //~Lighting,default,0.4|0|1|
-uniform float SpecularExp = 16.0; //~Lighting,default,16|0|100|
-uniform float SpecularMax = 10.0; //~Lighting,default,10|0|100|
+uniform float Specular = 0.4; //~Lighting|default|0.4|0|1|
+uniform float SpecularExp = 16.0; //~Lighting|default|16|0|100|
+uniform float SpecularMax = 10.0; //~Lighting|default|10|0|100|
 
-uniform vec4 AO = vec4(0.0,0.0,0.0,0.7); //~Lighting,color4,0,0,0,0.7|0,0,0,0|1,1,1,1|
+uniform vec4 AO = vec4(0.0,0.0,0.0,0.7); //~Lighting|color4|0,0,0,0.7|0,0,0,0|1,1,1,1|
 
-uniform float Fog = 0.4; //~Lighting,default,0.4|0|2|
+uniform float Fog = 0.4; //~Lighting|default|0.4|0|2|
 
 
 float fSteps = 0.0;

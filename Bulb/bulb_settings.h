@@ -19,6 +19,8 @@
 #include "drawing_tools.h"
 #include "gamepad_input.h"
 
+#include "string_tools.h"
+
 class BulbControlSettings {
 public:
 	glm::vec3 camera_eye;

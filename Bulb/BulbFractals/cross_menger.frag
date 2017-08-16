@@ -1,10 +1,10 @@
 //FRACTAL_FILE
 
-uniform int Iterations = 15; //~Fractal,default,15|0|200
-uniform float Gap = 1.0; //~Fractal,default,1|0|1
+uniform int Iterations = 15; //~Fractal|default|15|0|200
+uniform float Gap = 1.0; //~Fractal|default|1|0|1
 
-uniform vec3 Rot1 = vec3(0.0); //~Fractal,default,0,0,0|-180,-180,-180|180,180,180
-uniform vec3 Rot2 = vec3(0.0); //~Fractal,default,0,0,0|-180,-180,-180|180,180,180
+uniform vec3 Rot1 = vec3(0.0); //~Fractal|default|0,0,0|-180,-180,-180|180,180,180
+uniform vec3 Rot2 = vec3(0.0); //~Fractal|default|0,0,0|-180,-180,-180|180,180,180
 
 mat3 fracRotation1;
 mat3 fracRotation2;

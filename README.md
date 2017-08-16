@@ -3,8 +3,8 @@
 todo:
 #strafing
 #setting sorting
--saving (in progress)
--loading
+#saving
+#loading
 -more fractals
 #add movespeed and rotation speed to settings
 #add hsv color setting changing
@@ -26,3 +26,6 @@ todo:
 #add keyboard menu control
 -fix controller vibrate
 -somehow un-fuck control variables (maybe take inspiration from shadervariables)
+#add actual string tools code
+-add fonts and make menus pretty
+-figure out better way of sending depth data from gpu other than alpha

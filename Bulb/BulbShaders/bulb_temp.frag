@@ -1,95 +1,6 @@
 #version 400
 
-// Standard matrices
 
-// Return rotation matrix for rotating around vector v by angle
-mat3  rotationMatrix3(vec3 v, float angle)
-{
-	float c = cos(radians(angle));
-	float s = sin(radians(angle));
-	
-	return mat3(c + (1.0 - c) * v.x * v.x, (1.0 - c) * v.x * v.y - s * v.z, (1.0 - c) * v.x * v.z + s * v.y,
-		(1.0 - c) * v.x * v.y + s * v.z, c + (1.0 - c) * v.y * v.y, (1.0 - c) * v.y * v.z - s * v.x,
-		(1.0 - c) * v.x * v.z - s * v.y, (1.0 - c) * v.y * v.z + s * v.x, c + (1.0 - c) * v.z * v.z
-		);
-}
-
-mat3 rotationMatrixXYZ(vec3 v) {
-	return rotationMatrix3(vec3(1.0,0.0,0.0), v.x)*
-	rotationMatrix3(vec3(0.0,1.0,0.0), v.y)*
-	rotationMatrix3(vec3(0.0,0.0,1.0), v.z);
-}
-
-// Return rotation matrix for rotating around vector v by angle
-mat4  rotationMatrix(vec3 v, float angle)
-{
-	float c = cos(radians(angle));
-	float s = sin(radians(angle));
-	
-	return mat4(c + (1.0 - c) * v.x * v.x, (1.0 - c) * v.x * v.y - s * v.z, (1.0 - c) * v.x * v.z + s * v.y, 0.0,
-		(1.0 - c) * v.x * v.y + s * v.z, c + (1.0 - c) * v.y * v.y, (1.0 - c) * v.y * v.z - s * v.x, 0.0,
-		(1.0 - c) * v.x * v.z - s * v.y, (1.0 - c) * v.y * v.z + s * v.x, c + (1.0 - c) * v.z * v.z, 0.0,
-		0.0, 0.0, 0.0, 1.0);
-}
-
-mat4 translate(vec3 v) {
-	return mat4(1.0,0.0,0.0,0.0,
-		0.0,1.0,0.0,0.0,
-		0.0,0.0,1.0,0.0,
-		v.x,v.y,v.z,1.0);
-}
-
-mat4 scale4(float s) {
-	return mat4(s,0.0,0.0,0.0,
-		0.0,s,0.0,0.0,
-		0.0,0.0,s,0.0,
-		0.0,0.0,0.0,1.0);
-}
-
-//FRACTAL_FILE
-
-uniform int Iterations = 15; //~Fractal,default,15|0|200
-uniform int ColorIterations = 3; //~Fractal,default,3|0|200
-uniform float MinRad2 = 0.25; //~Fractal,default,0.25|0|2
-uniform float Scale = 3.0; //~Fractal,default,3|-5|5
-
-uniform vec3 RotVector = vec3(0.0); //~Fractal,default,1,1,1|0,0,0|1,1,1
-uniform float RotAngle = 0.0; //~Fractal,default,0|0|180
-
-mat3 rot;
-
-vec4 orbitTrap = vec4(10000.0);
-
-vec4 scale = vec4(Scale, Scale, Scale, abs(Scale)) / MinRad2;
-float absScalem1 = abs(Scale - 1.0);
-float AbsScaleRaisedTo1mIters = pow(abs(Scale), float(1-Iterations));
-
-void init() {
-	rot = rotationMatrix3(normalize(RotVector), RotAngle);
-}
-
-float DE(vec3 pos) {
-	vec4 p = vec4(pos,1), p0 = p;
-	
-	for (int i=0; i<Iterations; i++) {
-		p.xyz*=rot;
-		p.xyz = clamp(p.xyz, -1.0, 1.0) * 2.0 - p.xyz;
-		
-		float r2 = dot(p.xyz, p.xyz);
-		
-		if (i < ColorIterations) {
-			orbitTrap = min(orbitTrap, abs(vec4(p.xyz,r2)));
-		}
-		
-		p *= clamp(max(MinRad2/r2, MinRad2), 0.0, 1.0);
-		p = p*scale + p0;
-		
-        if (r2 > 1000.0) {
-			break;
-		}
-	}
-	return ((length(p.xyz) - absScalem1) / p.w - AbsScaleRaisedTo1mIters);
-}
 
 out vec4 frag_color;
 
@@ -99,52 +10,52 @@ in vec3 camera_ray;
 
 
 // Raytrace
-uniform float Dither = 0.1; //~Raytrace,default,0.1|0|1|
-uniform float Detail = -2.5; //~Raytrace,default,-2.5|-7|0|
-uniform float DetailAO = -0.5; //~Raytrace,default,-0.5|-7|0|
+uniform float Dither = 0.1; //~Raytrace|default|0.1|0|1|
+uniform float Detail = -2.5; //~Raytrace|default|-2.5|-7|0|
+uniform float DetailAO = -0.5; //~Raytrace|default|-0.5|-7|0|
 
 float minDist = pow(10.0, Detail); 
 float aoEps = pow(10.0, DetailAO);
 float MaxDistance = 100000.0;
 
-uniform int MaxRaySteps = 110; //~Raytrace,default,110|0|500|
-uniform float FudgeFactor = 1.0; //~Raytrace,default,1|0|1|
+uniform int MaxRaySteps = 110; //~Raytrace|default|110|0|500|
+uniform float FudgeFactor = 1.0; //~Raytrace|default|1|0|1|
 
-uniform float NormalBackStep = 1.0; //~Raytrace,default,1|0|10|
+uniform float NormalBackStep = 1.0; //~Raytrace|default|1|0|10|
 
 
 // Color
-uniform vec3 BackgroundColor = vec3(0.8); //~Color,color,0.8,0.8,0.8|0,0,0|1,1,1|
-uniform vec3 BaseColor = vec3(0.5, 0.1, 0.7); //~Color,color,0.5,0.1,0.7|0,0,0|1,1,1|
+uniform vec3 BackgroundColor = vec3(0.8); //~Color|color|0.8,0.8,0.8|0,0,0|1,1,1|
+uniform vec3 BaseColor = vec3(0.5, 0.1, 0.7); //~Color|color|0.5,0.1,0.7|0,0,0|1,1,1|
 
-uniform float OrbitStrength = 0.5; //~Color,default,0.5|0|1|
+uniform float OrbitStrength = 0.5; //~Color|default|0.5|0|1|
 
-uniform bool CycleColors = false; //~Color,default,false|false|true|
-uniform float Cycles = 1.1; //~Color,default,1.1|0.1|30|
+uniform bool CycleColors = false; //~Color|default|false|false|true|
+uniform float Cycles = 1.1; //~Color|default|1.1|0.1|30|
 
-uniform vec4 X = vec4(0.5,0.6,0.6,0.7); //~Color,color4,0.5,0.6,0.6,0.7|0,0,0,-1|1,1,1,1|
-uniform vec4 Y = vec4(1.0,0.6,0.0,0.4); //~Color,color4,1.0,0.6,0.0,0.4|0,0,0,-1|1,1,1,1|
-uniform vec4 Z = vec4(0.8,0.78,1.0,0.5); //~Color,color4,0.8,0.78,1.0,0.5|0,0,0,-1|1,1,1,1|
-uniform vec4 R = vec4(0.4,0.7,1.0,0.12); //~Color,color4,0.4,0.7,1.0,0.12|0,0,0,-1|1,1,1,1|
+uniform vec4 X = vec4(0.5,0.6,0.6,0.7); //~Color|color4|0.5,0.6,0.6,0.7|0,0,0,-1|1,1,1,1|
+uniform vec4 Y = vec4(1.0,0.6,0.0,0.4); //~Color|color4|1.0,0.6,0.0,0.4|0,0,0,-1|1,1,1,1|
+uniform vec4 Z = vec4(0.8,0.78,1.0,0.5); //~Color|color4|0.8,0.78,1.0,0.5|0,0,0,-1|1,1,1,1|
+uniform vec4 R = vec4(0.4,0.7,1.0,0.12); //~Color|color4|0.4,0.7,1.0,0.12|0,0,0,-1|1,1,1,1|
 
 
 // Lighting
-uniform vec2 SpotLightDir = vec2(0.1, 0.1); //~Lighting,default,0.1,0.1|-1,-1|1,1|
-uniform vec4 SpotLight = vec4(1,1,1,0.4); //~Lighting,color4,1,1,1,0.4|0,0,0,0|1,1,1,1|
+uniform vec2 SpotLightDir = vec2(0.1, 0.1); //~Lighting|default|0.1,0.1|-1,-1|1,1|
+uniform vec4 SpotLight = vec4(1,1,1,0.4); //~Lighting|color4|1,1,1,0.4|0,0,0,0|1,1,1,1|
 
-uniform vec4 CamLight = vec4(1.0); //~Lighting,color4,1,1,1,1|0,0,0,0|1,1,1,2|
-uniform float CamLightMin = 0.5; //~Lighting,default,0.5|0|1|
+uniform vec4 CamLight = vec4(1.0); //~Lighting|color4|1,1,1,1|0,0,0,0|1,1,1,2|
+uniform float CamLightMin = 0.5; //~Lighting|default|0.5|0|1|
 
-uniform float ShadowSoft = 2.0; //~Lighting,default,2|0|20|
-uniform float HardShadow = 0.5; //~Lighting,default,0.5|0|1|
+uniform float ShadowSoft = 2.0; //~Lighting|default|2|0|20|
+uniform float HardShadow = 0.5; //~Lighting|default|0.5|0|1|
 
-uniform float Specular = 0.4; //~Lighting,default,0.4|0|1|
-uniform float SpecularExp = 16.0; //~Lighting,default,16|0|100|
-uniform float SpecularMax = 10.0; //~Lighting,default,10|0|100|
+uniform float Specular = 0.4; //~Lighting|default|0.4|0|1|
+uniform float SpecularExp = 16.0; //~Lighting|default|16|0|100|
+uniform float SpecularMax = 10.0; //~Lighting|default|10|0|100|
 
-uniform vec4 AO = vec4(0.0,0.0,0.0,0.7); //~Lighting,color4,0,0,0,0.7|0,0,0,0|1,1,1,1|
+uniform vec4 AO = vec4(0.0,0.0,0.0,0.7); //~Lighting|color4|0,0,0,0.7|0,0,0,0|1,1,1,1|
 
-uniform float Fog = 0.4; //~Lighting,default,0.4|0|2|
+uniform float Fog = 0.4; //~Lighting|default|0.4|0|2|
 
 
 float fSteps = 0.0;

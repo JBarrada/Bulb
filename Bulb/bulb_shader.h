@@ -1,10 +1,7 @@
 #ifndef BULB_SHADER_H
 #define BULB_SHADER_H
 
-#include <iostream>
 #include <fstream>
-#include <cmath>
-#include <time.h>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -13,9 +10,9 @@
 #include <glew.h>
 #include <glut.h>
 #include <glm\glm.hpp>
-#include <glm\gtc\matrix_transform.hpp>
 
 #include "shader_utils.h"
+#include "string_tools.h"
 
 using namespace std;
 
@@ -35,25 +32,22 @@ public:
 	string name;
 	string category;
 	string type;
-
 	SHADER_VAR_TYPE var_type;
 
-	bool hsv_mode;
 	bool is_color;
+	bool hsv_mode;
+	bool update;
 
 	glm::vec4 value[4];
 
 	bool animate_enable[4];
 	glm::vec4 animate_values[4];
 
-	bool update;
-
-
 	ShaderVariable();
+	ShaderVariable(string code);
 
 	void load_from_shader_comment(string code);
 	void load_from_bulb_save_string(string code);
-
 	string get_bulb_save_string();
 
 	bool needs_update();
@@ -73,7 +67,6 @@ public:
 
 	bool operator==(const ShaderVariable& rhs);
 };
-
 
 class BulbShader {
 public:
@@ -99,8 +92,5 @@ public:
 	
 	void load();
 };
-
-vector<string> split_string(string input, string target);
-void stovec(string values_string, glm::vec4 &value);
 
 #endif

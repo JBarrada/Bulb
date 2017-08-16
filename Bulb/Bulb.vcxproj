@@ -74,6 +74,7 @@
     <ClCompile Include="gamepad_input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="shader_utils.cpp" />
+    <ClCompile Include="string_tools.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bulb_settings.h" />
@@ -81,6 +82,7 @@
     <ClInclude Include="drawing_tools.h" />
     <ClInclude Include="gamepad_input.h" />
     <ClInclude Include="shader_utils.h" />
+    <ClInclude Include="string_tools.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="bulb.frag">

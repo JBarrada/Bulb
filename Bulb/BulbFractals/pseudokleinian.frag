@@ -1,12 +1,12 @@
 //FRACTAL_FILE
 
-uniform int Iterations = 5; //~Fractal,default,5|0|200
-uniform float Size = 1.0; //~Fractal,default,1|0|2
-uniform vec3 CSize = vec3(1.0); //~Fractal,default,1,1,1|0,0,0|2,2,2
-uniform vec3 C = vec3(0.0); //~Fractal,default,0,0,0|-2,-2,-2|2,2,2
-uniform float TThickness = 0.01; //~Fractal,default,0.01|0|2
-uniform float DEoffset = 0.0; //~Fractal,default,0|0|0.01
-uniform vec3 Offset = vec3(0.0); //~Fractal,default,1,1,1|-1,-1,-1|1,1,1
+uniform int Iterations = 5; //~Fractal|default|5|0|200
+uniform float Size = 1.0; //~Fractal|default|1|0|2
+uniform vec3 CSize = vec3(1.0); //~Fractal|default|1,1,1|0,0,0|2,2,2
+uniform vec3 C = vec3(0.0); //~Fractal|default|0,0,0|-2,-2,-2|2,2,2
+uniform float TThickness = 0.01; //~Fractal|default|0.01|0|2
+uniform float DEoffset = 0.0; //~Fractal|default|0|0|0.01
+uniform vec3 Offset = vec3(0.0); //~Fractal|default|1,1,1|-1,-1,-1|1,1,1
 
 vec4 orbitTrap = vec4(10000.0);
 
