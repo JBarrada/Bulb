@@ -29,3 +29,5 @@ todo:
 #add actual string tools code
 -add fonts and make menus pretty
 -figure out better way of sending depth data from gpu other than alpha
+-floating particles
+-save file images
