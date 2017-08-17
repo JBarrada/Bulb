@@ -14,6 +14,8 @@
 #include "drawing_tools.h"
 #include "bulb_shader.h"
 #include "bulb_settings.h"
+#include "keyboard_input.h"
+
 
 int SCREEN_W = 640;
 int SCREEN_H = 480;
@@ -22,6 +24,7 @@ float ASPECT = (float)SCREEN_W / (float)SCREEN_H;
 bool is_fullscreen = false;
 
 GamePadXbox* pad = new GamePadXbox(GamePadIndex_One);
+KeyboardState keyboard_state;
 
 float frames = 0;
 clock_t frame_time;
@@ -74,6 +77,7 @@ void set_fullscreen(bool fullscreen) {
 }
 
 void keyboard_down_special(int key, int x, int y) {
+	/*
 	if (bulb_settings.settings_open) {
 		bulb_settings.keyboard_update(key);
 		//control_settings.camera_keyboard_update(key);
@@ -86,10 +90,21 @@ void keyboard_down_special(int key, int x, int y) {
 			control_settings.camera_keyboard_update(key);
 		}
 	}
+	*/
+	keyboard_state.special_down(key);
+}
+
+void keyboard_up_special(int key, int x, int y) {
+	keyboard_state.special_up(key);
 }
 
 void keyboard_down(unsigned char key, int x, int y) {
-	keyboard_down_special((int)key, x, y);
+	//keyboard_down_special((int)key, x, y);
+	keyboard_state.keyboard_down(key);
+}
+
+void keyboard_up(unsigned char key, int x, int y) {
+	keyboard_state.keyboard_up(key);
 }
 
 void force_redraw(int value) {
@@ -97,20 +112,22 @@ void force_redraw(int value) {
 	
 	if (pad->is_connected()) {
 		pad->update();
+	}
 
-		if (bulb_settings.settings_open) {
-			bulb_settings.gamepad_update(&pad->State);
-			control_settings.camera_gamepad_update(&pad->State, true);
+	if (bulb_settings.settings_open) {
+		bulb_settings.input_update(pad, &keyboard_state);
+		control_settings.camera_gamepad_update(&pad->State, true);
+	} else {
+		if (pad->State.pressed(GamePad_Button_START) || keyboard_state.pressed_keyboard(27)) {
+			bulb_settings.settings_open = true;
+		} else if (pad->State.pressed(GamePad_Button_BACK) || keyboard_state.pressed_special(GLUT_KEY_F11)) {
+			set_fullscreen(!is_fullscreen);
 		} else {
-			if (pad->State.pressed(GamePad_Button_START)) {
-				bulb_settings.settings_open = true;
-			} else if (pad->State.pressed(GamePad_Button_BACK)) {
-				set_fullscreen(!is_fullscreen);
-			} else {
-				control_settings.camera_gamepad_update(&pad->State, false);
-			}
+			control_settings.camera_gamepad_update(&pad->State, false);
 		}
 	}
+	
+	keyboard_state.next();
 
 	glutTimerFunc(20, force_redraw, 0);
 }
@@ -138,7 +155,9 @@ int main(int argc, const char * argv[]) {
 	glutDisplayFunc(render);
 	glutTimerFunc(20, force_redraw, 0);
 	glutKeyboardFunc(keyboard_down);
+	glutKeyboardUpFunc(keyboard_up);
 	glutSpecialFunc(keyboard_down_special);
+	glutSpecialUpFunc(keyboard_up_special);
 	glutReshapeFunc(reshape);
 
 	glEnable(GL_BLEND);
@@ -162,6 +181,7 @@ int main(int argc, const char * argv[]) {
 
 	save_file.close();
 	*/
+	keyboard_state.reset();
 
 	glutMainLoop();
 

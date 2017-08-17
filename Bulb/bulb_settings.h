@@ -18,6 +18,7 @@
 #include "bulb_shader.h"
 #include "drawing_tools.h"
 #include "gamepad_input.h"
+#include "keyboard_input.h"
 
 #include "string_tools.h"
 
@@ -54,7 +55,7 @@ public:
 	void camera_keyboard_update(int key);
 	float expo(float value);
 
-	void adjust_variable(float normalized_amount, int variable);
+	void adjust_variable(float analog, float digital, int variable);
 	string get_variable_name(int variable);
 	string get_variable_value(int variable);
 };
@@ -100,20 +101,16 @@ public:
 	void draw_slider_bar(float x, float y, float bar_width, float bar_height, int *values, string format, bool selected);
 
 	void control_menu_draw();
-	void control_menu_gamepad_update(GamePadState *state);
-	void control_menu_keyboard_update(int key);
+	void control_menu_input_update(GamePadState *gamepad_state, KeyboardState *keyboard_state);
 
 	void shader_menu_draw();
-	void shader_menu_gamepad_update(GamePadState *state);
-	void shader_menu_keyboard_update(int key);
+	void shader_menu_input_update(GamePadState *gamepad_state, KeyboardState *keyboard_state);
 
 	void main_menu_draw();
-	void main_menu_gamepad_update(GamePadState *state);
-	void main_menu_keyboard_update(int key);
-	
+	void main_menu_input_update(GamePadState *gamepad_state, KeyboardState *keyboard_state);
+
 	void load_menu_draw();
-	void load_menu_gamepad_update(GamePadState *state);
-	void load_menu_keyboard_update(int key);
+	void load_menu_input_update(GamePadState *gamepad_state, KeyboardState *keyboard_state);
 
 	void update_save_files();
 	void load_save_file(string save_file_name);
@@ -121,9 +118,7 @@ public:
 
 	void draw();
 
-	void gamepad_update(GamePadState *state);
-	void keyboard_update(int key);
+	void input_update(GamePadXbox *gamepad, KeyboardState *keyboard);
 };
-
 
 #endif

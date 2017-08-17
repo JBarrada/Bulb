@@ -1,5 +1,14 @@
 #include "bulb_shader.h"
 
+/*
+float digital_step_align(float step) {
+	float increments[] = {0.005f, 0.01f, 0.05f, 0.1f, 0.5f, 1.0f};
+	float new_step = increments[0];
+	for (int i = 0; i < 6; i++) if (abs(step) > increments[i]) new_step = increments[i];
+	return (new_step * ((step < 0.0f) ? -1.0f : 1.0f));
+}
+*/
+
 glm::vec4 rgb2hsv(glm::vec4 c) {
 	glm::vec4 K = glm::vec4(0.0f, -1.0f / 3.0f, 2.0f / 3.0f, -1.0f);
 	glm::vec4 p = glm::mix(glm::vec4(c.b, c.g, K.w, K.z), glm::vec4(c.g, c.b, K.x, K.y), (c.g < c.b) ? 0.0f : 1.0f);
@@ -135,19 +144,20 @@ void ShaderVariable::update_program_variable(GLuint program) {
 	update = false;
 }
 
-void ShaderVariable::adjust_variable(float normalized_amount, int &sub_variable) {
+void ShaderVariable::adjust_variable(float analog, float digital, int &sub_variable) {
 	int sub_var_count[6] = {1, 1, 1, 2, 3, 4};
 	sub_variable = glm::clamp(sub_variable, 0, sub_var_count[var_type] - 1);
 	
 	if (!animate_enable[sub_variable]) {
 		if (var_type == VAR_BOOL) {
-			if (abs(normalized_amount) == 1.0f) {
+			if (abs(analog + digital) == 1.0f) {
 				value[0][sub_variable] = (value[0][sub_variable] == 1.0f) ? 0.0f : 1.0f;
 			}
 		} else {
 			float resolution = 100.0f;
 			float step = value[3][sub_variable] / resolution;
-			value[0][sub_variable] = glm::clamp(value[0][sub_variable] + (normalized_amount * step), value[1][sub_variable], value[2][sub_variable]);
+			float step_digital = (var_type == VAR_INT) ? 1.0f : max(pow(10, floor(log10(step))), step - (pow(10, floor(log10(step)))*5));
+			value[0][sub_variable] = glm::clamp(value[0][sub_variable] + (analog * step) + (digital * step_digital), value[1][sub_variable], value[2][sub_variable]);
 		}
 		update = true;
 	}

@@ -1,5 +1,10 @@
 #include "bulb_settings.h"
 
+float digital_step_align(float step) {
+	float step_digital = max(pow(10, floor(log10(step))), step - (pow(10, floor(log10(step)))*5));
+	return step_digital;
+}
+
 BulbControlSettings::BulbControlSettings() {
 	camera_eye = glm::vec3(0.0, 4.0, 10.0);
 	camera_target = glm::vec3(0.0, 0.0, 0.0);
@@ -310,44 +315,44 @@ float BulbControlSettings::expo(float value) {
 	}
 }
 
-void BulbControlSettings::adjust_variable(float normalized_amount, int variable) {
+void BulbControlSettings::adjust_variable(float analog, float digital, int variable) {
 	float step = 0.0f;
 	float resolution = 100.0f;
 
 	if (variable == 0) { // "camera_fov"'
 		step = camera_fov[3] / resolution;
-		camera_fov[0] = glm::clamp(camera_fov[0] + (normalized_amount * step), camera_fov[1], camera_fov[2]);
+		camera_fov[0] = glm::clamp(camera_fov[0] + (analog * step) + (digital * digital_step_align(step)), camera_fov[1], camera_fov[2]);
 	}
 	if (variable == 1) { // "control_expo_power"
 		step = control_expo_power[3] / resolution;
-		control_expo_power[0] = glm::clamp(control_expo_power[0] + (int)(normalized_amount * step), control_expo_power[1], control_expo_power[2]);
+		control_expo_power[0] = glm::clamp(control_expo_power[0] + (int)(analog * step) + (int)(digital * digital_step_align(step)), control_expo_power[1], control_expo_power[2]);
 	}
 	if (variable == 2) { // "control_move_speed_forward"
 		step = control_move_speed_forward[3] / resolution;
-		control_move_speed_forward[0] = glm::clamp(control_move_speed_forward[0] + (normalized_amount * step), control_move_speed_forward[1], control_move_speed_forward[2]);
+		control_move_speed_forward[0] = glm::clamp(control_move_speed_forward[0] + (analog * step) + (digital * digital_step_align(step)), control_move_speed_forward[1], control_move_speed_forward[2]);
 	}
 	if (variable == 3) { // "control_move_speed_lateral"
 		step = control_move_speed_lateral[3] / resolution;
-		control_move_speed_lateral[0] = glm::clamp(control_move_speed_lateral[0] + (normalized_amount * step), control_move_speed_lateral[1], control_move_speed_lateral[2]);
+		control_move_speed_lateral[0] = glm::clamp(control_move_speed_lateral[0] + (analog * step) + (digital * digital_step_align(step)), control_move_speed_lateral[1], control_move_speed_lateral[2]);
 	}
 	if (variable == 4) { // "control_move_speed_vertical"
 		step = control_move_speed_vertical[3] / resolution;
-		control_move_speed_vertical[0] = glm::clamp(control_move_speed_vertical[0] + (normalized_amount * step), control_move_speed_vertical[1], control_move_speed_vertical[2]);
+		control_move_speed_vertical[0] = glm::clamp(control_move_speed_vertical[0] + (analog * step) + (digital * digital_step_align(step)), control_move_speed_vertical[1], control_move_speed_vertical[2]);
 	}
 	if (variable == 5) { // "control_pitch_speed"
 		step = control_pitch_speed[3] / resolution;
-		control_pitch_speed[0] = glm::clamp(control_pitch_speed[0] + (normalized_amount * step), control_pitch_speed[1], control_pitch_speed[2]);
+		control_pitch_speed[0] = glm::clamp(control_pitch_speed[0] + (analog * step) + (digital * digital_step_align(step)), control_pitch_speed[1], control_pitch_speed[2]);
 	}
 	if (variable == 6) { // "control_roll_speed"
 		step = control_roll_speed[3] / resolution;
-		control_roll_speed[0] = glm::clamp(control_roll_speed[0] + (normalized_amount * step), control_roll_speed[1], control_roll_speed[2]);
+		control_roll_speed[0] = glm::clamp(control_roll_speed[0] + (analog * step) + (digital * digital_step_align(step)), control_roll_speed[1], control_roll_speed[2]);
 	}
 	if (variable == 7) { // "control_yaw_speed"
 		step = control_yaw_speed[3] / resolution;
-		control_yaw_speed[0] = glm::clamp(control_yaw_speed[0] + (normalized_amount * step), control_yaw_speed[1], control_yaw_speed[2]);
+		control_yaw_speed[0] = glm::clamp(control_yaw_speed[0] + (analog * step) + (digital * digital_step_align(step)), control_yaw_speed[1], control_yaw_speed[2]);
 	}
 	if (variable == 8) { // "control_vibrate"
-		if (abs(normalized_amount) == 1.0f) control_vibrate[0] = !control_vibrate[0];
+		if (abs(analog + digital) == 1.0f) control_vibrate[0] = !control_vibrate[0];
 	}
 }
 
@@ -442,6 +447,7 @@ void BulbSettings::draw_slider_bar(float x, float y, float bar_width, float bar_
 	draw_slider_bar(x, y, bar_width, bar_height, (float)values[0], (float)values[1], (float)values[2], format, selected);
 }
 
+
 void BulbSettings::control_menu_draw() {
 	if (control_menu_item_selected) {
 		float bar_width = 500;
@@ -509,57 +515,34 @@ void BulbSettings::control_menu_draw() {
 	}
 }
 
-void BulbSettings::control_menu_gamepad_update(GamePadState *state) {
+void BulbSettings::control_menu_input_update(GamePadState *gamepad_state, KeyboardState *keyboard_state) {
 	if (control_menu_item_selected) {
-		if (state->pressed(GamePad_Button_B)) {
+		if (gamepad_state->pressed(GamePad_Button_B) || keyboard_state->pressed_keyboard(27)) {
 			control_menu_item_selected = false;
 		}
 
-		float dpad_step = (state->pressed(GamePad_Button_DPAD_RIGHT) - state->pressed(GamePad_Button_DPAD_LEFT));
-		float trigger_step = (settings_expo(state->rt) - settings_expo(state->lt));
+		float dpad_step = (gamepad_state->pressed(GamePad_Button_DPAD_RIGHT) - gamepad_state->pressed(GamePad_Button_DPAD_LEFT));
+		dpad_step += (keyboard_state->pressed_special(GLUT_KEY_RIGHT) - keyboard_state->pressed_special(GLUT_KEY_LEFT));
 
-		control_settings->adjust_variable(dpad_step + trigger_step, control_menu_item_highlight);
+		float trigger_step = (settings_expo(gamepad_state->rt) - settings_expo(gamepad_state->lt));
+
+		control_settings->adjust_variable(trigger_step, dpad_step, control_menu_item_highlight);
 	} else {
-		if (state->pressed(GamePad_Button_A)) {
+		if (gamepad_state->pressed(GamePad_Button_A) || keyboard_state->pressed_keyboard(13)) {
 			control_menu_item_selected = true;
 			control_menu_item_sub_highlight = 0;
 		}
-		if (state->pressed(GamePad_Button_B)) {
+		if (gamepad_state->pressed(GamePad_Button_B) || keyboard_state->pressed_keyboard(27)) {
 			menu_open = 0; // main menu
 		}
 
-		if (state->pressed(GamePad_Button_DPAD_UP)) control_menu_item_highlight++;
-		if (state->pressed(GamePad_Button_DPAD_DOWN)) control_menu_item_highlight--;
+		if (gamepad_state->pressed(GamePad_Button_DPAD_UP) || keyboard_state->pressed_special(GLUT_KEY_UP)) control_menu_item_highlight++;
+		if (gamepad_state->pressed(GamePad_Button_DPAD_DOWN) || keyboard_state->pressed_special(GLUT_KEY_DOWN)) control_menu_item_highlight--;
 		int items_size = 9;
 		control_menu_item_highlight = glm::clamp(control_menu_item_highlight, 0, items_size-1);
 	}
 }
 
-void BulbSettings::control_menu_keyboard_update(int key) {
-	if (control_menu_item_selected) {
-		if (key == 27) {
-			control_menu_item_selected = false;
-		}
-
-		float dpad_step = ((key == GLUT_KEY_RIGHT) - (key == GLUT_KEY_LEFT));
-		float trigger_step = 0.0f; // (settings_expo(state->rt) - settings_expo(state->lt));
-
-		control_settings->adjust_variable(dpad_step + trigger_step, control_menu_item_highlight);
-	} else {
-		if (key == 13) {
-			control_menu_item_selected = true;
-			control_menu_item_sub_highlight = 0;
-		}
-		if (key == 27) {
-			menu_open = 0; // main menu
-		}
-
-		if (key == GLUT_KEY_UP) control_menu_item_highlight++;
-		if (key == GLUT_KEY_DOWN) control_menu_item_highlight--;
-		int items_size = 9;
-		control_menu_item_highlight = glm::clamp(control_menu_item_highlight, 0, items_size-1);
-	}
-}
 
 void BulbSettings::shader_menu_draw() {
 	if (shader_menu_item_selected) {
@@ -684,123 +667,67 @@ void BulbSettings::shader_menu_draw() {
 	}
 }
 
-void BulbSettings::shader_menu_gamepad_update(GamePadState *state) {
+void BulbSettings::shader_menu_input_update(GamePadState *gamepad_state, KeyboardState *keyboard_state) {
 	if (shader_menu_item_selected) {
 		int actual_highlight_index = bulb_shader->shader_categories_indexes[shader_menu_category][shader_menu_item_highlight];
 		ShaderVariable *selected_variable = &bulb_shader->shader_variables[actual_highlight_index];
 
-		if (state->pressed(GamePad_Button_X)) {
+		if (gamepad_state->pressed(GamePad_Button_X) || keyboard_state->pressed_keyboard('x')) {
 			selected_variable->animate_enable[shader_menu_item_sub_highlight] = !selected_variable->animate_enable[shader_menu_item_sub_highlight];
 			shader_menu_item_sub_selected = selected_variable->animate_enable[shader_menu_item_sub_highlight]; // auto enter menu
 		}
 
-		float dpad_step = (state->pressed(GamePad_Button_DPAD_RIGHT) - state->pressed(GamePad_Button_DPAD_LEFT));
-		float trigger_step = (settings_expo(state->rt) - settings_expo(state->lt));
+		float dpad_step = (gamepad_state->pressed(GamePad_Button_DPAD_RIGHT) - gamepad_state->pressed(GamePad_Button_DPAD_LEFT));
+		dpad_step = (keyboard_state->pressed_special(GLUT_KEY_RIGHT) - keyboard_state->pressed_special(GLUT_KEY_LEFT));
+
+		float trigger_step = (settings_expo(gamepad_state->rt) - settings_expo(gamepad_state->lt));
 
 		if (shader_menu_item_sub_selected) {
-			if (state->pressed(GamePad_Button_B)) {
+			if (gamepad_state->pressed(GamePad_Button_B) || keyboard_state->pressed_keyboard(27)) {
 				shader_menu_item_sub_selected = false;
 			}
 
-			if (state->pressed(GamePad_Button_DPAD_UP)) shader_menu_item_sub_animate_highlight++;
-			if (state->pressed(GamePad_Button_DPAD_DOWN)) shader_menu_item_sub_animate_highlight--;
+			if (gamepad_state->pressed(GamePad_Button_DPAD_UP) || keyboard_state->pressed_special(GLUT_KEY_UP)) shader_menu_item_sub_animate_highlight++;
+			if (gamepad_state->pressed(GamePad_Button_DPAD_DOWN) || keyboard_state->pressed_special(GLUT_KEY_DOWN)) shader_menu_item_sub_animate_highlight--;
 
 			selected_variable->adjust_animate(dpad_step + trigger_step, shader_menu_item_sub_highlight, shader_menu_item_sub_animate_highlight);
 		} else {
-			if (state->pressed(GamePad_Button_A) && selected_variable->animate_enable[shader_menu_item_sub_highlight]) {
+			if ((gamepad_state->pressed(GamePad_Button_A) || keyboard_state->pressed_keyboard(13)) && selected_variable->animate_enable[shader_menu_item_sub_highlight]) {
 				shader_menu_item_sub_selected = true;
 			}
-			if (state->pressed(GamePad_Button_B)) {
+			if (gamepad_state->pressed(GamePad_Button_B) || keyboard_state->pressed_keyboard(27)) {
 				shader_menu_item_selected = false;
 			}
 
-			if (state->pressed(GamePad_Button_Y)) {
+			if (gamepad_state->pressed(GamePad_Button_Y) || keyboard_state->pressed_keyboard('y')) {
 				selected_variable->set_hsv_mode(!selected_variable->hsv_mode);
 			}
 
-			if (state->pressed(GamePad_Button_DPAD_UP)) shader_menu_item_sub_highlight++;
-			if (state->pressed(GamePad_Button_DPAD_DOWN)) shader_menu_item_sub_highlight--;
+			if (gamepad_state->pressed(GamePad_Button_DPAD_UP) || keyboard_state->pressed_special(GLUT_KEY_UP)) shader_menu_item_sub_highlight++;
+			if (gamepad_state->pressed(GamePad_Button_DPAD_DOWN) || keyboard_state->pressed_special(GLUT_KEY_DOWN)) shader_menu_item_sub_highlight--;
 
-			selected_variable->adjust_variable(dpad_step + trigger_step, shader_menu_item_sub_highlight);
+			selected_variable->adjust_variable(trigger_step, dpad_step, shader_menu_item_sub_highlight);
 		}
 	} else {
-		if (state->pressed(GamePad_Button_A)) {
+		if (gamepad_state->pressed(GamePad_Button_A) || keyboard_state->pressed_keyboard(13)) {
 			shader_menu_item_selected = true;
 			shader_menu_item_sub_highlight = 0;
 		}
-		if (state->pressed(GamePad_Button_B)) {
+		if (gamepad_state->pressed(GamePad_Button_B) || keyboard_state->pressed_keyboard(27)) {
 			menu_open = 0; // main menu
 		}
 
-		if (state->pressed(GamePad_Button_RIGHT_SHOULDER)) shader_menu_category++;
-		if (state->pressed(GamePad_Button_LEFT_SHOULDER)) shader_menu_category--;
+		if (gamepad_state->pressed(GamePad_Button_RIGHT_SHOULDER) || keyboard_state->pressed_special(GLUT_KEY_RIGHT)) shader_menu_category++;
+		if (gamepad_state->pressed(GamePad_Button_LEFT_SHOULDER) || keyboard_state->pressed_special(GLUT_KEY_LEFT)) shader_menu_category--;
 		shader_menu_category = glm::clamp(shader_menu_category, 0, (int)bulb_shader->shader_categories.size() - 1);
 
-		if (state->pressed(GamePad_Button_DPAD_UP)) shader_menu_item_highlight++;
-		if (state->pressed(GamePad_Button_DPAD_DOWN)) shader_menu_item_highlight--;
+		if (gamepad_state->pressed(GamePad_Button_DPAD_UP) || keyboard_state->pressed_special(GLUT_KEY_UP)) shader_menu_item_highlight++;
+		if (gamepad_state->pressed(GamePad_Button_DPAD_DOWN) || keyboard_state->pressed_special(GLUT_KEY_DOWN)) shader_menu_item_highlight--;
 		int category_size = (int)bulb_shader->shader_categories_indexes[shader_menu_category].size();
 		shader_menu_item_highlight = glm::clamp(shader_menu_item_highlight, 0, category_size-1);
 	}
 }
 
-void BulbSettings::shader_menu_keyboard_update(int key) {
-	if (shader_menu_item_selected) {
-		int actual_highlight_index = bulb_shader->shader_categories_indexes[shader_menu_category][shader_menu_item_highlight];
-		ShaderVariable *selected_variable = &bulb_shader->shader_variables[actual_highlight_index];
-
-		if (key == 'x') {
-			selected_variable->animate_enable[shader_menu_item_sub_highlight] = !selected_variable->animate_enable[shader_menu_item_sub_highlight];
-			shader_menu_item_sub_selected = selected_variable->animate_enable[shader_menu_item_sub_highlight]; // auto enter menu
-		}
-
-		float dpad_step = ((key == GLUT_KEY_RIGHT) - (key == GLUT_KEY_LEFT));
-		float trigger_step = 0.0f; //(settings_expo(state->rt) - settings_expo(state->lt));
-
-		if (shader_menu_item_sub_selected) {
-			if (key == 27) {
-				shader_menu_item_sub_selected = false;
-			}
-
-			if (key == GLUT_KEY_UP) shader_menu_item_sub_animate_highlight++;
-			if (key == GLUT_KEY_DOWN) shader_menu_item_sub_animate_highlight--;
-
-			selected_variable->adjust_animate(dpad_step + trigger_step, shader_menu_item_sub_highlight, shader_menu_item_sub_animate_highlight);
-		} else {
-			if ((key == 13) && selected_variable->animate_enable[shader_menu_item_sub_highlight]) {
-				shader_menu_item_sub_selected = true;
-			}
-			if (key == 27) {
-				shader_menu_item_selected = false;
-			}
-
-			if (key == 'y') {
-				selected_variable->set_hsv_mode(!selected_variable->hsv_mode);
-			}
-
-			if (key == GLUT_KEY_UP) shader_menu_item_sub_highlight++;
-			if (key == GLUT_KEY_DOWN) shader_menu_item_sub_highlight--;
-
-			selected_variable->adjust_variable(dpad_step + trigger_step, shader_menu_item_sub_highlight);
-		}
-	} else {
-		if (key == 13) {
-			shader_menu_item_selected = true;
-			shader_menu_item_sub_highlight = 0;
-		}
-		if (key == 27) {
-			menu_open = 0; // main menu
-		}
-
-		if (key == GLUT_KEY_RIGHT) shader_menu_category++;
-		if (key == GLUT_KEY_LEFT) shader_menu_category--;
-		shader_menu_category = glm::clamp(shader_menu_category, 0, (int)bulb_shader->shader_categories.size() - 1);
-
-		if (key == GLUT_KEY_UP) shader_menu_item_highlight++;
-		if (key == GLUT_KEY_DOWN) shader_menu_item_highlight--;
-		int category_size = (int)bulb_shader->shader_categories_indexes[shader_menu_category].size();
-		shader_menu_item_highlight = glm::clamp(shader_menu_item_highlight, 0, category_size-1);
-	}
-}
 
 void BulbSettings::main_menu_draw() {
 	string menu_items[] = {"Shader Settings", "Control Settings", "Load", "Save"};
@@ -818,10 +745,10 @@ void BulbSettings::main_menu_draw() {
 	}
 }
 
-void BulbSettings::main_menu_gamepad_update(GamePadState *state) {
+void BulbSettings::main_menu_input_update(GamePadState *gamepad_state, KeyboardState *keyboard_state) {
 	int menu_items_size = 4;
 
-	if (state->pressed(GamePad_Button_A)) {
+	if (gamepad_state->pressed(GamePad_Button_A) || keyboard_state->pressed_keyboard(13)) {
 		main_menu_item_selected = true;
 		menu_open = main_menu_item_highlight + 1;
 
@@ -843,48 +770,15 @@ void BulbSettings::main_menu_gamepad_update(GamePadState *state) {
 			save_save_file("BulbSaves\\" + string(buffer) + ".bulbsave");
 		}
 	}
-	if (state->pressed(GamePad_Button_B)) {
+	if (gamepad_state->pressed(GamePad_Button_B) || keyboard_state->pressed_keyboard(27)) {
 		settings_open = false;
 	}
 	
-	if (state->pressed(GamePad_Button_DPAD_UP)) main_menu_item_highlight++;
-	if (state->pressed(GamePad_Button_DPAD_DOWN)) main_menu_item_highlight--;
+	if (gamepad_state->pressed(GamePad_Button_DPAD_UP) || keyboard_state->pressed_special(GLUT_KEY_UP)) main_menu_item_highlight++;
+	if (gamepad_state->pressed(GamePad_Button_DPAD_DOWN) || keyboard_state->pressed_special(GLUT_KEY_DOWN)) main_menu_item_highlight--;
 	main_menu_item_highlight = glm::clamp(main_menu_item_highlight, 0, menu_items_size - 1);
 }
 
-void BulbSettings::main_menu_keyboard_update(int key) {
-	int menu_items_size = 4;
-
-	if (key == 13) {
-		main_menu_item_selected = true;
-		menu_open = main_menu_item_highlight + 1;
-
-		if (main_menu_item_highlight == 3) {
-			main_menu_item_selected = false;
-			menu_open = 0;
-
-			// save (todo: make this better)
-
-			time_t rawtime;
-			struct tm * timeinfo;
-			char buffer[100];
-
-			time(&rawtime);
-			timeinfo = localtime(&rawtime);
-
-			strftime(buffer, sizeof(buffer), "%j %H_%M_%S", timeinfo);
-
-			save_save_file("BulbSaves\\" + string(buffer) + ".bulbsave");
-		}
-	}
-	if (key == 27) {
-		settings_open = false;
-	}
-
-	if (key == GLUT_KEY_UP) main_menu_item_highlight++;
-	if (key == GLUT_KEY_DOWN) main_menu_item_highlight--;
-	main_menu_item_highlight = glm::clamp(main_menu_item_highlight, 0, menu_items_size - 1);
-}
 
 void BulbSettings::load_menu_draw() {
 	if (!load_menu_item_selected) {
@@ -935,87 +829,47 @@ void BulbSettings::load_menu_draw() {
 	}
 }
 
-void BulbSettings::load_menu_gamepad_update(GamePadState *state) {
+void BulbSettings::load_menu_input_update(GamePadState *gamepad_state, KeyboardState *keyboard_state) {
 	if (!load_menu_item_selected) {
 		int menu_items_size = 2;
-		if (state->pressed(GamePad_Button_A)) {
+		if (gamepad_state->pressed(GamePad_Button_A) || keyboard_state->pressed_keyboard(13)) {
 			load_menu_item_selected = true;
 			load_menu_item_sub_highlight = 0;
 
 			if (load_menu_item_highlight == 1) update_save_files();
 		}
-		if (state->pressed(GamePad_Button_B)) {
+		if (gamepad_state->pressed(GamePad_Button_B) || keyboard_state->pressed_keyboard(27)) {
 			menu_open = 0; // main menu
 		}
 
-		if (state->pressed(GamePad_Button_DPAD_UP)) load_menu_item_highlight++;
-		if (state->pressed(GamePad_Button_DPAD_DOWN)) load_menu_item_highlight--;
+		if (gamepad_state->pressed(GamePad_Button_DPAD_UP) || keyboard_state->pressed_special(GLUT_KEY_UP)) load_menu_item_highlight++;
+		if (gamepad_state->pressed(GamePad_Button_DPAD_DOWN) || keyboard_state->pressed_special(GLUT_KEY_DOWN)) load_menu_item_highlight--;
 		load_menu_item_highlight = glm::clamp(load_menu_item_highlight, 0, menu_items_size - 1);
 	} else {
-		if (state->pressed(GamePad_Button_B)) {
+		if (gamepad_state->pressed(GamePad_Button_B) || keyboard_state->pressed_keyboard(27)) {
 			load_menu_item_selected = false;
 		}
 
-		if (state->pressed(GamePad_Button_DPAD_UP)) load_menu_item_sub_highlight++;
-		if (state->pressed(GamePad_Button_DPAD_DOWN)) load_menu_item_sub_highlight--;
+		if (gamepad_state->pressed(GamePad_Button_DPAD_UP) || keyboard_state->pressed_special(GLUT_KEY_UP)) load_menu_item_sub_highlight++;
+		if (gamepad_state->pressed(GamePad_Button_DPAD_DOWN) || keyboard_state->pressed_special(GLUT_KEY_DOWN)) load_menu_item_sub_highlight--;
 
 		if (load_menu_item_highlight == 0) {
 			load_menu_item_sub_highlight = glm::clamp(load_menu_item_sub_highlight, 0, (int)bulb_shader->fractal_files.size() - 1);
 			
-			if (state->pressed(GamePad_Button_A)) {
+			if (gamepad_state->pressed(GamePad_Button_A) || keyboard_state->pressed_keyboard(13)) {
 				bulb_shader->fractal_file = bulb_shader->fractal_files[load_menu_item_sub_highlight];
 				bulb_shader->load();
 			}
 		} else if (load_menu_item_highlight == 1) {
 			load_menu_item_sub_highlight = glm::clamp(load_menu_item_sub_highlight, 0, (int)save_files.size() - 1);
 
-			if (state->pressed(GamePad_Button_A)) {
+			if (gamepad_state->pressed(GamePad_Button_A) || keyboard_state->pressed_keyboard(13)) {
 				// load save file
 			}
 		}
 	}
 }
 
-void BulbSettings::load_menu_keyboard_update(int key) {
-	if (!load_menu_item_selected) {
-		int menu_items_size = 2;
-		if (key == 13) {
-			load_menu_item_selected = true;
-			load_menu_item_sub_highlight = 0;
-
-			if (load_menu_item_highlight == 1) update_save_files();
-		}
-		if (key == 27) {
-			menu_open = 0; // main menu
-		}
-
-		if (key == GLUT_KEY_UP) load_menu_item_highlight++;
-		if (key == GLUT_KEY_DOWN) load_menu_item_highlight--;
-		load_menu_item_highlight = glm::clamp(load_menu_item_highlight, 0, menu_items_size - 1);
-	} else {
-		if (key == 27) {
-			load_menu_item_selected = false;
-		}
-
-		if (key == GLUT_KEY_UP) load_menu_item_sub_highlight++;
-		if (key == GLUT_KEY_DOWN) load_menu_item_sub_highlight--;
-
-		if (load_menu_item_highlight == 0) {
-			load_menu_item_sub_highlight = glm::clamp(load_menu_item_sub_highlight, 0, (int)bulb_shader->fractal_files.size() - 1);
-			
-			if (key == 13) {
-				bulb_shader->fractal_file = bulb_shader->fractal_files[load_menu_item_sub_highlight];
-				bulb_shader->load();
-			}
-		} else if (load_menu_item_highlight == 1) {
-			load_menu_item_sub_highlight = glm::clamp(load_menu_item_sub_highlight, 0, (int)save_files.size() - 1);
-
-			if (key == 13) {
-				// load save file
-			}
-		}
-	}
-}
 
 void BulbSettings::update_save_files() {
 	save_files.clear();
@@ -1049,18 +903,6 @@ void BulbSettings::draw() {
 	}
 }
 
-void BulbSettings::gamepad_update(GamePadState *state) {
-	if (menu_open == 0) {
-		main_menu_gamepad_update(state);
-	} else if (menu_open == 1) {
-		shader_menu_gamepad_update(state);
-	} else if (menu_open == 2) {
-		control_menu_gamepad_update(state);
-	} else if (menu_open == 3) {
-		load_menu_gamepad_update(state);
-	}
-}
-
 void BulbSettings::load_save_file(string save_file_name) {
 	ifstream save_file;
 	save_file.open(save_file_name, ios::in);
@@ -1081,14 +923,14 @@ void BulbSettings::save_save_file(string save_file_name) {
 	save_file.close();
 }
 
-void BulbSettings::keyboard_update(int key) {
+void BulbSettings::input_update(GamePadXbox *gamepad, KeyboardState *keyboard) {
 	if (menu_open == 0) {
-		main_menu_keyboard_update(key);
+		main_menu_input_update(&gamepad->State, keyboard);
 	} else if (menu_open == 1) {
-		shader_menu_keyboard_update(key);
+		shader_menu_input_update(&gamepad->State, keyboard);
 	} else if (menu_open == 2) {
-		control_menu_keyboard_update(key);
+		control_menu_input_update(&gamepad->State, keyboard);
 	} else if (menu_open == 3) {
-		load_menu_keyboard_update(key);
+		load_menu_input_update(&gamepad->State, keyboard);
 	}
 }

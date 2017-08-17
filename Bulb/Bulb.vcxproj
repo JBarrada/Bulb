@@ -81,6 +81,7 @@
     <ClInclude Include="bulb_shader.h" />
     <ClInclude Include="drawing_tools.h" />
     <ClInclude Include="gamepad_input.h" />
+    <ClInclude Include="keyboard_input.h" />
     <ClInclude Include="shader_utils.h" />
     <ClInclude Include="string_tools.h" />
   </ItemGroup>
