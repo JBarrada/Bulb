@@ -1,9 +1,7 @@
 #ifndef BULB_SETTINGS_H
 #define BULB_SETTINGS_H
 
-#include <iostream>
 #include <fstream>
-#include <cmath>
 #include <time.h>
 #include <string>
 #include <vector>
@@ -13,52 +11,15 @@
 #include <glew.h>
 #include <glut.h>
 #include <glm\glm.hpp>
-#include <glm\gtc\matrix_transform.hpp>
 
 #include "bulb_shader.h"
+#include "bulb_variable.h"
+#include "bulb_control_settings.h"
 #include "drawing_tools.h"
 #include "gamepad_input.h"
 #include "keyboard_input.h"
 
 #include "string_tools.h"
-
-class BulbControlSettings {
-public:
-	glm::vec3 camera_eye;
-	glm::vec3 camera_target;
-	glm::vec3 camera_up;
-	glm::mat4 camera_orientation;
-
-	//glm::vec3 camera_eye_prev;
-	//glm::vec3 camera_velocity_prev;
-
-	float camera_prox_target;
-	float camera_prox;
-
-	float camera_fov[4];
-	int control_expo_power[4];
-	float control_move_speed_forward[4];
-	float control_move_speed_lateral[4];
-	float control_move_speed_vertical[4];
-	float control_pitch_speed[4];
-	float control_roll_speed[4];
-	float control_yaw_speed[4];
-	bool control_vibrate[4];
-
-	BulbControlSettings();
-
-	void write_to_save_file(ofstream &save_file);
-	void read_from_save_file(ifstream &save_file);
-
-	void update_camera_prox(int SCREEN_W,  int SCREEN_H);
-	void camera_gamepad_update(GamePadState *state, bool sticks_only);
-	void camera_keyboard_update(int key);
-	float expo(float value);
-
-	void adjust_variable(float analog, float digital, int variable);
-	string get_variable_name(int variable);
-	string get_variable_value(int variable);
-};
 
 class BulbSettings {
 private:
@@ -96,9 +57,7 @@ public:
 
 	float settings_expo(float value);
 
-	void draw_slider_bar(float x, float y, float bar_width, float bar_height, float current, float min, float max, string format, bool selected);
-	void draw_slider_bar(float x, float y, float bar_width, float bar_height, float *values, string format, bool selected);
-	void draw_slider_bar(float x, float y, float bar_width, float bar_height, int *values, string format, bool selected);
+	void draw_bulb_variable(BulbVariable *variable, int sub_highlight, int sub_animate_highlight, bool sub_selected);
 
 	void control_menu_draw();
 	void control_menu_input_update(GamePadState *gamepad_state, KeyboardState *keyboard_state);

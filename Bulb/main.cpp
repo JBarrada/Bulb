@@ -52,7 +52,7 @@ void render() {
 	
 	bulb_shader.draw();
 
-	bulb_shader.update_control_variables(control_settings.camera_eye, control_settings.camera_target, control_settings.camera_up, control_settings.camera_fov[0], ASPECT);
+	bulb_shader.update_control_variables(&control_settings, ASPECT);
 	bulb_shader.update_shader_variables();
 
 	if (bulb_settings.settings_open) bulb_settings.draw();
@@ -77,20 +77,6 @@ void set_fullscreen(bool fullscreen) {
 }
 
 void keyboard_down_special(int key, int x, int y) {
-	/*
-	if (bulb_settings.settings_open) {
-		bulb_settings.keyboard_update(key);
-		//control_settings.camera_keyboard_update(key);
-	} else {
-		if (key == 27) {
-			bulb_settings.settings_open = true;
-		} else if (key == GLUT_KEY_F11) {
-			set_fullscreen(!is_fullscreen);
-		} else {
-			control_settings.camera_keyboard_update(key);
-		}
-	}
-	*/
 	keyboard_state.special_down(key);
 }
 
@@ -99,7 +85,6 @@ void keyboard_up_special(int key, int x, int y) {
 }
 
 void keyboard_down(unsigned char key, int x, int y) {
-	//keyboard_down_special((int)key, x, y);
 	keyboard_state.keyboard_down(key);
 }
 
@@ -164,23 +149,6 @@ int main(int argc, const char * argv[]) {
 
 	bulb_shader.load();
 
-	/*
-	ofstream save_file;
-	save_file.open("testsave.bulbsave");
-
-	control_settings.write_to_save_file(save_file);
-
-	save_file.close();
-	*/
-
-	/*
-	ifstream save_file;
-	save_file.open("testsave.bulbsave", ios::in);
-
-	control_settings.read_from_save_file(save_file);
-
-	save_file.close();
-	*/
 	keyboard_state.reset();
 
 	glutMainLoop();

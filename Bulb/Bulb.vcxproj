@@ -68,8 +68,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="bulb_control_settings.cpp" />
     <ClCompile Include="bulb_settings.cpp" />
     <ClCompile Include="bulb_shader.cpp" />
+    <ClCompile Include="bulb_variable.cpp" />
     <ClCompile Include="drawing_tools.cpp" />
     <ClCompile Include="gamepad_input.cpp" />
     <ClCompile Include="main.cpp" />
@@ -77,8 +79,10 @@
     <ClCompile Include="string_tools.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="bulb_control_settings.h" />
     <ClInclude Include="bulb_settings.h" />
     <ClInclude Include="bulb_shader.h" />
+    <ClInclude Include="bulb_variable.h" />
     <ClInclude Include="drawing_tools.h" />
     <ClInclude Include="gamepad_input.h" />
     <ClInclude Include="keyboard_input.h" />

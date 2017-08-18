@@ -25,10 +25,12 @@ todo:
 -skyboxes (space, ocean, gradient)
 -volumetric/atmospheric lighting/shadows 
 -fix controller vibrate
--somehow un-fuck control variables (maybe take inspiration from shadervariables)
--fix dpad int adjustments (started on this)
+#somehow un-fuck control variables (maybe take inspiration from shadervariables)
+#fix dpad int adjustments
 -add fonts and make menus pretty
 -figure out better way of sending depth data from gpu other than alpha
 -floating particles
 -save file images
 ?better keyboard handling (needs testing)
+-start by actually looking at fractal
+-maybe add draw_bulbvar_menu() and draw_text_menu() functions to bulbsettings to simplify menu drawing
