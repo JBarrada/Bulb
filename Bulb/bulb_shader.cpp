@@ -93,7 +93,7 @@ void BulbShader::load() {
 		}
 	}
 
-	std::sort(shader_variables.begin(), shader_variables.end(), [](const BulbVariable& lhs, const BulbVariable& rhs){ return lhs.category < rhs.category; });
+	std::sort(shader_variables.begin(), shader_variables.end(), [](const BulbVariable& lhs, const BulbVariable& rhs){ return lhs.name < rhs.name; });
 
 	// shader categories
 	shader_categories.clear();

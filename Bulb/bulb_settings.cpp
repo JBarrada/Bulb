@@ -528,8 +528,8 @@ void BulbSettings::write_save_image(ofstream &save_file) {
 	save_file << "IMAGE|256|256|";
 	int screen_w = (int)drawing_tools->SCREEN_W, screen_h = (int)drawing_tools->SCREEN_H;
 	int capture_res = 256, screen_res = min(screen_w, screen_h);
-	unsigned char *data = new unsigned char[screen_res * screen_res * 3];
 
+	unsigned char *data = new unsigned char[screen_res * screen_res * 3];
 	glReadPixels((screen_w / 2) - (screen_res / 2), (screen_h / 2) - (screen_res / 2), screen_res, screen_res, GL_RGB, GL_UNSIGNED_BYTE, data);
 
 	for (int y = 0; y < capture_res; y++) {
