@@ -132,8 +132,8 @@ void BulbVariable::adjust_variable(float analog, float digital, int &sub_variabl
 	
 	if (!animate_enable[sub_variable]) {
 		if (var_type == VAR_BOOL) {
-			if (abs(analog + digital) == 1.0f) {
-				value[0][sub_variable] = (value[0][sub_variable] == 1.0f) ? 0.0f : 1.0f;
+			if (abs(digital) == 1.0f) {
+				value[0][sub_variable] = ((int)value[0][sub_variable] == 1.0f) ? 0.0f : 1.0f;
 			}
 		} else {
 			float resolution = 100.0f;

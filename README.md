@@ -34,4 +34,4 @@ todo:
 ?better keyboard handling (needs testing)
 -start by actually looking at fractal
 -maybe add draw_bulbvar_menu() and draw_text_menu() functions to bulbsettings to simplify menu drawing
--fix dpad bool adjust
+?fix dpad bool adjust

@@ -246,7 +246,7 @@ void BulbSettings::shader_menu_input_update(GamePadState *gamepad_state, Keyboar
 		}
 
 		float dpad_step = (gamepad_state->pressed(GamePad_Button_DPAD_RIGHT) - gamepad_state->pressed(GamePad_Button_DPAD_LEFT));
-		dpad_step = (keyboard_state->pressed_special(GLUT_KEY_RIGHT) - keyboard_state->pressed_special(GLUT_KEY_LEFT));
+		dpad_step += (keyboard_state->pressed_special(GLUT_KEY_RIGHT) - keyboard_state->pressed_special(GLUT_KEY_LEFT));
 
 		float trigger_step = (settings_expo(gamepad_state->rt) - settings_expo(gamepad_state->lt));
 
