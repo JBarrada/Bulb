@@ -498,16 +498,21 @@ void BulbSettings::read_save_image(ifstream &save_file, GLuint &tex_id) {
 
 	int image_width=256, image_height=256;
 
+	streamoff current_pos = 0;
 	string save_file_line;
 	while (getline(save_file, save_file_line)) {
 		if (save_file_line.substr(0, 5) == "IMAGE") {
 			vector<string> image_line = split_string(save_file_line, "|");
 			image_width = stoi(image_line[1]);
 			image_height = stoi(image_line[2]);
-			if ((int)save_file_line.length() >= (image_width*image_height*3 + 14)) {
-				save_file_line.copy(data,image_width*image_height*3, 14);
-			}
+
+			save_file.clear();
+			save_file.seekg(current_pos + 14, ios::beg);
+			save_file.read(data, image_width*image_height*3);
+
+			break;
 		}
+		current_pos = save_file.tellg();
 	}
 	
 	glGenTextures(1, &tex_id);
