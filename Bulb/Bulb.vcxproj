@@ -68,6 +68,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BMP.cpp" />
     <ClCompile Include="bulb_control_settings.cpp" />
     <ClCompile Include="bulb_settings.cpp" />
     <ClCompile Include="bulb_shader.cpp" />
@@ -79,6 +80,7 @@
     <ClCompile Include="string_tools.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BMP.h" />
     <ClInclude Include="bulb_control_settings.h" />
     <ClInclude Include="bulb_settings.h" />
     <ClInclude Include="bulb_shader.h" />

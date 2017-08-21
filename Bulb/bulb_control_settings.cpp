@@ -1,7 +1,7 @@
 #include "bulb_control_settings.h"
 
 BulbControlSettings::BulbControlSettings() {
-	camera_eye.load_from_bulb_save_string("CV|camera_eye|Camera|DEFAULT|4|0|0|0000|0,4,10||||||||");
+	camera_eye.load_from_bulb_save_string("CV|camera_eye|Camera|DEFAULT|4|0|0|0000|0,8,0||||||||");
 	camera_target.load_from_bulb_save_string("CV|camera_target|Camera|DEFAULT|4|0|0|0000|0,0,0||||||||");
 	camera_up.load_from_bulb_save_string("CV|camera_up|Camera|DEFAULT|4|0|0|0000|0,0,1||||||||");
 	camera_fov.load_from_bulb_save_string("CV|camera_fov|Camera|DEFAULT|2|0|0|0000|1.5|0|4||||||");
@@ -154,7 +154,7 @@ void BulbControlSettings::camera_gamepad_update(GamePadState *state, bool sticks
 	*/
 }
 
-void BulbControlSettings::camera_keyboard_update(int key) {
+void BulbControlSettings::camera_keyboard_update(KeyboardState *keyboard_state) {
 	glm::vec4 forward_direction = camera_orientation * glm::vec4(0, 1, 0, 0);
 	glm::vec4 left_direction = camera_orientation * glm::vec4(1, 0, 0, 0);
 
@@ -162,43 +162,43 @@ void BulbControlSettings::camera_keyboard_update(int key) {
 	float prox_speed_lateral = control_move_speed_lateral.value[0][0] * glm::max(camera_prox, 0.0001f);
 	float prox_speed_vertical = control_move_speed_vertical.value[0][0] * glm::max(camera_prox, 0.0001f);
 
-	if (key == 'w') {
+	if (keyboard_state->keyboard['w']) {
 		camera_eye.value[0] -= prox_speed_forward * forward_direction;
 	}
-	if (key == 's') {
+	if (keyboard_state->keyboard['s']) {
 		camera_eye.value[0] += prox_speed_forward * forward_direction;
 	}
-	if (key == 'a') {
+	if (keyboard_state->keyboard['a']) {
 		camera_eye.value[0] += prox_speed_lateral * left_direction;
 	}
-	if (key == 'd') {
+	if (keyboard_state->keyboard['d']) {
 		camera_eye.value[0] -= prox_speed_lateral * left_direction;
 	}
 	
-	if (key == 'q') {
+	if (keyboard_state->keyboard['q']) {
 		camera_orientation *= glm::rotate(glm::mat4(1.0), control_roll_speed.value[0][0] * 1.0f, glm::vec3(0, -1, 0));
 	}
-	if (key == 'e') {
+	if (keyboard_state->keyboard['e']) {
 		camera_orientation *= glm::rotate(glm::mat4(1.0), control_roll_speed.value[0][0] * -1.0f, glm::vec3(0, -1, 0));
 	}
 
-	if (key == 'r') {
+	if (keyboard_state->keyboard['r']) {
 		camera_eye.value[0] += prox_speed_vertical * camera_up.value[0];
 	}
-	if (key == 'f') {
+	if (keyboard_state->keyboard['f']) {
 		camera_eye.value[0] -= prox_speed_vertical * camera_up.value[0];
 	}
 	
-	if (key == GLUT_KEY_UP) {
+	if (keyboard_state->special[GLUT_KEY_UP]) {
 		camera_orientation *= glm::rotate(glm::mat4(1.0), control_pitch_speed.value[0][0] * 1.0f, glm::vec3(1, 0, 0));
 	}
-	if (key == GLUT_KEY_DOWN) {
+	if (keyboard_state->special[GLUT_KEY_DOWN]) {
 		camera_orientation *= glm::rotate(glm::mat4(1.0), control_pitch_speed.value[0][0] * -1.0f, glm::vec3(1, 0, 0));
 	}
-	if (key == GLUT_KEY_LEFT) {
+	if (keyboard_state->special[GLUT_KEY_LEFT]) {
 		camera_orientation *= glm::rotate(glm::mat4(1.0), control_yaw_speed.value[0][0] * 1.0f, glm::vec3(0, 0, -1));
 	}
-	if (key == GLUT_KEY_RIGHT) {
+	if (keyboard_state->special[GLUT_KEY_RIGHT]) {
 		camera_orientation *= glm::rotate(glm::mat4(1.0), control_yaw_speed.value[0][0] * -1.0f, glm::vec3(0, 0, -1));
 	}
 

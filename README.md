@@ -30,8 +30,11 @@ todo:
 -add fonts and make menus pretty
 -figure out better way of sending depth data from gpu other than alpha
 -floating particles
--save file images
+?save file images (needs testing)
 ?better keyboard handling (needs testing)
 -start by actually looking at fractal
 -maybe add draw_bulbvar_menu() and draw_text_menu() functions to bulbsettings to simplify menu drawing
 ?fix dpad bool adjust
+-make load bulbsaves menu look better
+-allow for higher than screen scrolling in loadsaves menu
+-add screenshots (already added BMP class)

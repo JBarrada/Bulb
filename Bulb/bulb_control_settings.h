@@ -49,7 +49,7 @@ public:
 
 	void update_camera_prox(int SCREEN_W,  int SCREEN_H);
 	void camera_gamepad_update(GamePadState *state, bool sticks_only);
-	void camera_keyboard_update(int key);
+	void camera_keyboard_update(KeyboardState *keyboard_state);
 	float expo(float value);
 };
 

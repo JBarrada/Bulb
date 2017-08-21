@@ -56,7 +56,7 @@ public:
 	bool needs_update();
 	void update_program_variable(GLuint program);
 
-	void adjust_variable(float analog, float digital, int &sub_variable);
+	void adjust_variable(float analog, int digital, int &sub_variable);
 	void adjust_animate(float normalized_amount, int &sub_variable, int &animate_variable);
 
 	void set_hsv_mode(bool enable);

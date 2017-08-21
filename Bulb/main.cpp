@@ -16,9 +16,8 @@
 #include "bulb_settings.h"
 #include "keyboard_input.h"
 
-
-int SCREEN_W = 640;
-int SCREEN_H = 480;
+int SCREEN_W = 320;
+int SCREEN_H = 240;
 float ASPECT = (float)SCREEN_W / (float)SCREEN_H;
 
 bool is_fullscreen = false;
@@ -33,7 +32,6 @@ DrawingTools drawing_tools;
 BulbShader bulb_shader;
 BulbControlSettings control_settings;
 BulbSettings bulb_settings(&bulb_shader, &control_settings, &drawing_tools);
-
 
 void frame_counter() {
 	frames++;
@@ -109,6 +107,7 @@ void force_redraw(int value) {
 			set_fullscreen(!is_fullscreen);
 		} else {
 			control_settings.camera_gamepad_update(&pad->State, false);
+			control_settings.camera_keyboard_update(&keyboard_state);
 		}
 	}
 	

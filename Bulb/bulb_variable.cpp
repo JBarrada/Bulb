@@ -127,12 +127,12 @@ void BulbVariable::update_program_variable(GLuint program) {
 	update = false;
 }
 
-void BulbVariable::adjust_variable(float analog, float digital, int &sub_variable) {
+void BulbVariable::adjust_variable(float analog, int digital, int &sub_variable) {
 	sub_variable = glm::clamp(sub_variable, 0, BULB_VAR_SIZE[var_type] - 1);
 	
 	if (!animate_enable[sub_variable]) {
 		if (var_type == VAR_BOOL) {
-			if (abs(digital) == 1.0f) {
+			if (abs(digital) == 1) {
 				value[0][sub_variable] = ((int)value[0][sub_variable] == 1.0f) ? 0.0f : 1.0f;
 			}
 		} else {
