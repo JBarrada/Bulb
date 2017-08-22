@@ -39,3 +39,8 @@ todo:
 -allow for higher than screen scrolling in loadsaves menu
 -add screenshots (already added BMP class)
 #reset order of shader vars after load
+-fix image saving
+-add on screen fps counter
+-"select" exits menu everywhere
+-save overwrite and delete
+-reload current save

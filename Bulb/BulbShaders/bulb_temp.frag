@@ -48,55 +48,47 @@ mat4 scale4(float s) {
 
 //FRACTAL_FILE
 
-uniform float Scale = 1.5; //~Fractal|default|1.5|0|5
-uniform int Iterations = 10; //~Fractal|default|10|0|200
+uniform int Iterations = 15; //~Fractal|default|15|0|200
+uniform int ColorIterations = 3; //~Fractal|default|3|0|200
+uniform float MinRad2 = 0.25; //~Fractal|default|0.25|0|2
+uniform float Scale = 3.0; //~Fractal|default|3|-5|5
 
-uniform vec3 Offset = vec3(0.0,1.0,1.0); //~Fractal|default|0,1,1|-1,-1,-1|1,1,1
-uniform vec3 Offset2 = vec3(1.0,-0.3,-0.3); //~Fractal|default|1.0,-0.3,-0.3|-1,-1,-1|1,1,1
-uniform float Qube = 0.1; //~Fractal|default|0.1|-1|1
+uniform vec3 RotVector = vec3(0.0); //~Fractal|default|1,1,1|0,0,0|1,1,1
+uniform float RotAngle = 0.0; //~Fractal|default|0|0|180
 
-uniform float Angle1 = 0.0; //~Fractal|default|0|-180|180
-uniform vec3 Rot1 = vec3(1.0,1.0,1.0); //~Fractal|default|1,1,1|-1,-1,-1|1,1,1
-
-mat3 fracRotation1;
+mat3 rot;
 
 vec4 orbitTrap = vec4(10000.0);
 
+vec4 scale = vec4(Scale, Scale, Scale, abs(Scale)) / MinRad2;
+float absScalem1 = abs(Scale - 1.0);
+float AbsScaleRaisedTo1mIters = pow(abs(Scale), float(1-Iterations));
+
 void init() {
-	fracRotation1 = Scale * rotationMatrix3(normalize(Rot1), Angle1);
+	rot = rotationMatrix3(normalize(RotVector), RotAngle);
 }
 
-float DE(vec3 z) {
-	float t; int n = 0;
-	float scalep = 1;
-
-	vec3 z0=z;
-	z = abs(z);
-	//z -= (1,1,1);
-	if (z.y>z.x) z.xy =z.yx;
-	if (z.z>z.x) z.xz = z.zx;
-	if (z.y>z.x) z.xy =z.yx;
-	float DE1 =1.0-z.x;
-	z = z0;
-	// Folds.
-	//Dodecahedral
-	while (n < Iterations) {
-		z *= fracRotation1;
-		z = abs(z);
-		z -= Offset;
-		if (z.y>z.x) z.xy =z.yx;
-		if (z.z>z.x) z.xz = z.zx;
-		if (z.y>z.x) z.xy =z.yx;
-		z -= Offset2;
-		if (z.y>z.x) z.xy =z.yx;
-		if (z.z>z.x) z.xz = z.zx;
-		if (z.y>z.x) z.xy =z.yx;
-
-		n++;  scalep *= Scale;
-		DE1 = abs(min(Qube/n-DE1,(+z.x)/scalep));
-	}
+float DE(vec3 pos) {
+	vec4 p = vec4(pos,1), p0 = p;
 	
-	return DE1;
+	for (int i=0; i<Iterations; i++) {
+		p.xyz*=rot;
+		p.xyz = clamp(p.xyz, -1.0, 1.0) * 2.0 - p.xyz;
+		
+		float r2 = dot(p.xyz, p.xyz);
+		
+		if (i < ColorIterations) {
+			orbitTrap = min(orbitTrap, abs(vec4(p.xyz,r2)));
+		}
+		
+		p *= clamp(max(MinRad2/r2, MinRad2), 0.0, 1.0);
+		p = p*scale + p0;
+		
+        if (r2 > 1000.0) {
+			break;
+		}
+	}
+	return ((length(p.xyz) - absScalem1) / p.w - AbsScaleRaisedTo1mIters);
 }
 
 out vec4 frag_color;

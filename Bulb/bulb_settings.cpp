@@ -463,7 +463,7 @@ void BulbSettings::update_save_files() {
 				string save_file_name = "BulbSaves\\" + string(fileData.cFileName);
 				save_files.push_back(save_file_name);
 
-				ifstream save_file(save_file_name);
+				ifstream save_file(save_file_name, ios::binary);
 				GLuint current_tex_id;
 				read_save_image(save_file, current_tex_id);
 				save_file.close();
