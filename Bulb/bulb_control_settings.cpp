@@ -23,6 +23,7 @@ BulbControlSettings::BulbControlSettings() {
 	control_yaw_speed.load_from_bulb_save_string("CV|control_yaw_speed|Control|DEFAULT|2|0|0|0000|0.03|0|0.1|0.1|||||");
 
 	control_vibrate.load_from_bulb_save_string("CV|control_vibrate|Control|DEFAULT|0|0|0|0000|1|0|1|1|||||");
+	show_fps.load_from_bulb_save_string("CV|show_fps|Control|DEFAULT|0|0|0|0000|1|0|1|1|||||");
 
 	control_variables.clear();
 	control_variables.push_back(&camera_fov);
@@ -34,6 +35,7 @@ BulbControlSettings::BulbControlSettings() {
 	control_variables.push_back(&control_roll_speed);
 	control_variables.push_back(&control_yaw_speed);
 	control_variables.push_back(&control_vibrate);
+	control_variables.push_back(&show_fps);
 }
 
 void BulbControlSettings::write_to_save_file(ofstream &save_file) {

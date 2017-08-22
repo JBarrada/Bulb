@@ -40,7 +40,8 @@ todo:
 -add screenshots (already added BMP class)
 #reset order of shader vars after load
 -fix image saving
--add on screen fps counter
--"select" exits menu everywhere
+#add on screen fps counter
+#"select" exits menu everywhere
 -save overwrite and delete
 -reload current save
+-camera_fov issue

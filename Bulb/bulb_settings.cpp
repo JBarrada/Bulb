@@ -565,6 +565,8 @@ void BulbSettings::save_save_file(string save_file_name) {
 }
 
 void BulbSettings::input_update(GamePadXbox *gamepad, KeyboardState *keyboard) {
+	if (gamepad->State.pressed(GamePad_Button_START)) settings_open = false;
+
 	if (menu_open == 0) {
 		main_menu_input_update(&gamepad->State, keyboard);
 	} else if (menu_open == 1) {

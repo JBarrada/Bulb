@@ -19,6 +19,7 @@ public:
 	BMP(int, int);
 	
 	void save(string);
+	void load(string);
 	
 	uint8_t* get_pixel(int, int);
 	

@@ -16,17 +16,20 @@
 #include "bulb_settings.h"
 #include "keyboard_input.h"
 
+#include "BMP.h"
+
 int SCREEN_W = 320;
 int SCREEN_H = 240;
 float ASPECT = (float)SCREEN_W / (float)SCREEN_H;
 
-bool is_fullscreen = false;
+bool is_fullscreen = true;
 
 GamePadXbox* pad = new GamePadXbox(GamePadIndex_One);
 KeyboardState keyboard_state;
 
 float frames = 0;
 clock_t frame_time;
+float current_fps = 0;
 
 DrawingTools drawing_tools;
 BulbShader bulb_shader;
@@ -37,12 +40,21 @@ void frame_counter() {
 	frames++;
 	float time_seconds = (float)(clock() - frame_time) / CLOCKS_PER_SEC;
 	if (time_seconds > 0.25) {
-		float fps = frames / time_seconds;
-		printf("%0.1f\n", fps);
+		current_fps = frames / time_seconds;
 
 		frames = 0;
 		frame_time = clock();
 	}
+}
+
+void draw_fps() {
+		char fps_string[10];
+		sprintf_s(fps_string, "%0.1f", current_fps);
+		glUseProgram(0);
+		glColor3f(1,1,1);
+		drawing_tools.rectangle_filled(0, SCREEN_H - 20, 35, 20);
+		glColor3f(0,0,0);
+		drawing_tools.text(5, SCREEN_H - 15, GLUT_BITMAP_HELVETICA_12, string(fps_string));
 }
 
 void render() {
@@ -54,12 +66,13 @@ void render() {
 	bulb_shader.update_shader_variables();
 
 	if (bulb_settings.settings_open) bulb_settings.draw();
+	if (control_settings.show_fps.value[0][0] == 1.0f) draw_fps();
 
 	glutSwapBuffers();
 	
 	control_settings.update_camera_prox(SCREEN_W, SCREEN_H);
 
-	//frame_counter();
+	frame_counter();
 }
 
 void set_fullscreen(bool fullscreen) {
@@ -149,6 +162,10 @@ int main(int argc, const char * argv[]) {
 	bulb_shader.load();
 
 	keyboard_state.reset();
+
+	BMP test;
+	test.load("BulbSaves\\buddhawater.bmp");
+	test.save("omgtest.bmp");
 
 	glutMainLoop();
 

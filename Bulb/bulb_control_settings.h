@@ -39,6 +39,7 @@ public:
 	BulbVariable control_roll_speed;
 	BulbVariable control_yaw_speed;
 	BulbVariable control_vibrate;
+	BulbVariable show_fps;
 
 	vector<BulbVariable*> control_variables;
 
