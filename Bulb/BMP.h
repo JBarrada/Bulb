@@ -15,8 +15,11 @@ public:
 	int width, height;
 	uint8_t* image_data;
 	
+	int bmp_file_size;
+
 	BMP();
 	BMP(int, int);
+	BMP(string);
 	
 	void save(string);
 	void load(string);

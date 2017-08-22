@@ -20,14 +20,29 @@
 #include "keyboard_input.h"
 
 #include "string_tools.h"
+#include "BMP.h"
+
+class BulbSave {
+public:
+	string file_name;
+	string clean_name;
+	BMP image;
+	GLuint tex_id;
+
+	BulbSave();
+
+	bool load(string save_file_name);
+};
 
 class BulbSettings {
 private:
 	int load_menu_item_highlight;
 	bool load_menu_item_selected;
 	int load_menu_item_sub_highlight;
-	vector<string> save_files;
-	vector<GLuint> save_tex_ids;
+	//vector<string> save_files;
+	//vector<GLuint> save_tex_ids;
+
+	vector<BulbSave> save_files;
 
 	int control_menu_item_highlight;
 	bool control_menu_item_selected;
@@ -74,7 +89,7 @@ public:
 
 	void update_save_files();
 	void write_save_image(ofstream &save_file);
-	void read_save_image(ifstream &save_file, GLuint &tex_id);
+	//void read_save_image(ifstream &save_file, GLuint &tex_id);
 
 	void load_save_file(string save_file_name);
 	void save_save_file(string save_file_name);

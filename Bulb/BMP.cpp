@@ -6,13 +6,19 @@ BMP::BMP() {
 BMP::BMP(int width, int height) {
 	this->width = width;
 	this->height = height;
+	this->bmp_file_size = 0;
 	
 	this->image_data = new uint8_t[width * height * 3];
 	memset(this->image_data, 0x00, width * height * 3);
 }
 
+BMP::BMP(string path) {
+	load(path);
+}
+
 void BMP::save(string path) {
-	int bmp_file_size =  53 + (width * height * 3);
+	int bmp_padding = (4 - (width * 3) % 4) % 4;
+	bmp_file_size =  54 + (((width * 3) + bmp_padding) * height);
 	
 	uint8_t bmp_file_header[14];
 	memset(bmp_file_header, 0x00, 14);
@@ -37,8 +43,6 @@ void BMP::save(string path) {
 	bmp_image_header[11] = (height >> 24) & 0xff;
 	bmp_image_header[12] = 1;
 	bmp_image_header[14] = 24;
-
-	int bmp_padding = (4 - (width * 3) % 4) % 4;
 	
 	fstream output(path.c_str(), ios::out | ios::binary | ios::trunc);
 	output.write((char*)bmp_file_header, 14);
@@ -60,8 +64,10 @@ void BMP::load(string path) {
 	input.seekg(0, ios::beg);
 	input.read((char*)&bmp_file_header, 14);
 
+	bmp_file_size = 0;
 	uint32_t image_data_offset = 0;
 	for (int i = 0; i < 4; i++) {
+		bmp_file_size += (bmp_file_header[2+i] << (i*8));
 		image_data_offset += (bmp_file_header[10+i] << (i*8));
 	}
 

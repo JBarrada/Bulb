@@ -16,8 +16,6 @@
 #include "bulb_settings.h"
 #include "keyboard_input.h"
 
-#include "BMP.h"
-
 int SCREEN_W = 320;
 int SCREEN_H = 240;
 float ASPECT = (float)SCREEN_W / (float)SCREEN_H;
@@ -162,10 +160,6 @@ int main(int argc, const char * argv[]) {
 	bulb_shader.load();
 
 	keyboard_state.reset();
-
-	BMP test;
-	test.load("BulbSaves\\buddhawater.bmp");
-	test.save("omgtest.bmp");
 
 	glutMainLoop();
 
