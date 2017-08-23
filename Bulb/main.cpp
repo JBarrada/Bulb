@@ -16,8 +16,8 @@
 #include "bulb_settings.h"
 #include "keyboard_input.h"
 
-int SCREEN_W = 320;
-int SCREEN_H = 240;
+int SCREEN_W = 640;
+int SCREEN_H = 480;
 float ASPECT = (float)SCREEN_W / (float)SCREEN_H;
 
 bool is_fullscreen = true;
@@ -50,9 +50,9 @@ void draw_fps() {
 		sprintf_s(fps_string, "%0.1f", current_fps);
 		glUseProgram(0);
 		glColor3f(1,1,1);
-		drawing_tools.rectangle_filled(0, SCREEN_H - 20, 35, 20);
+		drawing_tools.rectangle_filled(SCREEN_W - 35, SCREEN_H - 20, 35, 20);
 		glColor3f(0,0,0);
-		drawing_tools.text(5, SCREEN_H - 15, GLUT_BITMAP_HELVETICA_12, string(fps_string));
+		drawing_tools.text(SCREEN_W - 30, SCREEN_H - 15, GLUT_BITMAP_HELVETICA_12, string(fps_string));
 }
 
 void render() {

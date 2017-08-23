@@ -42,6 +42,8 @@ BulbSettings::BulbSettings(BulbShader *bulb_shader, BulbControlSettings *control
 	settings_open = false;
 	menu_open = 0;
 
+	info_text = "";
+
 	settings_font = GLUT_BITMAP_HELVETICA_12;
 	font_height = 20;
 
@@ -50,6 +52,12 @@ BulbSettings::BulbSettings(BulbShader *bulb_shader, BulbControlSettings *control
 	load_menu_item_selected = false;
 	load_menu_item_sub_highlight = 0; 
 	load_menu_delete_hold = 0;
+
+	save_menu_item_highlight = 0;
+	save_menu_item_selected = false;
+	save_menu_item_sub_highlight = 0; 
+	save_menu_overwrite_hold = 0;
+	save_menu_current_save_name = "";
 
 	control_menu_item_highlight = 0;
 	control_menu_item_selected = false;
@@ -198,6 +206,7 @@ void BulbSettings::control_menu_draw() {
 
 void BulbSettings::control_menu_input_update(GamePadState *gamepad_state, KeyboardState *keyboard_state) {
 	if (control_menu_item_selected) {
+		info_text = "[TRIGGERS]/[ARROW KEYS] to change value.";
 		if (gamepad_state->pressed(GamePad_Button_B) || keyboard_state->pressed_keyboard(27)) {
 			control_menu_item_selected = false;
 		}
@@ -213,6 +222,8 @@ void BulbSettings::control_menu_input_update(GamePadState *gamepad_state, Keyboa
 
 		control_settings->control_variables[control_menu_item_highlight]->adjust_variable(trigger_step, dpad_step, control_menu_item_sub_highlight);
 	} else {
+		info_text = "[A]/[ENTER] to edit.";
+
 		if (gamepad_state->pressed(GamePad_Button_A) || keyboard_state->pressed_keyboard(13)) {
 			control_menu_item_selected = true;
 			control_menu_item_sub_highlight = 0;
@@ -273,6 +284,8 @@ void BulbSettings::shader_menu_draw() {
 
 void BulbSettings::shader_menu_input_update(GamePadState *gamepad_state, KeyboardState *keyboard_state) {
 	if (shader_menu_item_selected) {
+		info_text = "[TRIGGERS]/[ARROW KEYS] to change value. [X] to toggle animate. [Y] to toggle HSV on colors.";
+
 		int actual_highlight_index = bulb_shader->shader_categories_indexes[shader_menu_category][shader_menu_item_highlight];
 		BulbVariable *selected_variable = &bulb_shader->shader_variables[actual_highlight_index];
 
@@ -314,6 +327,7 @@ void BulbSettings::shader_menu_input_update(GamePadState *gamepad_state, Keyboar
 			selected_variable->adjust_variable(trigger_step, dpad_step, shader_menu_item_sub_highlight);
 		}
 	} else {
+		info_text = "[DPAD]/[ARROW KEYS] to change category. [A]/[ENTER] to edit.";
 		if (gamepad_state->pressed(GamePad_Button_A) || keyboard_state->pressed_keyboard(13)) {
 			shader_menu_item_selected = true;
 			shader_menu_item_sub_highlight = 0;
@@ -322,8 +336,8 @@ void BulbSettings::shader_menu_input_update(GamePadState *gamepad_state, Keyboar
 			menu_open = 0; // main menu
 		}
 
-		if (gamepad_state->pressed(GamePad_Button_RIGHT_SHOULDER) || keyboard_state->pressed_special(GLUT_KEY_RIGHT)) shader_menu_category++;
-		if (gamepad_state->pressed(GamePad_Button_LEFT_SHOULDER) || keyboard_state->pressed_special(GLUT_KEY_LEFT)) shader_menu_category--;
+		if (gamepad_state->pressed(GamePad_Button_DPAD_RIGHT) || keyboard_state->pressed_special(GLUT_KEY_RIGHT)) shader_menu_category++;
+		if (gamepad_state->pressed(GamePad_Button_DPAD_LEFT) || keyboard_state->pressed_special(GLUT_KEY_LEFT)) shader_menu_category--;
 		shader_menu_category = glm::clamp(shader_menu_category, 0, (int)bulb_shader->shader_categories.size() - 1);
 
 		if (gamepad_state->pressed(GamePad_Button_DPAD_UP) || keyboard_state->pressed_special(GLUT_KEY_UP)) shader_menu_item_highlight++;
@@ -351,29 +365,14 @@ void BulbSettings::main_menu_draw() {
 }
 
 void BulbSettings::main_menu_input_update(GamePadState *gamepad_state, KeyboardState *keyboard_state) {
+	info_text = "";
 	int menu_items_size = 4;
 
 	if (gamepad_state->pressed(GamePad_Button_A) || keyboard_state->pressed_keyboard(13)) {
 		main_menu_item_selected = true;
 		menu_open = main_menu_item_highlight + 1;
 
-		if (main_menu_item_highlight == 3) {
-			main_menu_item_selected = false;
-			menu_open = 0;
-
-			// save (todo: make this better)
-
-			time_t rawtime;
-			struct tm * timeinfo;
-			char buffer[100];
-
-			time(&rawtime);
-			timeinfo = localtime(&rawtime);
-
-			strftime(buffer, sizeof(buffer), "%j %H_%M_%S", timeinfo);
-
-			save_save_file("BulbSaves\\" + string(buffer) + ".bmp");
-		}
+		if (menu_open == 4) save_menu_current_save_name = random_name(8);
 	}
 	if (gamepad_state->pressed(GamePad_Button_B) || keyboard_state->pressed_keyboard(27)) {
 		settings_open = false;
@@ -382,6 +381,109 @@ void BulbSettings::main_menu_input_update(GamePadState *gamepad_state, KeyboardS
 	if (gamepad_state->pressed(GamePad_Button_DPAD_UP) || keyboard_state->pressed_special(GLUT_KEY_UP)) main_menu_item_highlight++;
 	if (gamepad_state->pressed(GamePad_Button_DPAD_DOWN) || keyboard_state->pressed_special(GLUT_KEY_DOWN)) main_menu_item_highlight--;
 	main_menu_item_highlight = glm::clamp(main_menu_item_highlight, 0, menu_items_size - 1);
+}
+
+
+void BulbSettings::save_menu_draw() {
+	if (!save_menu_item_selected) {
+		string menu_items[] = {"New \"" + save_menu_current_save_name + "\"", "Overwrite"};
+		int menu_items_size = 2;
+		
+		glColor4f(0.2f,0.2f,0.2f,1.0f);
+		drawing_tools->rectangle_filled(0, 0, 250, (menu_items_size) * font_height + 5);
+
+		glColor4f(0.4f,0.4f,0.4f,1.0f);
+		drawing_tools->rectangle_filled(0, save_menu_item_highlight * font_height, 250, font_height);
+
+		glColor4f(1.0f,1.0f,1.0f,1.0f);
+		for (int i = 0; i < menu_items_size; i++) {	
+			drawing_tools->text(5, i * font_height + 5, settings_font, menu_items[i]);
+		}
+	} else if (save_menu_item_highlight == 0) {
+		// new save should be handled in input update
+	} else if (save_menu_item_highlight == 1) {
+		int menu_items_size = (int)save_files.size();
+		
+		glColor4f(0.2f,0.2f,0.2f,1.0f);
+		drawing_tools->rectangle_filled(0, 0, 250, (menu_items_size + 1) * font_height + 5);
+
+		glColor4f(0.4f,0.4f,0.4f,1.0f);
+		drawing_tools->rectangle_filled(0, (save_menu_item_sub_highlight + 1) * font_height, 250, font_height);
+
+		if (save_menu_overwrite_hold > 0) {
+			glColor4f(0.6f,0.4f,0.4f,1.0f);
+			drawing_tools->rectangle_filled(0, (save_menu_item_sub_highlight + 1) * font_height, (250 * save_menu_overwrite_hold) / 100, font_height);
+		}
+	
+		glColor4f(0.6f,0.6f,0.6f,1.0f);
+		drawing_tools->text(5, 0 * font_height + 5, settings_font, "Save\\Overwrite");
+
+		glColor4f(1.0f,1.0f,1.0f,1.0f);
+		for (int i = 0; i < menu_items_size; i++) {
+			string file_text = save_files[i].clean_name;
+			drawing_tools->text(5, (i + 1) * font_height + 5, settings_font, file_text);
+		}
+
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, save_files[save_menu_item_sub_highlight].tex_id);
+		drawing_tools->rectangle_tex(250, 0, 256, 256);
+		glDisable(GL_TEXTURE_2D);
+	}
+}
+
+void BulbSettings::save_menu_input_update(GamePadState *gamepad_state, KeyboardState *keyboard_state) {
+	if (!save_menu_item_selected) {
+		info_text = "";
+		int menu_items_size = 2;
+		if (gamepad_state->pressed(GamePad_Button_A) || keyboard_state->pressed_keyboard(13)) {
+			save_menu_item_selected = true;
+			save_menu_item_sub_highlight = 0;
+
+			if (save_menu_item_highlight == 0) {
+				save_menu_item_selected = false;
+
+				save_save_file("BulbSaves\\" + save_menu_current_save_name + ".bmp");
+				save_menu_current_save_name = random_name(8);
+
+			} else if (save_menu_item_highlight == 1) { 
+				update_save_files();
+			}
+		}
+		if (gamepad_state->pressed(GamePad_Button_B) || keyboard_state->pressed_keyboard(27)) {
+			menu_open = 0; // main menu
+		}
+
+		if (gamepad_state->pressed(GamePad_Button_DPAD_UP) || keyboard_state->pressed_special(GLUT_KEY_UP)) save_menu_item_highlight++;
+		if (gamepad_state->pressed(GamePad_Button_DPAD_DOWN) || keyboard_state->pressed_special(GLUT_KEY_DOWN)) save_menu_item_highlight--;
+		save_menu_item_highlight = glm::clamp(save_menu_item_highlight, 0, menu_items_size - 1);
+	} else {
+		if (gamepad_state->pressed(GamePad_Button_B) || keyboard_state->pressed_keyboard(27)) {
+			save_menu_item_selected = false;
+		}
+
+		if (gamepad_state->pressed(GamePad_Button_DPAD_UP) || keyboard_state->pressed_special(GLUT_KEY_UP)) {save_menu_item_sub_highlight++; save_menu_overwrite_hold = -1;}
+		if (gamepad_state->pressed(GamePad_Button_DPAD_DOWN) || keyboard_state->pressed_special(GLUT_KEY_DOWN)) {save_menu_item_sub_highlight--; save_menu_overwrite_hold = -1;}
+
+		if (save_menu_item_highlight == 0) {
+			// should not happen
+		} else if (save_menu_item_highlight == 1) {
+			info_text = "Hold [A]/[ENTER] to overwrite with new save.";
+			save_menu_item_sub_highlight = glm::clamp(save_menu_item_sub_highlight, 0, (int)save_files.size() - 1);
+
+			if (gamepad_state->buttons[GamePad_Button_A] || keyboard_state->keyboard[13]) {
+				if (save_menu_overwrite_hold != -1) {
+					save_menu_overwrite_hold += 1;
+					if (save_menu_overwrite_hold >= 100) {
+						save_menu_overwrite_hold = -1;
+
+						save_save_file(save_files[save_menu_item_sub_highlight].file_name);
+					}
+				}
+			} else {
+				save_menu_overwrite_hold = 0;
+			}
+		}
+	}
 }
 
 
@@ -452,12 +554,15 @@ void BulbSettings::load_menu_draw() {
 
 void BulbSettings::load_menu_input_update(GamePadState *gamepad_state, KeyboardState *keyboard_state) {
 	if (!load_menu_item_selected) {
+		info_text = "";
 		int menu_items_size = 2;
 		if (gamepad_state->pressed(GamePad_Button_A) || keyboard_state->pressed_keyboard(13)) {
 			load_menu_item_selected = true;
 			load_menu_item_sub_highlight = 0;
 
-			if (load_menu_item_highlight == 1) update_save_files();
+			if (load_menu_item_highlight == 1) { 
+				update_save_files();
+			}
 		}
 		if (gamepad_state->pressed(GamePad_Button_B) || keyboard_state->pressed_keyboard(27)) {
 			menu_open = 0; // main menu
@@ -467,6 +572,7 @@ void BulbSettings::load_menu_input_update(GamePadState *gamepad_state, KeyboardS
 		if (gamepad_state->pressed(GamePad_Button_DPAD_DOWN) || keyboard_state->pressed_special(GLUT_KEY_DOWN)) load_menu_item_highlight--;
 		load_menu_item_highlight = glm::clamp(load_menu_item_highlight, 0, menu_items_size - 1);
 	} else {
+		info_text = "[A]/[ENTER] to load.";
 		if (gamepad_state->pressed(GamePad_Button_B) || keyboard_state->pressed_keyboard(27)) {
 			load_menu_item_selected = false;
 		}
@@ -482,6 +588,7 @@ void BulbSettings::load_menu_input_update(GamePadState *gamepad_state, KeyboardS
 				bulb_shader->load();
 			}
 		} else if (load_menu_item_highlight == 1) {
+			info_text = "[A]/[ENTER] to load. Hold [X] to delete a save.";
 			load_menu_item_sub_highlight = glm::clamp(load_menu_item_sub_highlight, 0, (int)save_files.size() - 1);
 
 			if (gamepad_state->buttons[GamePad_Button_X] || keyboard_state->keyboard['x']) {
@@ -544,6 +651,17 @@ void BulbSettings::draw() {
 		control_menu_draw();
 	} else if (menu_open == 3) {
 		load_menu_draw();
+	} else if (menu_open == 4) {
+		save_menu_draw();
+	}
+
+	if (info_text.length() != 0) {
+		int text_width = drawing_tools->text_width(settings_font, info_text);
+		
+		glColor3f(0.2f,0.2f,0.2f);
+		drawing_tools->rectangle_filled(0, (int)drawing_tools->SCREEN_H - font_height, text_width + 10, font_height);
+		glColor3f(1,1,1);
+		drawing_tools->text(5, (int)drawing_tools->SCREEN_H - font_height + 5, settings_font, info_text);
 	}
 }
 
@@ -590,7 +708,10 @@ void BulbSettings::save_save_file(string save_file_name) {
 }
 
 void BulbSettings::input_update(GamePadXbox *gamepad, KeyboardState *keyboard) {
-	if (gamepad->State.pressed(GamePad_Button_START)) settings_open = false;
+	if (gamepad->State.pressed(GamePad_Button_START)) {
+		settings_open = false;
+		info_text = "";
+	}
 
 	if (menu_open == 0) {
 		main_menu_input_update(&gamepad->State, keyboard);
@@ -600,5 +721,7 @@ void BulbSettings::input_update(GamePadXbox *gamepad, KeyboardState *keyboard) {
 		control_menu_input_update(&gamepad->State, keyboard);
 	} else if (menu_open == 3) {
 		load_menu_input_update(&gamepad->State, keyboard);
+	} else if (menu_open == 4) {
+		save_menu_input_update(&gamepad->State, keyboard);
 	}
 }

@@ -45,3 +45,20 @@ string to_upper(string s) {
 	for (int i = 0; i < (int)s.size(); i++) upper_string += toupper(s[i]);
 	return upper_string;
 }
+
+string random_name(int size) {
+	string cons_sounds[] = {"b", "c", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p", "qu", "r", "s", "t", "v", "w", "x", "z"};
+	string vowels[] = {"a", "e", "i", "o", "u", "y"};
+
+	string name = "";
+
+	for (int i = 0; i < size; i++) {
+		if (i % 2 == 0) {
+			name += cons_sounds[rand()%20];
+		} else {
+			name += vowels[rand()%6];
+		}
+	}
+
+	return name;
+}

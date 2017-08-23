@@ -96,3 +96,13 @@ void DrawingTools::text(int x, int y, void *font, string text) {
 		offset += glutBitmapWidth(font, text[i]);
 	}
 }
+
+int DrawingTools::text_width(void *font, string text) {
+	int offset = 0;
+
+	for (int i = 0; i < (int)text.size(); i++) {
+		offset += glutBitmapWidth(font, text[i]);
+	}
+
+	return offset;
+}

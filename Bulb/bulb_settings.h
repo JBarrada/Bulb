@@ -42,6 +42,12 @@ private:
 	int load_menu_item_sub_highlight;
 	int load_menu_delete_hold;
 
+	int save_menu_item_highlight;
+	bool save_menu_item_selected;
+	int save_menu_item_sub_highlight;
+	int save_menu_overwrite_hold;
+	string save_menu_current_save_name;
+
 	vector<BulbSave> save_files;
 
 	int control_menu_item_highlight;
@@ -69,6 +75,8 @@ public:
 	bool settings_open;
 	int menu_open;
 
+	string info_text;
+
 	BulbSettings(BulbShader *bulb_shader, BulbControlSettings *control_settings, DrawingTools *drawing_tools);
 
 	float settings_expo(float value);
@@ -83,6 +91,9 @@ public:
 
 	void main_menu_draw();
 	void main_menu_input_update(GamePadState *gamepad_state, KeyboardState *keyboard_state);
+
+	void save_menu_draw();
+	void save_menu_input_update(GamePadState *gamepad_state, KeyboardState *keyboard_state);
 
 	void load_menu_draw();
 	void load_menu_input_update(GamePadState *gamepad_state, KeyboardState *keyboard_state);

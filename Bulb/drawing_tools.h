@@ -33,6 +33,7 @@ public:
 	void rectangle_hollow(float x, float y, float w, float h);
 
 	void text(int x, int y, void *font, string text);
+	int text_width(void *font, string text);
 
 };
 

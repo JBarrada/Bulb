@@ -14,4 +14,6 @@ void stovec(string values_string, glm::vec4 &value);
 
 string to_upper(string s);
 
+string random_name(int size);
+
 #endif

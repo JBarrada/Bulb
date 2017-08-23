@@ -1,5 +1,9 @@
 # Bulb
 
+#: completed
+?: testing
+-: pending
+
 todo:
 #strafing
 #setting sorting
@@ -40,9 +44,12 @@ todo:
 -add screenshots (already added BMP class)
 #reset order of shader vars after load
 #fix image saving
-#add on screen fps counter
+#add on screen fps counter (moved this to top right of screen)
 #"select" exits menu everywhere
--save overwrite and delete
+#save overwrite and delete
 -reload current save
 #camera_fov issue
 -make animations and movement deltatime based instead of frame based
+#add tooltips and menu instructions (basic tooltips added)
+-variable super fine adjustment
+-emergency escape fractal (if stuck somewhere)
