@@ -49,6 +49,7 @@ BulbSettings::BulbSettings(BulbShader *bulb_shader, BulbControlSettings *control
 	load_menu_item_highlight = 0;
 	load_menu_item_selected = false;
 	load_menu_item_sub_highlight = 0; 
+	load_menu_delete_hold = 0;
 
 	control_menu_item_highlight = 0;
 	control_menu_item_selected = false;
@@ -427,6 +428,11 @@ void BulbSettings::load_menu_draw() {
 
 		glColor4f(0.4f,0.4f,0.4f,1.0f);
 		drawing_tools->rectangle_filled(0, (load_menu_item_sub_highlight + 1) * font_height, 250, font_height);
+
+		if (load_menu_delete_hold > 0) {
+			glColor4f(0.6f,0.4f,0.4f,1.0f);
+			drawing_tools->rectangle_filled(0, (load_menu_item_sub_highlight + 1) * font_height, (250 * load_menu_delete_hold) / 100, font_height);
+		}
 	
 		glColor4f(0.6f,0.6f,0.6f,1.0f);
 		drawing_tools->text(5, 0 * font_height + 5, settings_font, "Load\\Saves");
@@ -465,8 +471,8 @@ void BulbSettings::load_menu_input_update(GamePadState *gamepad_state, KeyboardS
 			load_menu_item_selected = false;
 		}
 
-		if (gamepad_state->pressed(GamePad_Button_DPAD_UP) || keyboard_state->pressed_special(GLUT_KEY_UP)) load_menu_item_sub_highlight++;
-		if (gamepad_state->pressed(GamePad_Button_DPAD_DOWN) || keyboard_state->pressed_special(GLUT_KEY_DOWN)) load_menu_item_sub_highlight--;
+		if (gamepad_state->pressed(GamePad_Button_DPAD_UP) || keyboard_state->pressed_special(GLUT_KEY_UP)) {load_menu_item_sub_highlight++; load_menu_delete_hold = -1;}
+		if (gamepad_state->pressed(GamePad_Button_DPAD_DOWN) || keyboard_state->pressed_special(GLUT_KEY_DOWN)) {load_menu_item_sub_highlight--; load_menu_delete_hold = -1;}
 
 		if (load_menu_item_highlight == 0) {
 			load_menu_item_sub_highlight = glm::clamp(load_menu_item_sub_highlight, 0, (int)bulb_shader->fractal_files.size() - 1);
@@ -477,6 +483,21 @@ void BulbSettings::load_menu_input_update(GamePadState *gamepad_state, KeyboardS
 			}
 		} else if (load_menu_item_highlight == 1) {
 			load_menu_item_sub_highlight = glm::clamp(load_menu_item_sub_highlight, 0, (int)save_files.size() - 1);
+
+			if (gamepad_state->buttons[GamePad_Button_X] || keyboard_state->keyboard['x']) {
+				if (load_menu_delete_hold != -1) {
+					load_menu_delete_hold += 1;
+					if (load_menu_delete_hold >= 100) {
+						load_menu_delete_hold = -1;
+
+						remove(save_files[load_menu_item_sub_highlight].file_name.c_str());
+						update_save_files();
+						return;
+					}
+				}
+			} else {
+				load_menu_delete_hold = 0;
+			}
 
 			if (gamepad_state->pressed(GamePad_Button_A) || keyboard_state->pressed_keyboard(13)) {
 				load_save_file(save_files[load_menu_item_sub_highlight].file_name);

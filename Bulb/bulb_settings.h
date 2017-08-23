@@ -2,6 +2,7 @@
 #define BULB_SETTINGS_H
 
 #include <fstream>
+#include <stdio.h>
 #include <time.h>
 #include <string>
 #include <vector>
@@ -39,8 +40,7 @@ private:
 	int load_menu_item_highlight;
 	bool load_menu_item_selected;
 	int load_menu_item_sub_highlight;
-	//vector<string> save_files;
-	//vector<GLuint> save_tex_ids;
+	int load_menu_delete_hold;
 
 	vector<BulbSave> save_files;
 

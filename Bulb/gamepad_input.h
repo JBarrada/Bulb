@@ -72,6 +72,11 @@ public:
 	GamePadXbox(GamePadIndex controller) {
 		_controllerNum = controller;
 		State.reset();
+
+		for (int i = 0; i < (int)GamePadButton_Max; ++i) {
+			State.buttons[i] = false;
+			State.buttons_last[i] = false;
+		}
 	}
 
 	virtual ~GamePadXbox(void) {
