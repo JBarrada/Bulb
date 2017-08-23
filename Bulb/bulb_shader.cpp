@@ -25,9 +25,9 @@ void BulbShader::write_to_save_file(ofstream &save_file) {
 	}
 }
 
-void BulbShader::read_from_save_file(ifstream &save_file) {
+void BulbShader::read_from_save_file(ifstream &save_file, int data_start) {
 	save_file.clear();
-	save_file.seekg(0, ios::beg);
+	save_file.seekg(data_start, ios::beg);
 	
 	vector<BulbVariable> shader_variables_new;
 

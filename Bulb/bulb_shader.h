@@ -33,7 +33,7 @@ public:
 	BulbShader();
 
 	void write_to_save_file(ofstream &save_file);
-	void read_from_save_file(ifstream &save_file);
+	void read_from_save_file(ifstream &save_file, int data_start);
 
 	void update_shader_variables();
 	void update_control_variables(BulbControlSettings *control_settings, float camera_aspect);

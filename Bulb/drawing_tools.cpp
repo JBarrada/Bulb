@@ -64,10 +64,10 @@ void DrawingTools::rectangle_filled(int x, int y, int w, int h) {
 
 void DrawingTools::rectangle_tex(int x, int y, int w, int h) {
 	glBegin(GL_QUADS);
-	glTexCoord2i(0, 0); glVertex2f(screen_x(x), screen_y(y));
-	glTexCoord2i(1, 0); glVertex2f(screen_x(x+w), screen_y(y));
-	glTexCoord2i(1, 1); glVertex2f(screen_x(x+w), screen_y(y+h));
-	glTexCoord2i(0, 1); glVertex2f(screen_x(x), screen_y(y+h));
+	glTexCoord2i(0, 1); glVertex2f(screen_x(x), screen_y(y));
+	glTexCoord2i(1, 1); glVertex2f(screen_x(x+w), screen_y(y));
+	glTexCoord2i(1, 0); glVertex2f(screen_x(x+w), screen_y(y+h));
+	glTexCoord2i(0, 0); glVertex2f(screen_x(x), screen_y(y+h));
 	glEnd();
 }
 

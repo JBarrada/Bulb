@@ -4,7 +4,7 @@ BulbControlSettings::BulbControlSettings() {
 	camera_eye.load_from_bulb_save_string("CV|camera_eye|Camera|DEFAULT|4|0|0|0000|0,8,0||||||||");
 	camera_target.load_from_bulb_save_string("CV|camera_target|Camera|DEFAULT|4|0|0|0000|0,0,0||||||||");
 	camera_up.load_from_bulb_save_string("CV|camera_up|Camera|DEFAULT|4|0|0|0000|0,0,1||||||||");
-	camera_fov.load_from_bulb_save_string("CV|camera_fov|Camera|DEFAULT|2|0|0|0000|1.5|0|4||||||");
+	camera_fov.load_from_bulb_save_string("CV|camera_fov|Camera|DEFAULT|2|0|0|0000|1.5|0|4|4|||||");
 	camera_orientation = glm::mat4(1.0);
 
 	camera_prox_target = 1.0f;
@@ -54,9 +54,9 @@ void BulbControlSettings::write_to_save_file(ofstream &save_file) {
 	}
 }
 
-void BulbControlSettings::read_from_save_file(ifstream &save_file) {
+void BulbControlSettings::read_from_save_file(ifstream &save_file, int data_start) {
 	save_file.clear();
-	save_file.seekg(0, ios::beg);
+	save_file.seekg(data_start, ios::beg);
 
 	vector<BulbVariable> control_variables_new;
 

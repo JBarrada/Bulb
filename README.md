@@ -30,7 +30,7 @@ todo:
 -add fonts and make menus pretty
 -figure out better way of sending depth data from gpu other than alpha
 -floating particles
-?save file images (needs testing)
+#save file images (needs testing)
 ?better keyboard handling (needs testing)
 #start by actually looking at fractal
 -maybe add draw_bulbvar_menu() and draw_text_menu() functions to bulbsettings to simplify menu drawing
@@ -39,9 +39,10 @@ todo:
 -allow for higher than screen scrolling in loadsaves menu
 -add screenshots (already added BMP class)
 #reset order of shader vars after load
--fix image saving
+#fix image saving
 #add on screen fps counter
 #"select" exits menu everywhere
 -save overwrite and delete
 -reload current save
--camera_fov issue
+#camera_fov issue
+-make animations and movement deltatime based instead of frame based

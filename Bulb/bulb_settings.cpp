@@ -10,11 +10,12 @@ bool BulbSave::load(string save_file_name) {
 	image.load(file_name);
 
 	ifstream save_file(file_name);
-	char verify_string[8];
+	char verify_string[10];
+	memset(verify_string, 0, 10);
 	save_file.seekg(image.bmp_file_size, ios::beg);
 	save_file.read(verify_string, 8);
 	save_file.close();
-	if (verify_string == "BULBSAVE") {
+	if (string(verify_string) == "BULBSAVE") {
 		vector<string> file_name_split = split_string(file_name, "\\");
 		clean_name = file_name_split.back().substr(0, file_name_split.back().size() - 4);
 
@@ -370,7 +371,7 @@ void BulbSettings::main_menu_input_update(GamePadState *gamepad_state, KeyboardS
 
 			strftime(buffer, sizeof(buffer), "%j %H_%M_%S", timeinfo);
 
-			save_save_file("BulbSaves\\" + string(buffer) + ".bulbsave");
+			save_save_file("BulbSaves\\" + string(buffer) + ".bmp");
 		}
 	}
 	if (gamepad_state->pressed(GamePad_Button_B) || keyboard_state->pressed_keyboard(27)) {
@@ -393,7 +394,7 @@ void BulbSettings::load_menu_draw() {
 
 		glColor4f(0.4f,0.4f,0.4f,1.0f);
 		drawing_tools->rectangle_filled(0, load_menu_item_highlight * font_height, 250, font_height);
-	
+
 		glColor4f(1.0f,1.0f,1.0f,1.0f);
 		for (int i = 0; i < menu_items_size; i++) {	
 			drawing_tools->text(5, i * font_height + 5, settings_font, menu_items[i]);
@@ -402,32 +403,38 @@ void BulbSettings::load_menu_draw() {
 		int menu_items_size = (int)bulb_shader->fractal_files.size();
 		
 		glColor4f(0.2f,0.2f,0.2f,1.0f);
-		drawing_tools->rectangle_filled(0, 0, 250, (menu_items_size) * font_height + 5);
+		drawing_tools->rectangle_filled(0, 0, 250, (menu_items_size + 1) * font_height + 5);
 
 		glColor4f(0.4f,0.4f,0.4f,1.0f);
-		drawing_tools->rectangle_filled(0, load_menu_item_sub_highlight * font_height, 250, font_height);
+		drawing_tools->rectangle_filled(0, (load_menu_item_sub_highlight + 1) * font_height, 250, font_height);
 	
+		glColor4f(0.6f,0.6f,0.6f,1.0f);
+		drawing_tools->text(5, 0 * font_height + 5, settings_font, "Load\\Fractals");
+
 		glColor4f(1.0f,1.0f,1.0f,1.0f);
 		for (int i = 0; i < menu_items_size; i++) {
 			string file_text = bulb_shader->fractal_files[i];
 			if (bulb_shader->fractal_files[i] == bulb_shader->fractal_file) {
 				file_text += " (Loaded)";
 			}
-			drawing_tools->text(5, i * font_height + 5, settings_font, file_text);
+			drawing_tools->text(5, (i + 1) * font_height + 5, settings_font, file_text);
 		}
 	} else if (load_menu_item_highlight == 1) {
 		int menu_items_size = (int)save_files.size();
 		
 		glColor4f(0.2f,0.2f,0.2f,1.0f);
-		drawing_tools->rectangle_filled(0, 0, 250, (menu_items_size) * font_height + 5);
+		drawing_tools->rectangle_filled(0, 0, 250, (menu_items_size + 1) * font_height + 5);
 
 		glColor4f(0.4f,0.4f,0.4f,1.0f);
-		drawing_tools->rectangle_filled(0, load_menu_item_sub_highlight * font_height, 250, font_height);
+		drawing_tools->rectangle_filled(0, (load_menu_item_sub_highlight + 1) * font_height, 250, font_height);
 	
+		glColor4f(0.6f,0.6f,0.6f,1.0f);
+		drawing_tools->text(5, 0 * font_height + 5, settings_font, "Load\\Saves");
+
 		glColor4f(1.0f,1.0f,1.0f,1.0f);
 		for (int i = 0; i < menu_items_size; i++) {
 			string file_text = save_files[i].clean_name;
-			drawing_tools->text(5, i * font_height + 5, settings_font, file_text);
+			drawing_tools->text(5, (i + 1) * font_height + 5, settings_font, file_text);
 		}
 
 		glEnable(GL_TEXTURE_2D);
@@ -478,36 +485,7 @@ void BulbSettings::load_menu_input_update(GamePadState *gamepad_state, KeyboardS
 	}
 }
 
-/*
-void BulbSettings::update_save_files() {
-	for (int i = 0; i < (int)save_tex_ids.size(); i++) {
-		glDeleteTextures(1, &save_tex_ids[i]);
-	}
-	save_files.clear();
-	save_tex_ids.clear();
 
-	string directory = "BulbSaves\\*";
-	WIN32_FIND_DATA fileData; 
-	HANDLE hFind;
-	if ( !((hFind = FindFirstFile(directory.c_str(), &fileData)) == INVALID_HANDLE_VALUE) ) {
-		while(FindNextFile(hFind, &fileData)) {
-			vector<string> file_name_split = split_string(fileData.cFileName, ".");
-			if (file_name_split[1] == "BULBSAVE" || file_name_split[1] == "bulbsave") {
-				string save_file_name = "BulbSaves\\" + string(fileData.cFileName);
-				save_files.push_back(save_file_name);
-
-				ifstream save_file(save_file_name, ios::binary);
-				GLuint current_tex_id;
-				read_save_image(save_file, current_tex_id);
-				save_file.close();
-				save_tex_ids.push_back(current_tex_id);
-			}
-		}
-	}
-	
-	FindClose(hFind);
-}
-*/
 void BulbSettings::update_save_files() {
 	for (int i = 0; i < (int)save_files.size(); i++) {
 		glDeleteTextures(1, &save_files[i].tex_id);
@@ -548,88 +526,18 @@ void BulbSettings::draw() {
 	}
 }
 
-// todo basically remove this
-/*
-void BulbSettings::read_save_image(ifstream &save_file, GLuint &tex_id) {
-	save_file.clear();
-	save_file.seekg(0, ios::beg);
-
-	char data[256*256*3];
-	memset(data, 0, 256*256*3);
-
-	int image_width=256, image_height=256;
-
-	streamoff current_pos = 0;
-	string save_file_line;
-	while (getline(save_file, save_file_line)) {
-		if (save_file_line.substr(0, 5) == "IMAGE") {
-			vector<string> image_line = split_string(save_file_line, "|");
-			image_width = stoi(image_line[1]);
-			image_height = stoi(image_line[2]);
-
-			save_file.clear();
-			save_file.seekg(current_pos + 14, ios::beg);
-			save_file.read(data, image_width*image_height*3);
-
-			break;
-		}
-		current_pos = save_file.tellg();
-	}
-	
-	glGenTextures(1, &tex_id);
-	glBindTexture(GL_TEXTURE_2D, tex_id);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image_width, image_height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-}
-*/
-
-// todo figure out what to do with this
-void BulbSettings::write_save_image(ofstream &save_file) {
-	save_file << "IMAGE|256|256|";
-	int screen_w = (int)drawing_tools->SCREEN_W, screen_h = (int)drawing_tools->SCREEN_H;
-	int capture_res = 256, screen_res = min(screen_w, screen_h);
-
-	unsigned char *data = new unsigned char[screen_res * screen_res * 3];
-	glReadPixels((screen_w / 2) - (screen_res / 2), (screen_h / 2) - (screen_res / 2), screen_res, screen_res, GL_RGB, GL_UNSIGNED_BYTE, data);
-
-	for (int y = 0; y < capture_res; y++) {
-		for (int x = 0; x < capture_res; x++) {
-			int screen_x = (x * screen_res) / capture_res;
-			int screen_y = (y * screen_res) / capture_res;
-			int offset = (screen_y * 3 * screen_res) + (screen_x * 3);
-			save_file << data[offset+0] << data[offset+1] << data[offset+2];
-		}
-	}
-}
-
-// todo update this to work with new bulb save format (also figure out how to recover old save formats)
 void BulbSettings::load_save_file(string save_file_name) {
 	ifstream save_file;
 	save_file.open(save_file_name, ios::in);
 
-	bulb_shader->read_from_save_file(save_file);
-	control_settings->read_from_save_file(save_file);
+	BMP save_image;
+	save_image.load(save_file_name);
+
+	bulb_shader->read_from_save_file(save_file, save_image.bmp_file_size);
+	control_settings->read_from_save_file(save_file, save_image.bmp_file_size);
 
 	save_file.close();
 }
-
-// todo update this to work with new bulb save format
-/*
-void BulbSettings::save_save_file(string save_file_name) {
-	ofstream save_file;
-	save_file.open(save_file_name);
-
-	bulb_shader->write_to_save_file(save_file);
-	control_settings->write_to_save_file(save_file);
-	
-	write_save_image(save_file);
-
-	save_file.close();
-}
-*/
 
 void BulbSettings::save_save_file(string save_file_name) {
 	// capture and save thumbnail
@@ -642,7 +550,7 @@ void BulbSettings::save_save_file(string save_file_name) {
 	for (int y = 0; y < capture_res; y++) {
 		for (int x = 0; x < capture_res; x++) {
 			int screen_x = (x * screen_res) / capture_res;
-			int screen_y = (y * screen_res) / capture_res;
+			int screen_y = ((capture_res - y - 1) * screen_res) / capture_res;
 			save_image.set_pixel(x, y, &data[(screen_y * 3 * screen_res) + (screen_x * 3)]);
 		}
 	}
@@ -654,10 +562,8 @@ void BulbSettings::save_save_file(string save_file_name) {
 
 	save_file << "BULBSAVE" << endl;
 
-	bulb_shader->write_to_save_file(save_file); // update to seek to data pos
-	control_settings->write_to_save_file(save_file); // update to seek to data pos
-	
-	//write_save_image(save_file);
+	bulb_shader->write_to_save_file(save_file);
+	control_settings->write_to_save_file(save_file);
 
 	save_file.close();
 }

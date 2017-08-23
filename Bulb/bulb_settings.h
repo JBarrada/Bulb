@@ -88,8 +88,6 @@ public:
 	void load_menu_input_update(GamePadState *gamepad_state, KeyboardState *keyboard_state);
 
 	void update_save_files();
-	void write_save_image(ofstream &save_file);
-	//void read_save_image(ifstream &save_file, GLuint &tex_id);
 
 	void load_save_file(string save_file_name);
 	void save_save_file(string save_file_name);

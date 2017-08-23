@@ -46,7 +46,7 @@ public:
 	BulbControlSettings();
 
 	void write_to_save_file(ofstream &save_file);
-	void read_from_save_file(ifstream &save_file);
+	void read_from_save_file(ifstream &save_file, int data_start);
 
 	void update_camera_prox(int SCREEN_W,  int SCREEN_H);
 	void camera_gamepad_update(GamePadState *state, bool sticks_only);
