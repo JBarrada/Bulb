@@ -60,6 +60,9 @@ uniform vec4 AO = vec4(0.0,0.0,0.0,0.7); //~Lighting|color4|0,0,0,0.7|0,0,0,0|1,
 uniform float Fog = 0.4; //~Lighting|default|0.4|0|2|
 
 
+uniform sampler2D bg_image;
+#define PI  3.14159265358979323846264
+
 float fSteps = 0.0;
 
 float DEF(vec3 p) {
@@ -159,6 +162,14 @@ vec3 normal(vec3 pos, float normalDistance) {
 	return n;
 }
 
+vec3 equirectangularMap(sampler2D sampler, vec3 dir) {
+	// Convert (normalized) dir to spherical coordinates.
+	dir = normalize(dir);
+	vec2 longlat = vec2(atan(dir.y,dir.x),acos(dir.z));
+	// Normalize, and lookup in equirectangular map.
+ 	return texture2D(sampler, longlat/vec2(2.0*PI,PI)).xyz;
+}
+
 vec4 trace(vec3 from, vec3 dir, inout vec3 hit, inout vec3 hitNormal) {
 	hit = vec3(0.0);
 	orbitTrap = vec4(10000.0);
@@ -195,7 +206,8 @@ vec4 trace(vec3 from, vec3 dir, inout vec3 hit, inout vec3 hitNormal) {
 
 	vec3 hitColor;
 	float stepFactor = clamp(fSteps / 20.0,0.0,1.0);
-	vec3 backColor = BackgroundColor;
+	//vec3 backColor = BackgroundColor;
+	vec3 backColor = equirectangularMap(bg_image, dir);
 	
 	if (steps == MaxRaySteps) orbitTrap = vec4(0.0);
 	
@@ -217,7 +229,8 @@ vec4 trace(vec3 from, vec3 dir, inout vec3 hit, inout vec3 hitNormal) {
 		
 		// Fog
 		float f = totalDist;
-		hitColor = mix(hitColor, backColor, 1.0-exp(-pow(Fog,4.0)*f*f));
+		//hitColor = mix(hitColor, backColor, 1.0-exp(-pow(Fog,4.0)*f*f));
+		hitColor = mix(hitColor, BackgroundColor, 1.0-exp(-pow(Fog,4.0)*f*f));
 	} else {
 		hitColor = backColor;
 		hitNormal = vec3(0.0);

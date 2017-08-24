@@ -178,10 +178,10 @@ void BulbControlSettings::camera_keyboard_update(KeyboardState *keyboard_state) 
 	}
 	
 	if (keyboard_state->keyboard['q']) {
-		camera_orientation *= glm::rotate(glm::mat4(1.0), control_roll_speed.value[0][0] * 1.0f, glm::vec3(0, -1, 0));
+		camera_orientation *= glm::rotate(glm::mat4(1.0), control_roll_speed.value[0][0] * -1.0f, glm::vec3(0, -1, 0));
 	}
 	if (keyboard_state->keyboard['e']) {
-		camera_orientation *= glm::rotate(glm::mat4(1.0), control_roll_speed.value[0][0] * -1.0f, glm::vec3(0, -1, 0));
+		camera_orientation *= glm::rotate(glm::mat4(1.0), control_roll_speed.value[0][0] * 1.0f, glm::vec3(0, -1, 0));
 	}
 
 	if (keyboard_state->keyboard['r']) {
@@ -198,10 +198,10 @@ void BulbControlSettings::camera_keyboard_update(KeyboardState *keyboard_state) 
 		camera_orientation *= glm::rotate(glm::mat4(1.0), control_pitch_speed.value[0][0] * -1.0f, glm::vec3(1, 0, 0));
 	}
 	if (keyboard_state->special[GLUT_KEY_LEFT]) {
-		camera_orientation *= glm::rotate(glm::mat4(1.0), control_yaw_speed.value[0][0] * 1.0f, glm::vec3(0, 0, -1));
+		camera_orientation *= glm::rotate(glm::mat4(1.0), control_yaw_speed.value[0][0] * -1.0f, glm::vec3(0, 0, -1));
 	}
 	if (keyboard_state->special[GLUT_KEY_RIGHT]) {
-		camera_orientation *= glm::rotate(glm::mat4(1.0), control_yaw_speed.value[0][0] * -1.0f, glm::vec3(0, 0, -1));
+		camera_orientation *= glm::rotate(glm::mat4(1.0), control_yaw_speed.value[0][0] * 1.0f, glm::vec3(0, 0, -1));
 	}
 
 	camera_target.value[0] = camera_eye.value[0] + (camera_orientation * glm::vec4(0, -1, 0, 0));

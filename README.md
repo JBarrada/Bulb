@@ -56,3 +56,5 @@ todo:
 #fixed bmp writing (bgr problem)
 #save image hide UI
 #save image screen res non multiple of 4
+-fix biocube
+-started implementing skybox from IBL-Raytracer

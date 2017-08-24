@@ -16,6 +16,8 @@
 #include "bulb_settings.h"
 #include "keyboard_input.h"
 
+#include "BMP.h"
+
 int SCREEN_W = 640;
 int SCREEN_H = 480;
 float ASPECT = (float)SCREEN_W / (float)SCREEN_H;
@@ -25,6 +27,8 @@ bool is_fullscreen = true;
 GamePadXbox* pad = new GamePadXbox(GamePadIndex_One);
 KeyboardState keyboard_state;
 
+GLuint skybox_image;
+
 float frames = 0;
 clock_t frame_time;
 float current_fps = 0;
@@ -33,6 +37,19 @@ DrawingTools drawing_tools;
 BulbShader bulb_shader;
 BulbControlSettings control_settings;
 BulbSettings bulb_settings(&bulb_shader, &control_settings, &drawing_tools);
+
+void load_skybox() {
+	BMP image;
+	image.load("BulbImages\\space.bmp");
+
+	glGenTextures(1, &skybox_image);
+	glBindTexture(GL_TEXTURE_2D, skybox_image);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.width, image.height, 0, GL_RGB, GL_UNSIGNED_BYTE, image.image_data);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+}
 
 void frame_counter() {
 	frames++;
@@ -62,6 +79,13 @@ void render() {
 
 	bulb_shader.update_control_variables(&control_settings, ASPECT);
 	bulb_shader.update_shader_variables();
+
+	GLint var_pointer = glGetUniformLocation(bulb_shader.program_fp32, "bg_image");
+	glUniform1i(var_pointer, 0);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, skybox_image);
+
 
 	if (bulb_settings.settings_open) bulb_settings.draw();
 	if (control_settings.show_fps.value[0][0] == 1.0f) draw_fps();
@@ -160,6 +184,8 @@ int main(int argc, const char * argv[]) {
 	bulb_shader.load();
 
 	keyboard_state.reset();
+
+	load_skybox();
 
 	glutMainLoop();
 
