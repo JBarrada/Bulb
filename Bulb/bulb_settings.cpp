@@ -477,6 +477,7 @@ void BulbSettings::save_menu_input_update(GamePadState *gamepad_state, KeyboardS
 						save_menu_overwrite_hold = -1;
 
 						save_save_file(save_files[save_menu_item_sub_highlight].file_name);
+						update_save_files();
 					}
 				}
 			} else {
@@ -599,6 +600,7 @@ void BulbSettings::load_menu_input_update(GamePadState *gamepad_state, KeyboardS
 
 						remove(save_files[load_menu_item_sub_highlight].file_name.c_str());
 						update_save_files();
+						load_menu_item_sub_highlight = glm::clamp(load_menu_item_sub_highlight, 0, (int)save_files.size() - 1);
 						return;
 					}
 				}
@@ -680,8 +682,13 @@ void BulbSettings::load_save_file(string save_file_name) {
 
 void BulbSettings::save_save_file(string save_file_name) {
 	// capture and save thumbnail
+	glClear(GL_COLOR_BUFFER_BIT);
+	bulb_shader->draw();
+	glutSwapBuffers();
+
 	int screen_w = (int)drawing_tools->SCREEN_W, screen_h = (int)drawing_tools->SCREEN_H;
 	int capture_res = 256, screen_res = min(screen_w, screen_h);
+	screen_res -= (screen_res % 4);
 	unsigned char *data = new unsigned char[screen_res * screen_res * 3];
 	glReadPixels((screen_w / 2) - (screen_res / 2), (screen_h / 2) - (screen_res / 2), screen_res, screen_res, GL_RGB, GL_UNSIGNED_BYTE, data);
 

@@ -50,7 +50,12 @@ void BMP::save(string path) {
 
 	for (int i = 0; i < height; i++) {
 		int line_offset = width * (height - i - 1) * 3;
-		output.write((char*)&image_data[line_offset], width * 3);
+		for (int x = 0; x < width; x++) {
+			output.write((char*)&image_data[line_offset + (x*3) + 2], 1);
+			output.write((char*)&image_data[line_offset + (x*3) + 1], 1);
+			output.write((char*)&image_data[line_offset + (x*3) + 0], 1);
+		}
+
 		output.write(0x00, bmp_padding);
 	}
 	
@@ -91,7 +96,11 @@ void BMP::load(string path) {
 		input.seekg(file_offset, ios::beg);
 
 		int line_offset = width * (height - i - 1) * 3;
-		input.read((char*)&image_data[line_offset], width * 3);
+		for (int x = 0; x < width; x++) {
+			input.read((char*)&image_data[line_offset + (x*3) + 2], 1);
+			input.read((char*)&image_data[line_offset + (x*3) + 1], 1);
+			input.read((char*)&image_data[line_offset + (x*3) + 0], 1);
+		}
 	}
 
 	input.close();

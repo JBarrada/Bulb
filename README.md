@@ -53,3 +53,6 @@ todo:
 #add tooltips and menu instructions (basic tooltips added)
 -variable super fine adjustment
 -emergency escape fractal (if stuck somewhere)
+#fixed bmp writing (bgr problem)
+#save image hide UI
+#save image screen res non multiple of 4
