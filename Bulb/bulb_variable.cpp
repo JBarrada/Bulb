@@ -1,6 +1,6 @@
 #include "bulb_variable.h"
 
-int BULB_VAR_SIZE[] = {1, 1, 1, 2, 3, 4};
+int BULB_VAR_SIZE[] = {1, 1, 1, 2, 3, 4, 1};
 
 BulbVariable::BulbVariable() {
 	name = "";
@@ -26,13 +26,61 @@ BulbVariable::BulbVariable(string code) {
 	if (code.find("~") != string::npos) load_from_shader_comment(code); else load_from_bulb_save_string(code);
 }
 
+void BulbVariable::update_image_files() {
+	WIN32_FIND_DATA file_data; 
+	HANDLE hFind;
+	if (!((hFind = FindFirstFile("BulbImages\\*", &file_data)) == INVALID_HANDLE_VALUE)) {
+		while (FindNextFile(hFind, &file_data)) {
+			ifstream current_file("BulbImages\\" + string(file_data.cFileName), ios::in);
+			vector<string> file_name_split = split_string(file_data.cFileName, ".");
+			if (to_upper(file_name_split[1]) == "BMP") {
+				image_files.push_back("BulbImages\\" + string(file_data.cFileName));
+			}
+		}
+	}
+	FindClose(hFind);
+
+	image_files_index = -1;
+	for (int i = 0; i < (int)image_files.size(); i++) {
+		if (image_files[i] == value_image) {
+			image_files_index = i;
+			break;
+		}
+	}
+}
+
+void BulbVariable::update_value_image() {
+	image_files_index = -1;
+	for (int i = 0; i < (int)image_files.size(); i++) {
+		if (image_files[i] == value_image) {
+			image_files_index = i;
+			break;
+		}
+	}
+
+	glDeleteTextures(1, &value_image_tex_id);
+
+	if (image_files_index != -1) {
+		BMP image;
+		image.load(value_image);
+
+		glGenTextures(1, &value_image_tex_id);
+		glBindTexture(GL_TEXTURE_2D, value_image_tex_id);
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.width, image.height, 0, GL_RGB, GL_UNSIGNED_BYTE, image.image_data);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	}
+}
+
 void BulbVariable::load_from_shader_comment(string code) {
 	if (code.substr(0, 7) == "uniform") {
-		vector<string> split_space = split_string(code, " ");
+		vector<string> split_space = split_string(code, " ;");
 		vector<string> split_comment = split_string(code.substr(code.find("~") + 1), "|");
 
-		string type_strings[] = {"bool", "int", "float", "vec2", "vec3", "vec4"};
-		var_type = (BULB_VAR_TYPE)std::distance(type_strings, std::find(type_strings, type_strings + 6, split_space[1]));
+		string type_strings[] = {"bool", "int", "float", "vec2", "vec3", "vec4", "sampler2D"};
+		var_type = (BULB_VAR_TYPE)std::distance(type_strings, std::find(type_strings, type_strings + 7, split_space[1]));
 
 		name = split_space[2];
 		category = split_comment[0];
@@ -41,9 +89,19 @@ void BulbVariable::load_from_shader_comment(string code) {
 
 		for (int i = 0; i < 3; i++) {
 			if (var_type == VAR_BOOL) value[i][0] = (float)(to_upper(split_comment[2+i]) == "TRUE");
-			if (var_type != VAR_BOOL) stovec(split_comment[2+i], value[i]);
+			else if (var_type != VAR_SAMP2D) stovec(split_comment[2+i], value[i]);
 		}
+		if (var_type == VAR_SAMP2D) { 
+			value_image = split_comment[2];
+			no_clamp = true;
+		}
+
 		value[3] = value[2] - value[1];
+
+		if (var_type == VAR_SAMP2D) { 
+			update_image_files();
+			update_value_image();
+		}
 	}
 }
 
@@ -62,12 +120,23 @@ void BulbVariable::load_from_bulb_save_string(string code) {
 			update = true;
 
 			for (int i = 0; i < 4; i++) {
-				stovec(code_split[8+i], value[i]);
+				if (var_type != VAR_SAMP2D) {
+					stovec(code_split[8+i], value[i]);
+				}
 
 				animate_enable[i] = (code_split[7][i] == '1');
 				stovec(code_split[12+i], animate_values[i]);
 			}
+			if (var_type == VAR_SAMP2D) {
+				value_image = code_split[8];
+			}
+
 			if ((int)code_split[8].size() == 0 || (int)code_split[9].size() == 0) no_clamp = true;
+
+			if (var_type == VAR_SAMP2D) { 
+				update_image_files();
+				update_value_image();
+			}
 		}
 	}
 }
@@ -84,7 +153,11 @@ string BulbVariable::get_bulb_save_string(string prefix) {
 		if (no_clamp && i > 0) {
 			j += sprintf_s(save_chars+j, 1000-j, "|");
 		} else {
-			j += sprintf_s(save_chars+j, 1000-j, "%f,%f,%f,%f|", value[i][0], value[i][1], value[i][2], value[i][3]);
+			if (var_type != VAR_SAMP2D) {
+				j += sprintf_s(save_chars+j, 1000-j, "%f,%f,%f,%f|", value[i][0], value[i][1], value[i][2], value[i][3]);
+			} else {
+				j += sprintf_s(save_chars+j, 1000-j, "%s|", value_image.c_str());
+			}
 		}
 	}
 	for (int i=0; i<4; i++) {
@@ -95,7 +168,7 @@ string BulbVariable::get_bulb_save_string(string prefix) {
 }
 
 bool BulbVariable::needs_update() {
-	return (update + animate_enable[0] + animate_enable[1] + animate_enable[2] + animate_enable[3]) != 0;
+	return (update + animate_enable[0] + animate_enable[1] + animate_enable[2] + animate_enable[3] + (var_type == VAR_SAMP2D)) != 0;
 }
 
 void BulbVariable::update_program_variable(GLuint program) {
@@ -124,6 +197,14 @@ void BulbVariable::update_program_variable(GLuint program) {
 		if (var_type == VAR_VEC4) glUniform4fv(var_pointer, 1, (float*)&value[0]);
 	}
 
+	if (var_type == VAR_SAMP2D) {
+		if (image_files_index != -1) {
+			glUniform1i(var_pointer, 0);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, value_image_tex_id);
+		}
+	}
+
 	update = false;
 }
 
@@ -134,6 +215,14 @@ void BulbVariable::adjust_variable(float analog, int digital, int &sub_variable)
 		if (var_type == VAR_BOOL) {
 			if (abs(digital) == 1) {
 				value[0][sub_variable] = ((int)value[0][sub_variable] == 1.0f) ? 0.0f : 1.0f;
+			}
+		} else if (var_type == VAR_SAMP2D) {
+			if (digital != 0 && ((int)image_files.size() != 0)) {
+				image_files_index = glm::clamp(image_files_index+digital, 0, (int)image_files.size() - 1);
+				if (value_image != image_files[image_files_index]) {
+					value_image = image_files[image_files_index];
+					update_value_image();
+				}
 			}
 		} else {
 			float resolution = 100.0f;
@@ -175,6 +264,7 @@ string BulbVariable::get_string() {
 	if (var_type == VAR_VEC2) sprintf_s(text, "%0.2f, %0.2f", value[0].x, value[0].y);
 	if (var_type == VAR_VEC3) sprintf_s(text, "%0.2f, %0.2f, %0.2f", value[0].x, value[0].y, value[0].z);
 	if (var_type == VAR_VEC4) sprintf_s(text, "%0.2f, %0.2f, %0.2f, %0.2f", value[0].x, value[0].y, value[0].z, value[0].w);
+	if (var_type == VAR_SAMP2D) return value_image + ((image_files_index == -1) ? " (Not found)" : "");
 
 	return string(text);
 }
@@ -184,9 +274,10 @@ string BulbVariable::get_string(int &sub_variable) {
 	string prefixes[3][4] = {{"X: ", "Y: ", "Z: ", ""}, {"R: ", "G: ", "B: ", ""}, {"H: ", "S: ", "V: ", ""}};
 
 	if (var_type == VAR_BOOL) sprintf_s(text, ((value[0][0]) ? "true" : "false"));
-	if (var_type == VAR_INT) sprintf_s(text, "%0.0f", value[0][0]);
-	if (var_type == VAR_FLOAT) sprintf_s(text, "%f", value[0][0]);
-	if (var_type >= VAR_VEC2) {
+	else if (var_type == VAR_INT) sprintf_s(text, "%0.0f", value[0][0]);
+	else if (var_type == VAR_FLOAT) sprintf_s(text, "%f", value[0][0]);
+	else if (var_type == VAR_SAMP2D) return value_image + ((image_files_index == -1) ? " (Not found)" : "");
+	else if (var_type >= VAR_VEC2) {
 		int prefix_index = (int)is_color + (int)hsv_mode;
 		sprintf_s(text, "%s%f", prefixes[prefix_index][sub_variable].c_str(), value[0][sub_variable]);
 	}

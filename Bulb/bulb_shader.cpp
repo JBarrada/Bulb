@@ -1,7 +1,7 @@
 #include "bulb_shader.h"
 
 BulbShader::BulbShader() {
-	fractal_file = "BulbFractals\\mandelbox.frag";
+	fractal_file = "BulbFractals\\cross_menger.frag";
 
 	WIN32_FIND_DATA file_data; 
 	HANDLE hFind;

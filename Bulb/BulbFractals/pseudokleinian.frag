@@ -15,7 +15,7 @@ void init() {}
 float RoundBox(vec3 p, vec3 csize, float offset) {
 	vec3 di = abs(p) - csize;
 	float k=max(di.x,max(di.y,di.z));
-	return abs(k*float(k<0.)+ length(max(di,0.0))-offset);
+	return abs(k*float(k<0.0)+ length(max(di,0.0))-offset);
 }
 
 float Thingy(vec3 p, float e) {
@@ -24,15 +24,15 @@ float Thingy(vec3 p, float e) {
 }
 
 float Thing2(vec3 p) {
-	float DEfactor=1.;
-   	vec3 ap=p+1.;
+	float DEfactor=1.0;
+   	vec3 ap=p+1.0;
 	for(int i=0;i<Iterations && ap!=p;i++){
 		ap=p;
-		p=2.*clamp(p, -CSize, CSize)-p;
+		p=2.0*clamp(p, -CSize, CSize)-p;
       
 		float r2=dot(p,p);
 		orbitTrap = min(orbitTrap, abs(vec4(p,r2)));
-		float k=max(Size/r2,1.);
+		float k=max(Size/r2,1.0);
 
 		p*=k;DEfactor*=k;
       
@@ -45,5 +45,5 @@ float Thing2(vec3 p) {
 }
 
 float DE(vec3 p){
-	return  Thing2(p);
+	return Thing2(p);
 }

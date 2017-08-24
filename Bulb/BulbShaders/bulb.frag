@@ -4,6 +4,7 @@
 
 #include "FRACTAL"
 
+
 out vec4 frag_color;
 
 // Camera
@@ -27,6 +28,10 @@ uniform float NormalBackStep = 1.0; //~Raytrace|default|1|0|10|
 
 
 // Color
+uniform bool BackgroundImageEnable = false; //~Color|default|false|false|true|
+uniform sampler2D BackgroundImage; //~Color|default|BulbImages\space.bmp|||
+uniform float BackgroundImageDiffuse = 1.0; //~Color|default|1|0|1|
+uniform float BackgroundImageSpecular = 1.0; //~Color|default|1|0|1|
 uniform vec3 BackgroundColor = vec3(0.8); //~Color|color|0.8,0.8,0.8|0,0,0|1,1,1|
 uniform vec3 BaseColor = vec3(0.5, 0.1, 0.7); //~Color|color|0.5,0.1,0.7|0,0,0|1,1,1|
 
@@ -60,8 +65,15 @@ uniform vec4 AO = vec4(0.0,0.0,0.0,0.7); //~Lighting|color4|0,0,0,0.7|0,0,0,0|1,
 uniform float Fog = 0.4; //~Lighting|default|0.4|0|2|
 
 
-uniform sampler2D bg_image;
 #define PI  3.14159265358979323846264
+
+vec3 equirectangularMap(sampler2D sampler, vec3 dir) {
+	// Convert (normalized) dir to spherical coordinates.
+	dir = normalize(dir);
+	vec2 longlat = vec2(atan(dir.y,dir.x),acos(dir.z));
+	// Normalize, and lookup in equirectangular map.
+ 	return texture2D(sampler, longlat/vec2(2.0*PI,PI)).xyz;
+}
 
 float fSteps = 0.0;
 
@@ -92,11 +104,9 @@ vec3 lighting(vec3 n, vec3 color, vec3 pos, vec3 dir, float eps, out float shado
 	vec3 halfVector = normalize(-dir+spotDir);
 	float diffuse = nDotL*SpotLight.w;
 	float ambient = max(CamLightMin,dot(-n, dir))*CamLight.w;
-	float hDotN = max(0.,dot(n,halfVector));
+	float hDotN = max(0.0,dot(n,halfVector));
 
-	float specular =((SpecularExp+2.)/8.)*pow(hDotN,SpecularExp)*
-	(SpecularExp + (1.-SpecularExp)*pow(1.-hDotN,5.))*
-	nDotL*Specular;
+	float specular =((SpecularExp+2.0)/8.0)*pow(hDotN,SpecularExp)*(SpecularExp + (1.-SpecularExp)*pow(1.-hDotN,5.))*nDotL*Specular;
 	specular = min(SpecularMax,specular);
 	
 	if (HardShadow>0.0) {
@@ -107,6 +117,27 @@ vec3 lighting(vec3 n, vec3 color, vec3 pos, vec3 dir, float eps, out float shado
 	}
 	
 	return (SpotLight.xyz*diffuse+CamLight.xyz*ambient+ specular*SpotLight.xyz)*color;
+}
+
+vec3 lightingImage(vec3 n, vec3 color, vec3 pos, vec3 dir, float eps, out float shadowStrength) {
+	shadowStrength = 0.0;
+	vec3 spotDir = vec3(sin(SpotLightDir.x*3.1415)*cos(SpotLightDir.y*3.1415/2.0), sin(SpotLightDir.y*3.1415/2.0)*sin(SpotLightDir.x*3.1415), cos(SpotLightDir.x*3.1415));
+	float Shadow = 0.0;
+	float ambient = max(CamLightMin,dot(-n, dir))*CamLight.w;
+	vec3 reflected = -2.0*dot(dir,n)*n+dir;
+	vec3 diffuse =  BackgroundImageDiffuse*equirectangularMap(BackgroundImage,n);
+	vec3 specular = BackgroundImageSpecular*equirectangularMap(BackgroundImage,reflected);
+	specular = min(vec3(SpecularMax),specular);
+
+	if (Shadow>0.0) {
+		// check path from pos to spotDir
+		shadowStrength = 1.0-shadow(pos+n*eps, spotDir, eps);
+		ambient = mix(ambient,0.0,Shadow*shadowStrength);
+		diffuse = mix(diffuse,vec3(0.0),Shadow*shadowStrength);
+		specular = mix(specular,vec3(0.0),Shadow*shadowStrength);
+	}
+
+	return (diffuse+CamLight.xyz*ambient)*color+specular;
 }
 
 float rand(vec2 co){
@@ -130,6 +161,7 @@ float ambientOcclusion(vec3 p, vec3 n) {
 
 vec3 cycle(vec3 c, float s) {
 	return vec3(0.5)+0.5*vec3(cos(s*Cycles+c.x),cos(s*Cycles+c.y),cos(s*Cycles+c.z));
+	// return vec3(0.5) + cos(dot(c, vec3(s*Cycles))) * 0.5; // maybe optimized
 }
 
 vec3 getColor() {
@@ -160,14 +192,6 @@ vec3 normal(vec3 pos, float normalDistance) {
 		DE(pos+e.xxy)-DE(pos-e.xxy));
 	n =  normalize(n);
 	return n;
-}
-
-vec3 equirectangularMap(sampler2D sampler, vec3 dir) {
-	// Convert (normalized) dir to spherical coordinates.
-	dir = normalize(dir);
-	vec2 longlat = vec2(atan(dir.y,dir.x),acos(dir.z));
-	// Normalize, and lookup in equirectangular map.
- 	return texture2D(sampler, longlat/vec2(2.0*PI,PI)).xyz;
 }
 
 vec4 trace(vec3 from, vec3 dir, inout vec3 hit, inout vec3 hitNormal) {
@@ -207,7 +231,7 @@ vec4 trace(vec3 from, vec3 dir, inout vec3 hit, inout vec3 hitNormal) {
 	vec3 hitColor;
 	float stepFactor = clamp(fSteps / 20.0,0.0,1.0);
 	//vec3 backColor = BackgroundColor;
-	vec3 backColor = equirectangularMap(bg_image, dir);
+	vec3 backColor = (BackgroundImageEnable) ? equirectangularMap(BackgroundImage, dir) : BackgroundColor;
 	
 	if (steps == MaxRaySteps) orbitTrap = vec4(0.0);
 	
@@ -225,7 +249,11 @@ vec4 trace(vec3 from, vec3 dir, inout vec3 hit, inout vec3 hitNormal) {
 		}
 		hitColor = mix(hitColor, AO.xyz, ao);
 		hitNormal= normal(hit-NormalBackStep*epsModified*direction, epsModified);
-		hitColor = lighting(hitNormal, hitColor, hit, direction, epsModified, shadowStrength);
+		if (BackgroundImageEnable) {
+			hitColor = lightingImage(hitNormal, hitColor, hit, direction, epsModified, shadowStrength);
+		} else {
+			hitColor = lighting(hitNormal, hitColor, hit, direction, epsModified, shadowStrength);
+		}
 		
 		// Fog
 		float f = totalDist;

@@ -26,7 +26,7 @@ todo:
 ?loading
 -more fractals
 -scale animation to proximity setting
--skyboxes (space, ocean, gradient)
+#skyboxes (space, ocean, gradient)
 -volumetric/atmospheric lighting/shadows 
 -fix controller vibrate
 #somehow un-fuck control variables (maybe take inspiration from shadervariables)
@@ -57,4 +57,4 @@ todo:
 #save image hide UI
 #save image screen res non multiple of 4
 -fix biocube
--started implementing skybox from IBL-Raytracer
+#started implementing skybox from IBL-Raytracer

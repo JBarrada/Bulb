@@ -117,9 +117,11 @@ void BulbSettings::draw_bulb_variable(BulbVariable *variable, int sub_highlight,
 		}
 
 		// draw slider
-		glColor3f(var_fg_color,var_fg_color,var_fg_color);
-		int pos = (int)(((variable->value[0][i] - variable->value[1][i]) / variable->value[3][i]) * bar_width);
-		drawing_tools->rectangle_filled(x + pos - 2, y, 4, bar_height);
+		if (variable->var_type != VAR_SAMP2D) {
+			glColor3f(var_fg_color,var_fg_color,var_fg_color);
+			int pos = (int)(((variable->value[0][i] - variable->value[1][i]) / variable->value[3][i]) * bar_width);
+			drawing_tools->rectangle_filled(x + pos - 2, y, 4, bar_height);
+		}
 
 		// draw text
 		glColor3f(var_fg_color,var_fg_color,var_fg_color);
@@ -290,8 +292,10 @@ void BulbSettings::shader_menu_input_update(GamePadState *gamepad_state, Keyboar
 		BulbVariable *selected_variable = &bulb_shader->shader_variables[actual_highlight_index];
 
 		if (gamepad_state->pressed(GamePad_Button_X) || keyboard_state->pressed_keyboard('x')) {
-			selected_variable->animate_enable[shader_menu_item_sub_highlight] = !selected_variable->animate_enable[shader_menu_item_sub_highlight];
-			shader_menu_item_sub_selected = selected_variable->animate_enable[shader_menu_item_sub_highlight]; // auto enter menu
+			if (selected_variable->var_type != VAR_SAMP2D) {
+				selected_variable->animate_enable[shader_menu_item_sub_highlight] = !selected_variable->animate_enable[shader_menu_item_sub_highlight];
+				shader_menu_item_sub_selected = selected_variable->animate_enable[shader_menu_item_sub_highlight]; // auto enter menu
+			}
 		}
 
 		int dpad_step = 0;
@@ -424,6 +428,7 @@ void BulbSettings::save_menu_draw() {
 			drawing_tools->text(5, (i + 1) * font_height + 5, settings_font, file_text);
 		}
 
+		
 		glEnable(GL_TEXTURE_2D);
 		glBindTexture(GL_TEXTURE_2D, save_files[save_menu_item_sub_highlight].tex_id);
 		drawing_tools->rectangle_tex(250, 0, 256, 256);
