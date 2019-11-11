@@ -1,5 +1,4 @@
-#version 130
-precision highp float;
+#version 400
 
 // Standard matrices
 
@@ -49,60 +48,52 @@ mat4 scale4(float s) {
 
 //FRACTAL_FILE
 
-uniform int Iterations = 15; //~Fractal|default|15|0|200
-uniform float Gap = 1.0; //~Fractal|default|1|0|1
-
-uniform vec3 Rot1 = vec3(0.0); //~Fractal|default|0,0,0|-180,-180,-180|180,180,180
-uniform vec3 Rot2 = vec3(0.0); //~Fractal|default|0,0,0|-180,-180,-180|180,180,180
-
-mat3 fracRotation1;
-mat3 fracRotation2;
+uniform int Iterations = 5; //~Fractal|default|5|0|200
+uniform float Size = 1.0; //~Fractal|default|1|0|2
+uniform vec3 CSize = vec3(1.0); //~Fractal|default|1,1,1|0,0,0|2,2,2
+uniform vec3 C = vec3(0.0); //~Fractal|default|0,0,0|-2,-2,-2|2,2,2
+uniform float TThickness = 0.01; //~Fractal|default|0.01|0|2
+uniform float DEoffset = 0.0; //~Fractal|default|0|0|0.01
+uniform vec3 Offset = vec3(0.0); //~Fractal|default|1,1,1|-1,-1,-1|1,1,1
 
 vec4 orbitTrap = vec4(10000.0);
 
-void init() {
-	fracRotation1 = rotationMatrixXYZ(vec3(Rot1.x,0.0,0.0))*rotationMatrixXYZ(vec3(0.0,Rot1.y,0.0))*rotationMatrixXYZ(vec3(0.0,0.0,Rot1.z));
-	fracRotation2 = rotationMatrixXYZ(vec3(Rot2.x,0.0,0.0))*rotationMatrixXYZ(vec3(0.0,Rot2.y,0.0))*rotationMatrixXYZ(vec3(0.0,0.0,Rot2.z));
+void init() {}
+
+float RoundBox(vec3 p, vec3 csize, float offset) {
+	vec3 di = abs(p) - csize;
+	float k=max(di.x,max(di.y,di.z));
+	return abs(k*float(k<0.0)+ length(max(di,0.0))-offset);
 }
 
-float baseshape(vec3 p, float s) {
-	p.yz = abs(p.yz);
-	float t = 2.0 * max(0.0, dot(p.xy, vec2(-sqrt(3.0) * 0.5, 0.5)));
-    p.xy -= t * vec2(-sqrt(3.0), 1.0) * 0.5;
-	p.y = abs(p.y);
-	
-	if (p.y > p.z) p.yz = p.zy;
-	
-	p -= s * vec3(0.5*sqrt(3.0), 1.5, 1.5);
-	
-	if (p.z > p.x) p.xz = p.zx;
-	
-	if (p.x < 0.0) return p.x;
-	
-	p.yz = max(vec2(0.0), p.yz);
-	return length(p);
+float Thingy(vec3 p, float e) {
+	p-=Offset;
+	return (abs(length(p.xy)*p.z)-e) / sqrt(dot(p,p)+abs(e));
 }
 
-float DE(vec3 p) {
-	float dd = 1.0;
-	for(int i = 0; i<Iterations; i++){
-		p=fracRotation1*p;
-		p.yz=abs(p.yz); 
-		float t = 2.0 * max(0.0, dot(p.xy, vec2(-sqrt(3.0) * 0.5, 0.5)) );
-		p.xy -= t*vec2(-sqrt(3.0),1.0)*0.5;
-		p.y=abs(p.y);
-		
-		if(p.y>p.z) p.yz=p.zy;
-		p.y=abs(p.y-0.5)+0.5; 
-		p-=vec3(0.5*sqrt(3.0),1.5,1.5);
-		
-		p*=3.0;
-		dd*=1.0/3.0;
-		p+=vec3(0.5*sqrt(3.0),1.5,1.5);
-		p=fracRotation2*p;
-		orbitTrap = min(orbitTrap, abs(vec4(p.xyz,dot(p,p))));
+float Thing2(vec3 p) {
+	float DEfactor=1.0;
+   	vec3 ap=p+1.0;
+	for(int i=0;i<Iterations && ap!=p;i++){
+		ap=p;
+		p=2.0*clamp(p, -CSize, CSize)-p;
+      
+		float r2=dot(p,p);
+		orbitTrap = min(orbitTrap, abs(vec4(p,r2)));
+		float k=max(Size/r2,1.0);
+
+		p*=k;DEfactor*=k;
+      
+		p+=C;
+		orbitTrap = min(orbitTrap, abs(vec4(p,dot(p,p))));
 	}
-	return dd*baseshape(p,Gap);
+	return abs(0.5*Thingy(p,TThickness)/DEfactor-DEoffset);
+
+	//return abs(0.5*abs(p.z-Offset.z)/DEfactor-DEoffset);
+}
+
+float DE(vec3 p){
+	return Thing2(p);
 }
 
 
@@ -261,8 +252,8 @@ float ambientOcclusion(vec3 p, vec3 n) {
 }
 
 vec3 cycle(vec3 c, float s) {
-	//return vec3(0.5)+0.5*vec3(cos(s*Cycles+c.x),cos(s*Cycles+c.y),cos(s*Cycles+c.z));
-	return vec3(0.5) + cos(dot(c, vec3(s*Cycles))) * 0.5;
+	return vec3(0.5)+0.5*vec3(cos(s*Cycles+c.x),cos(s*Cycles+c.y),cos(s*Cycles+c.z));
+	// return vec3(0.5) + cos(dot(c, vec3(s*Cycles))) * 0.5; // maybe optimized
 }
 
 vec3 getColor() {

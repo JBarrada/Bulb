@@ -33,7 +33,7 @@ void stovec(string values_string, glm::vec4 &value) {
 
 		try {
 			value[i] = stof(current_value);
-		} catch (std::invalid_argument) {
+		} catch (...) {
 			value[i] = 0.0f;
 			return;
 		}
