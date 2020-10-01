@@ -1,7 +1,9 @@
 **********If you just want to "play" download the "DEPLOY.zip" and run the .exe!**********
 
-![demo](https://github.com/JBarrada/Bulb/blob/master/demo.png)
+
 ![animation](https://github.com/JBarrada/Bulb/blob/master/anim.gif)
+![demo](https://github.com/JBarrada/Bulb/blob/master/demo.png)
+
 # Bulb
 
 ```
@@ -76,13 +78,15 @@ It is also recommended that you "play" with an XBox controller, keyboard works t
 
 
 ## KEYBOARD CONTROLS
+```
 ESC 			- will bring up the menu or back you out of a menu if you are in one
 ENTER			- (in menu) select
 Arrow Keys 		- (in menu) menu navigation (out of menu) up/down is pitch and left/right is yaw
 W/A/S/D 		- (out of menu) forward back and strafing
 Q/E				- (out of menu) roll
-
+```
 ## XBOX CONTROLS
+```
 Back 			- toggle full screen
 Start 			- open/close menu
 DPad 			- (in menu) menu navigation
@@ -94,7 +98,7 @@ LStick 			- (out of menu) vertical movement and yaw
 RStick 			- (out of menu) pitch and roll
 LT 				- (out of menu) move backwards (in menu) value adjustment
 RT 				- (out of menu) move forwards (in menu) value adjustment
-
+```
 
 ## Points of Interest
 You can load one of a few different "Fractals". These contain the core mathematics for the structure of the object. They each have their own settings that can be manipulated and animated. The default fractal is the "Cross Menger"
