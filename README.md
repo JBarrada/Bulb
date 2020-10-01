@@ -1,7 +1,7 @@
 **********If you just want to "play" download the "DEPLOY.zip" and run the .exe!**********
 
 ![demo](https://github.com/JBarrada/Bulb/blob/master/demo.png)
-
+![animation](https://github.com/JBarrada/Bulb/blob/master/anim.gif)
 # Bulb
 
 ```
